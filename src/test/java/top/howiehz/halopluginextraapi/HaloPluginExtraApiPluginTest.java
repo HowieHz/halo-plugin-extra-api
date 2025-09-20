@@ -1,4 +1,4 @@
-package top.howiehz.halopluginextraapi;
+﻿package top.howiehz.halopluginextraapi;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

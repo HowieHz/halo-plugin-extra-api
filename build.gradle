@@ -13,6 +13,13 @@ repositories {
 dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.21.0')
     compileOnly 'run.halo.app:api'
+    
+    // Add Spring dependencies for IDE support
+    compileOnly 'org.springframework:spring-context'
+    compileOnly 'org.springframework:spring-core'
+    compileOnly 'org.springframework:spring-beans'
+    compileOnly 'org.springframework.data:spring-data-commons'
+    compileOnly 'io.projectreactor:reactor-core'
 
     testImplementation 'run.halo.app:api'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
