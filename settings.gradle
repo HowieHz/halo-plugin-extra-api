@@ -3,5 +3,5 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'plugin-halo-plugin-extra-api'
+rootProject.name = 'extra-api'
 include 'ui'

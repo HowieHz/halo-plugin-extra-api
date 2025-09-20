@@ -4,7 +4,7 @@ apiVersion: plugin.halo.run/v1alpha1
 kind: Plugin
 metadata:
   # The name defines how the plugin is invoked, A unique name
-  name: halo-plugin-extra-api
+  name: extra-api
 spec:
   enabled: true
   requires: ">=2.21.0"
@@ -15,7 +15,7 @@ spec:
   homepage: https://github.com/HowieHz/halo-plugin-extra-api#readme
   repo: https://github.com/HowieHz/halo-plugin-extra-api
   issues: https://github.com/HowieHz/halo-plugin-extra-api/issues
-  displayName: "halo-plugin-extra-api"
+  displayName: "API 扩展包"
   description: "一个为 Halo CMS 提供额外 API 的轻量级插件"
   license:
     - name: "AGPL-3.0"
