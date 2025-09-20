@@ -62,9 +62,7 @@ public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
     // Patterns for stripping HTML quickly
     // 快速移除HTML的正则表达式模式 / Patterns for quickly stripping HTML
     private static final Pattern HTML_CONTENT_REMOVAL =
-        Pattern.compile("(?is)<(?:script|style)[^>]*>.*?</(?:script|style)>|<[^>]+>|&nbsp;");
-    private static final Pattern WHITESPACE_NORMALIZATION = Pattern.compile("\\s+");
-    private static final Pattern PUNCTUATION_SPACING = Pattern.compile("\\s+([,\\.!\\?:;，。！？：；、])");
+        Pattern.compile("(?is)<(?:script|style)\\b[^>]*>.*?</(?:script|style)>|<[^>]+>|&[a-zA-Z0-9#]+;");
 
     /**
      * Extract plain text from HTML content by removing tags and entities.
@@ -81,18 +79,7 @@ public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
         }
 
         // 一次性处理所有HTML标签和实体
-        String text = HTML_CONTENT_REMOVAL.matcher(html).replaceAll(" ");
-
-        // 批量替换特殊字符
-        text = text.replace('\u00A0', ' ').replace('\t', ' ').replace('\n', ' ').replace('\r', ' ');
-
-        // 规范化空白字符
-        text = WHITESPACE_NORMALIZATION.matcher(text).replaceAll(" ");
-
-        // 处理标点符号前的空格
-        text = PUNCTUATION_SPACING.matcher(text).replaceAll("$1");
-
-        return text.trim();
+        return HTML_CONTENT_REMOVAL.matcher(html).replaceAll(" ");
     }
 
     /**
