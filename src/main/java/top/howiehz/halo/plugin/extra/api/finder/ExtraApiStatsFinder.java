@@ -6,7 +6,7 @@ import java.util.Collections;
 /**
  * Finder for calculating post word/character counts for themes to use.
  */
-public interface ExtraApiFinder {
+public interface ExtraApiStatsFinder {
     /**
      * Unified word count API.
      * Parameters (all optional):

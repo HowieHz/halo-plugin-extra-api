@@ -13,21 +13,21 @@ import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.theme.finders.Finder;
 
 /**
- * Implementation of ExtraApiFinder.
+ * Implementation of ExtraApiStatsFinder.
  */
 @Component
-@Finder("extraApi")
-public class ExtraApiFinderImpl implements ExtraApiFinder {
+@Finder("extraApiStatsFinder")
+public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
 
     private final ReactiveExtensionClient client; // 响应式扩展客户端 / Reactive extension client
     private final PostContentService postContentService; // 文章内容服务 / Post content service
 
     /**
-     * Constructor to initialize ExtraApiFinderImpl with required dependencies.
-     * 构造函数，使用必需的依赖项初始化 ExtraApiFinderImpl。
+     * Constructor to initialize ExtraApiStatsFinderImpl with required dependencies.
+     * 构造函数，使用必需的依赖项初始化 ExtraApiStatsFinderImpl。
      */
-    public ExtraApiFinderImpl(ReactiveExtensionClient client,
-        PostContentService postContentService) {
+    public ExtraApiStatsFinderImpl(ReactiveExtensionClient client,
+                                   PostContentService postContentService) {
         this.client = client; // 注入响应式扩展客户端 / Inject reactive extension client
         this.postContentService = postContentService; // 注入文章内容服务 / Inject post content service
     }

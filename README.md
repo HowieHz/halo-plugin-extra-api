@@ -39,7 +39,7 @@
 - [] 提供随机文章 API
 - [] 提供预计阅读时间 API，及相关配置项
 
-## 本插件可用 API 列表
+## API 文档
 
 ### 检测本插件是否启用
 
@@ -58,53 +58,54 @@
 <!--/* 先检测插件可用性，再使用 API */-->
 <th:block th:if="${pluginFinder.available('extra-api')}">
     <span 
-        th:text="|总字数：${extraApi.wordCount()}|"
+        th:text="|总字数：${extraApiStatsFinder.wordCount()}|"
     ></span>
 </th:block>
 
 <!--/* 写在一个标签内也可以，th:if 的优先级比 th:text 高 */-->
 <span
     th:if="${pluginFinder.available('extra-api')}"
-    th:text="|总字数：${extraApi.wordCount()}|"
+    th:text="|总字数：${extraApiStatsFinder.wordCount()}|"
 ></span>
 
 <!--/* 自然模板写法 */-->
-<span th:if="${pluginFinder.available('extra-api')}">总字数：[[${extraApi.wordCount()}]]</span>
+<span th:if="${pluginFinder.available('extra-api')}">总字数：[[${extraApiStatsFinder.wordCount()}]]</span>
 ```
 
 **说明**
 
 使用 `pluginFinder.available('extra-api')` 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。
 
-### 文章字数统计 API
+### 统计信息 API
 
-**Finder 名称：** `extraApi`
+**Finder 名称：** `extraApiStatsFinder`
 
 #### 文章字数统计
 
 ```javascript
-extraApi.wordCount({
+extraApiStatsFinder.wordCount({
   name: 'post-metadata-name',  // 可选，未传入则统计全部文章字数总和
   version: 'release' | 'draft'  // 可选，默认 'release'
 });
 ```
 
 ```javascript
-extraApi.wordCount();
+extraApiStatsFinder.wordCount();
 ```
 
 **描述**
 
-- 传入 name（`metadata.name`）可统计该文章的字数，配合 version 指定统计发布版本还是草稿版本。
-- 当未传入 name 时，将统计全部文章的字数总和（同时依据 version 区分发布/草稿）。
-
-- **计数规则**：
-  - 中文、日文、韩文等 CJK 字符按每个字符计 1
-  - ASCII 连续字母/数字按 1 个单词计数
-  - 标点符号和空格不计入统计
-- **错误处理**：输入为空或文章不存在时返回 0，不会抛出异常
-- **性能说明**：
-  - 单次调用开销较小，适合在模板中直接使用
+- 参数说明：
+  - `name`：文章的 `metadata.name`，可选参数。未传入时统计全部文章字数总和。
+  - `version`：统计版本，可选 `release`（默认）或 `draft`。
+- 计数规则：
+  - 中文、日文、韩文等 CJK 字符按每个字符计 1。
+  - ASCII 连续字母/数字按 1 个单词计数。
+  - 标点符号和空格不计入统计。
+- 错误处理：
+  - 输入为空或文章不存在时返回 0，不会抛出异常。
+- 性能说明：
+  - 单次调用开销较小，适合在模板中直接使用。
 
 **参数**
 - `name:string` – 文章 `metadata.name`（可选，不传则统计全站）
@@ -116,18 +117,18 @@ extraApi.wordCount();
 **使用示例**
 ```html
 <!--/* 统计文章已发布版本的字，适用于 /templates/post.html */-->
-<span th:text="${extraApi.wordCount({name: post.metadata.name})}"></span>
+<span th:text="${extraApiStatsFinder.wordCount({name: post.metadata.name})}"></span>
 
 <!--/* 统计文章最新版本的字数（含草稿），适用于 /templates/post.html */-->
-<span th:text="${extraApi.wordCount({name: post.metadata.name, version: 'draft'})}"></span>
+<span th:text="${extraApiStatsFinder.wordCount({name: post.metadata.name, version: 'draft'})}"></span>
 
 <!--/* 统计全站已发布文章的总字数，适用于全部模板 */-->
-<span th:text="${extraApi.wordCount()}"></span>
+<span th:text="${extraApiStatsFinder.wordCount()}"></span>
 <!--/* 与下方写法等价 */-->
- <span th:text="${extraApi.wordCount({})}"></span>
+ <span th:text="${extraApiStatsFinder.wordCount({})}"></span>
 
 <!--/* 统计全站所有文章最新版本的总字数（含草稿），适用于全部模板 */-->
-<span th:text="${extraApi.wordCount({version: 'draft'})}"></span>
+<span th:text="${extraApiStatsFinder.wordCount({version: 'draft'})}"></span>
 ```
 
 ## 开发环境
