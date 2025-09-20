@@ -1,4 +1,4 @@
-package top.howiehz.halopluginextraapi;
+package top.howiehz.halo.plugin.extra.api;
 
 import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;

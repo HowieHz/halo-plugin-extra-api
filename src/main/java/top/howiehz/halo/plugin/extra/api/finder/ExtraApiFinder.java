@@ -1,4 +1,4 @@
-package top.howiehz.halopluginextraapi.finder;
+package top.howiehz.halo.plugin.extra.api.finder;
 
 import reactor.core.publisher.Mono;
 import java.util.Collections;
@@ -28,15 +28,4 @@ public interface ExtraApiFinder {
     default Mono<Integer> wordCount(){
         return wordCount(Collections.emptyMap());
     };
-
-    /**
-     * Unified post list query with optional pagination, filters, and sorting.
-     * Accepts parameters: page(int, 1-based), size(int), tagName(String),
-     * categoryName(String), ownerName(String), sort(String[] in the form of "field,direction").
-     * Delegates to Halo built-in postFinder when available, with a safe fallback.
-     *
-     * @param params query parameters map as described above
-     * @return Mono of a page-like result that can be iterated in templates
-     */
-    Mono<?> list(java.util.Map<String, Object> params);
 }
