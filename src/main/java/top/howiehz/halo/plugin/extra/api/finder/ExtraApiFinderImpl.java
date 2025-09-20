@@ -4,13 +4,11 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.content.ContentWrapper;
 import run.halo.app.content.PostContentService;
 import run.halo.app.core.extension.content.Post;
 import run.halo.app.extension.ListOptions;
-import run.halo.app.extension.PageRequestImpl;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.theme.finders.Finder;
 
@@ -24,37 +22,12 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
     private final ReactiveExtensionClient client; // 响应式扩展客户端 / Reactive extension client
     private final PostContentService postContentService; // 文章内容服务 / Post content service
 
-    // CJK 字符块集合 / CJK character block set
-    private static final Set<Character.UnicodeBlock> CJK_BLOCKS = Set.of(
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS,
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A,
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B,
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C,
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D,
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E,
-        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F,
-        Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS,
-        Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT,
-        Character.UnicodeBlock.HIRAGANA,
-        Character.UnicodeBlock.KATAKANA,
-        Character.UnicodeBlock.KATAKANA_PHONETIC_EXTENSIONS,
-        Character.UnicodeBlock.HANGUL_SYLLABLES,
-        Character.UnicodeBlock.HANGUL_JAMO,
-        Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO
-    );
-
-    // Patterns for stripping HTML quickly
-    // 快速移除HTML的正则表达式模式 / Patterns for quickly stripping HTML
-    private static final Pattern SCRIPT = Pattern.compile("(?is)<script[^>]*>.*?</script>");
-    private static final Pattern STYLE = Pattern.compile("(?is)<style[^>]*>.*?</style>");
-    private static final Pattern TAG = Pattern.compile("(?s)<[^>]+>");
-    private static final Pattern ENTITY_NBSP = Pattern.compile("&nbsp;", Pattern.CASE_INSENSITIVE);
-
     /**
      * Constructor to initialize ExtraApiFinderImpl with required dependencies.
      * 构造函数，使用必需的依赖项初始化 ExtraApiFinderImpl。
      */
-    public ExtraApiFinderImpl(ReactiveExtensionClient client, PostContentService postContentService) {
+    public ExtraApiFinderImpl(ReactiveExtensionClient client,
+        PostContentService postContentService) {
         this.client = client; // 注入响应式扩展客户端 / Inject reactive extension client
         this.postContentService = postContentService; // 注入文章内容服务 / Inject post content service
     }
@@ -67,31 +40,31 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
      * @param methodName the method name to invoke / 要调用的方法名
      * @return word count as Mono / 返回字数统计的 Mono
      */
-    private Mono<Integer> contentCountByName(String name, String methodName) {
+    private Mono<Integer> postContentCountByName(String name, String methodName) {
         if (name == null || name.isBlank()) {
             return Mono.just(0); // 空名称直接返回0 / Return 0 for empty name
         }
 
-        // 根据方法名选择对应的内容获取方式 / Choose content retrieval method based on method name
-        if ("getHeadContent".equals(methodName)) {
-            // 获取最新版本内容（包括正在编辑的草稿） / Get latest version content (including drafts being edited)
-            return postContentService.getHeadContent(name)
-                .map(ContentWrapper::getContent) // 提取 content 字段 / Extract content field
-                .map(content -> countWords(extractText(content))) // 提取文本并计数 / Extract text and count
-                .onErrorReturn(0) // 出错时返回 0 / Return 0 on error
-                .defaultIfEmpty(0); // 空结果时返回 0 / Return 0 if empty
-        } else if ("getReleaseContent".equals(methodName)) {
-            // 获取最新发布的文章内容 / Get latest published content
-            return postContentService.getReleaseContent(name)
-                .map(ContentWrapper::getContent) // 提取 content 字段 / Extract content field
-                .map(content -> countWords(extractText(content))) // 提取文本并计数 / Extract text and count
-                .onErrorReturn(0) // 出错时返回 0 / Return 0 on error
-                .defaultIfEmpty(0); // 空结果时返回 0 / Return 0 if empty
-        } else {
-            // 不支持的方法名 / Unsupported method name
-            return Mono.just(0);
-        }
+        // 使用函数接口映射方法名到对应的服务调用 / Use function interface to map method name to service call
+        Mono<ContentWrapper> contentMono = switch (methodName) {
+            case "getHeadContent" -> postContentService.getHeadContent(name);
+            case "getReleaseContent" -> postContentService.getReleaseContent(name);
+            default -> Mono.empty(); // 不支持的方法名返回空 / Return empty for unsupported method
+        };
+
+        return contentMono.map(ContentWrapper::getContent) // 提取 content 字段 / Extract content field
+            .map(content -> countWords(
+                extractText(content))) // 从 HTML 提取文本并计数 / Extract text and count
+            .onErrorReturn(0) // 出错时返回 0 / Return 0 on error
+            .defaultIfEmpty(0); // 空结果时返回 0 / Return 0 if empty
     }
+
+    // Patterns for stripping HTML quickly
+    // 快速移除HTML的正则表达式模式 / Patterns for quickly stripping HTML
+    private static final Pattern HTML_CONTENT_REMOVAL =
+        Pattern.compile("(?is)<(?:script|style)[^>]*>.*?</(?:script|style)>|<[^>]+>|&nbsp;");
+    private static final Pattern WHITESPACE_NORMALIZATION = Pattern.compile("\\s+");
+    private static final Pattern PUNCTUATION_SPACING = Pattern.compile("\\s+([,\\.!\\?:;，。！？：；、])");
 
     /**
      * Extract plain text from HTML content by removing tags and entities.
@@ -106,21 +79,20 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
         if (html == null || html.isBlank()) {
             return "";
         }
-        String text = SCRIPT.matcher(html).replaceAll(" "); // 移除script标签 / Remove script tags
-        text = STYLE.matcher(text).replaceAll(" "); // 移除style标签 / Remove style tags
-        text = TAG.matcher(text).replaceAll(" "); // 移除HTML标签 / Remove HTML tags
-        text = ENTITY_NBSP.matcher(text).replaceAll(" "); // 替换&nbsp;实体 / Replace &nbsp; entity
-        // Collapse whitespace / 规范化空白字符
-        text = text.replace('\u00A0', ' '); // 替换不间断空格 / Replace non-breaking space
-        text = text.replaceAll("[\\r\\n\\t]",
-            " "); // 替换换行符和制表符为空格 / Replace newlines and tabs with space
-        text = text.replaceAll("\\s+", " "); // 合并多个空格为一个 / Collapse multiple spaces to one
-        // Remove space before common punctuation (ASCII and CJK) / 移除常见标点符号前的空格（ASCII和CJK）
-        text = text.replaceAll("\\s+([,\\.!\\?:;])",
-            "$1"); // 移除ASCII标点前的空格 / Remove space before ASCII punctuation
-        text = text.replaceAll("\\s+([，。！？：；、])",
-            "$1"); // 移除CJK标点前的空格 / Remove space before CJK punctuation
-        return text.trim(); // 去除首尾空格 / Trim leading and trailing spaces
+
+        // 一次性处理所有HTML标签和实体
+        String text = HTML_CONTENT_REMOVAL.matcher(html).replaceAll(" ");
+
+        // 批量替换特殊字符
+        text = text.replace('\u00A0', ' ').replace('\t', ' ').replace('\n', ' ').replace('\r', ' ');
+
+        // 规范化空白字符
+        text = WHITESPACE_NORMALIZATION.matcher(text).replaceAll(" ");
+
+        // 处理标点符号前的空格
+        text = PUNCTUATION_SPACING.matcher(text).replaceAll("$1");
+
+        return text.trim();
     }
 
     /**
@@ -138,15 +110,15 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
         }
         int count = 0; // 字数计数器 / Word count counter
         boolean inAsciiWord = false; // 是否在ASCII单词中 / Whether in an ASCII word
-        for (int i = 0; i < text.length(); ) {
-            int cp = text.codePointAt(i); // 获取当前字符的码点 / Get code point of current character
-            int charCount = Character.charCount(cp); // 获取字符占用的字符单位数 / Get number of character units
-            if (isCJK(cp)) {
+        int length = text.length();
+        for (int i = 0; i < length; ) {
+            int codePoint = text.codePointAt(i); // 获取当前字符的码点 / Get code point of current character
+            if (isCJK(codePoint)) {
                 // count each CJK code point as one word/char
                 // 每个CJK码点计为一个字/词 / Count each CJK code point as one word/char
                 count++;
                 inAsciiWord = false; // 重置ASCII单词状态 / Reset ASCII word state
-            } else if (Character.isLetterOrDigit(cp)) {
+            } else if (Character.isLetterOrDigit(codePoint)) {
                 // group consecutive ASCII letters/digits as one word
                 // 连续的ASCII字母/数字作为一个单词 / Group consecutive ASCII letters/digits as one word
                 if (!inAsciiWord) {
@@ -156,7 +128,8 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
             } else {
                 inAsciiWord = false; // 非字母数字字符，重置状态 / Non-alphanumeric character, reset state
             }
-            i += charCount; // 移动到下一个字符 / Move to next character
+            // 使用位运算优化字符长度计算 / Optimize character length calculation with bitwise operations
+            i += (codePoint <= 0xFFFF) ? 1 : 2;
         }
         return Math.max(count, 0); // 确保返回非负数 / Ensure non-negative result
     }
@@ -167,18 +140,35 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
      * Includes various CJK unified ideographs, compatibility ideographs, and phonetic extensions.
      * 检查 Unicode 码点是否属于中日韩 (CJK) 字符块。
      * 包括各种 CJK 统一表意文字、兼容表意文字和音标扩展。
-     *
-     * @param codePoint the Unicode code point / Unicode 码点
-     * @return true if CJK character / 如果是 CJK 字符则返回 true
+     * Optimized CJK character detection using range checks.
+     * 使用范围检查优化的CJK字符检测。
      */
     private static boolean isCJK(int codePoint) {
-        return CJK_BLOCKS.contains(Character.UnicodeBlock.of(codePoint));
+        // 常见CJK范围的快速检查 / Fast check for common CJK ranges
+        return (codePoint >= 0x4E00 && codePoint <= 0x9FFF) ||     // CJK Unified Ideographs
+            (codePoint >= 0x3400 && codePoint <= 0x4DBF) ||     // CJK Extension A
+            (codePoint >= 0x20000 && codePoint <= 0x2A6DF) ||   // CJK Extension B
+            (codePoint >= 0x2A700 && codePoint <= 0x2B73F) ||   // CJK Extension C
+            (codePoint >= 0x2B740 && codePoint <= 0x2B81F) ||   // CJK Extension D
+            (codePoint >= 0x2B820 && codePoint <= 0x2CEAF) ||   // CJK Extension E
+            (codePoint >= 0x2CEB0 && codePoint <= 0x2EBEF) ||   // CJK Extension F
+            (codePoint >= 0xF900 && codePoint <= 0xFAFF) ||     // CJK Compatibility Ideographs
+            (codePoint >= 0x2F800 && codePoint <= 0x2FA1F) ||
+            // CJK Compatibility Ideographs Supplement
+            (codePoint >= 0x3040 && codePoint <= 0x309F) ||     // Hiragana
+            (codePoint >= 0x30A0 && codePoint <= 0x30FF) ||     // Katakana
+            (codePoint >= 0x31F0 && codePoint <= 0x31FF) ||     // Katakana Phonetic Extensions
+            (codePoint >= 0xAC00 && codePoint <= 0xD7AF) ||     // Hangul Syllables
+            (codePoint >= 0x1100 && codePoint <= 0x11FF) ||     // Hangul Jamo
+            (codePoint >= 0x3130 && codePoint <= 0x318F);       // Hangul Compatibility Jamo
     }
 
     /**
      * Unified word count API without slug support.
      * If name provided, count by name; otherwise sum word counts across all posts
      * (release/draft selectable by version).
+     * 统一的字数统计API，不支持slug。
+     * 如果提供name参数则统计指定文章，否则统计所有文章的字数总和。
      *
      * @param params parameter map: name? version? ('release'|'draft', default 'release')
      * @return word count as Mono (non-negative)
@@ -187,54 +177,27 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
     public Mono<Integer> wordCount(Map<String, Object> params) {
         Map<String, Object> map = params == null ? java.util.Collections.emptyMap() : params;
         String name = String.valueOf(map.get("name"));
-        String version = String.valueOf(map.getOrDefault("version", "release")).toLowerCase();
+        boolean isDraft =
+            String.valueOf(map.getOrDefault("version", "release")).equalsIgnoreCase("draft");
 
         if ("null".equals(name) || name.isBlank()) {
-            name = null;
+            return sumWordCountsAcrossAllPosts(isDraft);
         }
 
-        boolean isDraft = switch (version) {
-            case "draft" -> true;
-            case "release" -> false;
-            default -> false; // 默认为发布版本 / Default to release version
-        };
-
-        if (name != null) {
-            return isDraft ? contentCountByName(name, "getHeadContent")
-                : contentCountByName(name, "getReleaseContent");
-        }
-        return countAllPosts(isDraft);
+        return isDraft ? postContentCountByName(name, "getHeadContent")
+            : postContentCountByName(name, "getReleaseContent");
     }
 
-    private Mono<Integer> countAllPosts(boolean isDraft) {
-        final int pageSize = 100; // 分页大小 / Page size
-        return sumPage(1, pageSize, isDraft, 0);
-    }
-
-    private Mono<Integer> sumPage(int page, int size, boolean isDraft, int acc) {
-        var options = ListOptions.builder().build();
-        return client.listBy(Post.class, options,
-                PageRequestImpl.of(page, size, Sort.by("metadata.name")))
-            .flatMap(result -> {
-                var items = result.getItems(); // 获取文章列表 / Get post list
-                if (items == null || items.isEmpty()) {
-                    return Mono.just(acc); // 无数据时返回累积值 / Return accumulated value when no data
-                }
-                return Flux.fromIterable(items) // 转换为Flux流 / Convert to Flux stream
-                    .map(p -> p.getMetadata().getName()) // 提取文章名称 / Extract post name
-                    .flatMapSequential(
-                        name -> isDraft ? contentCountByName(name, "getHeadContent")
-                            : contentCountByName(name, "getReleaseContent"),
-                        8) // 并发计算字数 / Calculate word count concurrently
-                    .reduce(0, Integer::sum) // 累计字数 / Sum word counts
-                    .flatMap(sumThis -> {
-                        if (items.size() < size) {
-                            return Mono.just(acc + sumThis); // 最后一页，返回总计 / Last page, return total
-                        }
-                        return sumPage(page + 1, size, isDraft,
-                            acc + sumThis); // 递归处理下一页 / Recursively process next page
-                    });
-            })
-            .switchIfEmpty(Mono.just(acc)); // 空结果时返回累积值 / Return accumulated value if empty
+    /**
+     * sum word counts across all posts with pagination.
+     * 统计所有文章的字数总和。
+     */
+    private Mono<Integer> sumWordCountsAcrossAllPosts(boolean isDraft) {
+        return client.listAll(Post.class, ListOptions.builder().build(), Sort.unsorted())
+            .map(post -> post.getMetadata().getName()) // 提取需要的名称
+            .flatMapSequential(postName -> isDraft ? postContentCountByName(postName, "getHeadContent")
+                : postContentCountByName(postName, "getReleaseContent"), 128) // 128 并发
+            .reduce(0, Integer::sum) // 直接累加
+            .onErrorReturn(0);
     }
 }
