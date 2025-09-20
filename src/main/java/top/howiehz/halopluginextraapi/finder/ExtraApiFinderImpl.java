@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import run.halo.app.content.ContentWrapper;
 import run.halo.app.content.PostContentService;
 import run.halo.app.core.extension.content.Post;
 import run.halo.app.extension.ListOptions;
@@ -19,7 +20,7 @@ import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.theme.finders.Finder;
 
 /**
- * Implementation of WordCountFinder.
+ * Implementation of ExtraApiFinder.
  */
 @Component
 @Finder("extraApi")
@@ -63,28 +64,6 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
     }
 
     /**
-     * Get the word count of the release content by post slug.
-     * 根据文章别名获取发布内容的字数统计。
-     *
-     * @param slug the post slug / 文章别名
-     * @return word count as Mono / 返回字数统计的 Mono
-     */
-    public Mono<Integer> releaseCountBySlug(String slug) {
-        return resolveNameBySlug(slug).flatMap(this::releaseCountByName);
-    }
-
-    /**
-     * Get the word count of the head content by post slug.
-     * 根据文章别名获取头部内容的字数统计。
-     *
-     * @param slug the post slug / 文章别名
-     * @return word count as Mono / 返回字数统计的 Mono
-     */
-    public Mono<Integer> headCountBySlug(String slug) {
-        return resolveNameBySlug(slug).flatMap(this::headCountByName);
-    }
-
-    /**
      * Get the word count of content by post name and method name.
      * 根据文章名称和方法名获取内容的字数统计。
      *
@@ -96,104 +75,32 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
         if (name == null || name.isBlank()) {
             return Mono.just(0); // 空名称直接返回0 / Return 0 for empty name
         }
-        final var svc = getPostContentService(); // 获取文章内容服务 / Get post content service
-        if (svc == null) {
-            // Service unavailable at compile/runtime mismatch
-            // 服务不可用，编译/运行时不匹配 / Service unavailable at compile/runtime mismatch
-            return Mono.just(0);
-        }
-        try {
-            Method m = svc.getClass()
-                .getMethod(methodName, String.class); // 反射获取方法 / Get method by reflection
-            @SuppressWarnings("unchecked")
-            Mono<?> mono = (Mono<?>) m.invoke(svc, name); // 调用方法获取内容 / Invoke method to get content
-            return mono
-                .map(pc -> safeCount(extractText(getContent(pc)))) // 提取并计数 / Extract and count
+
+        // 根据方法名选择对应的内容获取方式 / Choose content retrieval method based on method name
+        if ("getHeadContent".equals(methodName)) {
+            // 获取最新版本内容（包括正在编辑的草稿） / Get latest version content (including drafts being edited)
+            return postContentService.getHeadContent(name)
+                .map(ContentWrapper::getContent) // 提取content字段 / Extract content field
+                .map(content -> safeCount(extractText(content))) // 提取文本并计数 / Extract text and count
                 .onErrorReturn(0) // 出错时返回0 / Return 0 on error
                 .defaultIfEmpty(0); // 空结果时返回0 / Return 0 if empty
-        } catch (Throwable e) {
-            return Mono.just(0); // 异常时返回0 / Return 0 on exception
+        } else if ("getReleaseContent".equals(methodName)) {
+            // 获取最新发布的文章内容 / Get latest published content
+            return postContentService.getReleaseContent(name)
+                .map(ContentWrapper::getContent) // 提取content字段 / Extract content field
+                .map(content -> safeCount(extractText(content))) // 提取文本并计数 / Extract text and count
+                .onErrorReturn(0) // 出错时返回0 / Return 0 on error
+                .defaultIfEmpty(0); // 空结果时返回0 / Return 0 if empty
+        } else {
+            // 不支持的方法名 / Unsupported method name
+            return Mono.just(0);
         }
-    }
-
-    /**
-     * Resolve post name by slug.
-     * 根据别名解析文章名称。
-     *
-     * @param slug the post slug / 文章别名
-     * @return post name as Mono / 返回文章名称的 Mono
-     */
-    private Mono<String> resolveNameBySlug(String slug) {
-        if (slug == null || slug.isBlank()) {
-            return Mono.just(""); // 空别名返回空字符串 / Return empty string for null/blank slug
-        }
-        var options = ListOptions.builder()
-            .fieldQuery(equal("spec.slug", slug)) // 按别名查询 / Query by slug
-            .build();
-        return client.listBy(Post.class, options,
-                PageRequestImpl.of(1, 1,
-                    Sort.by("metadata.name"))) // 分页查询，只取第一个 / Paginated query, take first only
-            .map(list -> list.getItems().stream().findFirst().map(p -> p.getMetadata().getName())
-                .orElse("")) // 提取文章名称或返回空 / Extract post name or return empty
-            .defaultIfEmpty(""); // 查询结果为空时返回空字符串 / Return empty string if no result
     }
 
     private final AtomicReference<Object> postContentServiceRef = new AtomicReference<>();
         // 缓存的文章内容服务引用 / Cached post content service reference
     private final AtomicReference<Object> postFinderRef = new AtomicReference<>();
         // 缓存的文章查找器引用 / Cached post finder reference
-
-    /**
-     * Get PostContentService instance from application context.
-     * Uses caching and tries multiple known class names for compatibility.
-     * 从应用程序上下文获取 PostContentService 实例。
-     * 使用缓存并尝试多个已知类名以确保兼容性。
-     *
-     * @return PostContentService instance or null if not found / 返回 PostContentService
-     * 实例，如果未找到则返回 null
-     */
-    private Object getPostContentService() {
-        // Prefer injected service if available
-        // 优先使用已注入的服务（如果可用） / Prefer injected service if available
-        if (this.postContentService != null) {
-            return this.postContentService;
-        }
-        var cached = postContentServiceRef.get(); // 获取缓存的服务实例 / Get cached service instance
-        if (cached != null) {
-            return cached;
-        }
-        // Try by known FQCNs
-        // 尝试通过已知的完全限定类名查找 / Try by known FQCNs
-        String[] candidates = new String[] {
-            "run.halo.app.core.post.PostContentService",
-            "run.halo.app.core.extension.content.PostContentService",
-            "run.halo.app.core.content.PostContentService"
-        };
-        for (String fqcn : candidates) {
-            try {
-                Class<?> clazz = Class.forName(fqcn); // 加载类 / Load class
-                Object bean = applicationContext.getBean(clazz); // 获取Bean实例 / Get bean instance
-                if (bean != null) {
-                    postContentServiceRef.compareAndSet(null, bean); // 缓存实例 / Cache instance
-                    return bean;
-                }
-            } catch (Throwable ignored) {
-                // 忽略异常，继续尝试下一个候选类 / Ignore exception, try next candidate
-            }
-        }
-        // Fallback by common bean name
-        // 通过通用Bean名称回退查找 / Fallback by common bean name
-        try {
-            Object bean = applicationContext.getBean("postContentService");
-            if (bean != null) {
-                postContentServiceRef.compareAndSet(null, bean); // 缓存实例 / Cache instance
-                return bean;
-            }
-        } catch (Throwable ignored) {
-            // 忽略异常 / Ignore exception
-        }
-        return null; // 未找到服务 / Service not found
-    }
 
     /**
      * Resolve built-in PostFinder bean for delegation.
@@ -342,6 +249,25 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
         return Math.max(count, 0); // 确保返回非负数 / Ensure non-negative result
     }
 
+    // CJK 字符块集合 / CJK character block set
+    private static final Set<Character.UnicodeBlock> CJK_BLOCKS = Set.of(
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS,
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A,
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B,
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C,
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D,
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E,
+        Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F,
+        Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS,
+        Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT,
+        Character.UnicodeBlock.HIRAGANA,
+        Character.UnicodeBlock.KATAKANA,
+        Character.UnicodeBlock.KATAKANA_PHONETIC_EXTENSIONS,
+        Character.UnicodeBlock.HANGUL_SYLLABLES,
+        Character.UnicodeBlock.HANGUL_JAMO,
+        Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO
+    );
+
     /**
      * Check if a Unicode code point belongs to CJK (Chinese, Japanese, Korean) character blocks.
      * Includes various CJK unified ideographs, compatibility ideographs, and phonetic extensions.
@@ -353,21 +279,7 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
      */
     private static boolean isCJK(int codePoint) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(codePoint);
-        return block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
-            || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
-            || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
-            || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C
-            || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D
-            || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E
-            || block == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F
-            || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
-            || block == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT
-            || block == Character.UnicodeBlock.HIRAGANA
-            || block == Character.UnicodeBlock.KATAKANA
-            || block == Character.UnicodeBlock.KATAKANA_PHONETIC_EXTENSIONS
-            || block == Character.UnicodeBlock.HANGUL_SYLLABLES
-            || block == Character.UnicodeBlock.HANGUL_JAMO
-            || block == Character.UnicodeBlock.HANGUL_COMPATIBILITY_JAMO;
+        return CJK_BLOCKS.contains(block);
     }
 
     /**
@@ -462,28 +374,23 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
     }
 
     /**
-     * Unified word count API.
-     * If name provided, count by name; else if slug provided, count by slug.
-     * If neither provided, sum word counts across all posts (release/head selectable by version).
+     * Unified word count API without slug support.
+     * If name provided, count by name; otherwise sum word counts across all posts
+     * (release/draft selectable by version).
      *
-     * @param params parameter map: name? slug? version? ('release'|'head', default 'release')
+     * @param params parameter map: name? version? ('release'|'draft', default 'release')
      * @return word count as Mono (non-negative)
      */
     @Override
     public Mono<Integer> wordCount(Map<String, Object> params) {
         Map<String, Object> map = params == null ? java.util.Collections.emptyMap() : params;
         String name = toString(map.get("name"));
-        String slug = toString(map.get("slug"));
         String version = toString(map.getOrDefault("version", "release")).toLowerCase();
-        boolean head = "head".equals(version);
+        boolean head = "draft".equals(version);
         if (name != null && !name.isBlank()) {
             return head ? headCountByName(name) : releaseCountByName(name);
         }
-        if (slug != null && !slug.isBlank()) {
-            return head ? headCountBySlug(slug) : releaseCountBySlug(slug);
-        }
-        // Neither name nor slug provided: count all posts
-        // 未提供名称或别名：统计所有文章 / Neither name nor slug provided: count all posts
+        // No name: count all posts
         return countAllPosts(head);
     }
 
