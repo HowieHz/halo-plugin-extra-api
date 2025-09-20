@@ -119,5 +119,6 @@ public class ExtraApiStatsFinderImplTest {
         // 测试特殊字符和标点符号
         assertEquals(0, ExtraApiStatsFinderImpl.countWords("\u00A0\t\n\n"));
         assertEquals(0, ExtraApiStatsFinderImpl.countWords("!!@#$%^&*()"));
+        assertEquals(0, ExtraApiStatsFinderImpl.countWords("😂🤣😍❤️🙌👌"));
     }
 }
