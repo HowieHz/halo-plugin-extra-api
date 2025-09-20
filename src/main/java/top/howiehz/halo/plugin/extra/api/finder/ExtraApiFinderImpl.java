@@ -196,7 +196,7 @@ public class ExtraApiFinderImpl implements ExtraApiFinder {
         return client.listAll(Post.class, ListOptions.builder().build(), Sort.unsorted())
             .map(post -> post.getMetadata().getName()) // 提取需要的名称
             .flatMapSequential(postName -> isDraft ? postContentCountByName(postName, "getHeadContent")
-                : postContentCountByName(postName, "getReleaseContent"), 128) // 128 并发
+                : postContentCountByName(postName, "getReleaseContent"), 1024) // 1024 并发
             .reduce(0, Integer::sum) // 直接累加
             .onErrorReturn(0);
     }
