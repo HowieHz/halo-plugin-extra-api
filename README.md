@@ -76,111 +76,24 @@
 
 使用 `pluginFinder.available('extra-api')` 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。
 
-### 文章字数统计
-
-本插件提供了一个 API 用于查询文章字数，可查询指定文章/全部文章总和。
-
-### 文章字数统计 Finder API
+### 文章字数统计 API
 
 **Finder 名称：** `extraApi`
 
-#### releaseCountByName(name)
+#### 文章字数统计
 
 ```
-extraApi.releaseCountByName(name);
-```
-
-**描述**
-
-根据文章的 metadata.name 获取已发布内容的字数统计。
-
-**参数**
-- `name:string` - 文章的唯一标识 metadata.name。
-
-**返回值**
-- `int` - 字数统计结果，如果文章不存在或输入为空则返回 0。
-
-**示例**
-```html
-<div th:with="post = ${postFinder.getByName('post-foo')}">
-  <span>字数：</span>
-  <span th:text="${extraApi.releaseCountByName(post.metadata.name)}">0</span>
-</div>
-```
-
-#### headCountByName(name)
-
-```
-extraApi.headCountByName(name);
+extraApi.wordCount({
+  name: 'post-metadata-name',
+  slug: 'post-slug'
+  version: 'release' | 'head' // 可选，默认 'release'
+});
 ```
 
 **描述**
 
-根据文章的 `metadata.name` 获取最新 HEAD 内容（包含草稿）的字数统计。
-
-**参数**
-- `name:string` - 文章的唯一标识 `metadata.name`。
-
-**返回值**
-- `int` - 字数统计结果，如果文章不存在或输入为空则返回 0。
-
-**示例**
-```html
-<div th:with="post = ${postFinder.getByName('post-foo')}">
-  <span>当前内容字数：</span>
-  <span th:text="${extraApi.headCountByName(post.metadata.name)}">0</span>
-</div>
-```
-
-#### releaseCountBySlug(slug)
-
-```
-extraApi.releaseCountBySlug(slug);
-```
-
-**描述**
-
-根据文章的 spec.slug 获取已发布内容的字数统计。
-
-**参数**
-- `slug:string` - 文章的别名 `spec.slug`。
-
-**返回值**
-- `int` - 字数统计结果，如果文章不存在或输入为空则返回 0。
-
-**示例**
-```html
-<div>
-  <span>字数：</span>
-  <span th:text="${extraApi.releaseCountBySlug('hello-world')}">0</span>
-</div>
-```
-
-#### headCountBySlug(slug)
-
-```
-extraApi.headCountBySlug(slug);
-```
-
-**描述**
-
-根据文章的 spec.slug 获取最新 HEAD 内容（包含草稿）的字数统计。
-
-**参数**
-- `slug:string` - 文章的别名 spec.slug。
-
-**返回值**
-- `int` - 字数统计结果，如果文章不存在或输入为空则返回 0。
-
-**示例**
-```html
-<div>
-  <span>当前内容字数：</span>
-  <span th:text="${extraApi.headCountBySlug('hello-world')}">0</span>
-</div>
-```
-
-#### 说明
+- 只需传入 name 或 slug，配合 version 指定统计发布版本还是 HEAD 版本。
+- 当 name 与 slug 均未传入时，将统计「全部文章」的字数总和（依据 version 区分发布/HEAD）。
 
 - **发布（release）版本**：只统计已发布的内容
 - **HEAD 版本**：包含还未发布的草稿内容
@@ -192,7 +105,97 @@ extraApi.headCountBySlug(slug);
 - **性能说明**：
   - 单次调用开销较小，适合在模板中直接使用
   - 通过 spec.slug 查找文章依赖 Halo 内置索引，无需额外配置
-  - 需要 Halo 版本 2.21 及以上。
+
+**参数**
+- `name:string` – 文章 `metadata.name`，与 `slug` 二选一；若二者都传，优先使用 `name`
+- `slug:string` – 文章 `spec.slug`
+- `version:string` – 统计版本，可选 `release`（默认）或 `head`
+
+**返回值**
+- `int` – 字数统计结果（非负），不存在或参数缺失时返回 0
+
+**使用示例**
+```html
+<!-- 统计已发布内容（默认 release） -->
+<span th:text="${extraApi.wordCount({name: post.metadata.name})}">0</span>
+
+<!-- 按 slug 统计 -->
+<span th:text="${extraApi.wordCount({slug: post.spec.slug})}">0</span>
+
+<!-- 统计最新 HEAD 内容（包含草稿） -->
+<span th:text="${extraApi.wordCount({name: post.metadata.name, version: 'head'})}">0</span>
+
+<!-- 统计全站所有文章的字数总和（已发布） -->
+<span th:text="${extraApi.wordCount({})}">0</span>
+
+<!-- 统计全站所有文章的字数总和（HEAD，包含草稿） -->
+<span th:text="${extraApi.wordCount({version: 'head'})}">0</span>
+```
+
+### 统一文章列表查询
+
+Finder 名称：`extraApi`
+
+方法签名：
+```
+extraApi.list({
+  page: 1,
+  size: 10,
+  tagName: 'fake-tag',
+  categoryName: 'fake-category',
+  ownerName: 'fake-owner',
+  sort: {'spec.publishTime,desc', 'metadata.creationTimestamp,asc'}
+});
+```
+
+**描述**
+
+统一参数的文章列表查询方法，支持分页、标签、分类、创建者、排序等参数，且均为可选参数。
+
+可以用它替代以下多个接口，降低学习成本：
+- `list(page, size)`
+- `listByCategory(page, size, categoryName)`
+- `listByTag(page, size, tagName)`
+- `listByOwner(page, size, ownerName)`
+
+**参数**
+- `page:int` – 分页页码，从 1 开始，默认 1
+- `size:int` – 分页条数，默认 10
+- `tagName:string` – 标签唯一标识 `metadata.name`
+- `categoryName:string` – 分类唯一标识 `metadata.name`
+- `ownerName:string` – 创建者用户名 `name`
+- `sort:string[]` – 排序字段，格式为 `字段名,排序方式`，排序方式可选 `asc` 或 `desc`。例如 `spec.publishTime,desc`。在模板中传递时请使用 `{}` 形式表示数组：`{'spec.publishTime,desc','metadata.creationTimestamp,asc'}`。
+
+**返回值**
+- `Mono<Page<Post>>` – 与 Halo 内置 `postFinder.list({...})` 一致，可直接用于模板遍历。
+
+**使用示例**
+```html
+<!-- 基础分页 -->
+<th:block th:with="page=${extraApi.list({page:1,size:5})}">
+  <ul>
+    <li th:each="post : ${page.items}" th:text="${post.spec.title}">标题</li>
+  </ul>
+</th:block>
+
+<!-- 带筛选和排序 -->
+<th:block th:with="page=${extraApi.list({
+  page:1,
+  size:10,
+  tagName:'tech',
+  categoryName:'java',
+  ownerName:'admin',
+  sort:{'spec.publishTime,desc','metadata.creationTimestamp,asc'}
+})}">
+  <ul>
+    <li th:each="post : ${page.items}" th:text="${post.spec.title}">标题</li>
+  </ul>
+</th:block>
+```
+
+**兼容性与实现说明**
+- 本方法优先委托给 Halo 内置 `postFinder.list(Map)` 实现，确保标签/分类/创建者等复杂筛选能力与官方行为保持一致。
+- 如果运行环境中不可用（例如版本差异），会回退到基础实现：支持 `page/size/sort`，不保证 `tagName/categoryName/ownerName` 过滤生效。
 
 ## 开发环境
 
