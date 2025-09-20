@@ -32,6 +32,8 @@ jobs:
           node-version: 24
           cache: 'pnpm'
           cache-dependency-path: 'ui/pnpm-lock.yaml'
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
       - name: gradlew test
         run: |
           ./gradlew test
