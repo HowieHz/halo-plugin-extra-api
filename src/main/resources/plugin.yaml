@@ -16,7 +16,7 @@ spec:
   repo: https://github.com/HowieHz/halo-plugin-extra-api
   issues: https://github.com/HowieHz/halo-plugin-extra-api/issues
   displayName: "halo-plugin-extra-api"
-  description: "halo-plugin-extra-api - Halo 插件"
+  description: "一个为 Halo CMS 提供额外 API 的轻量级插件"
   license:
-    - name: "GPL-3.0"
+    - name: "AGPL-3.0"
       url: "https://github.com/HowieHz/halo-plugin-extra-api/blob/main/LICENSE"
