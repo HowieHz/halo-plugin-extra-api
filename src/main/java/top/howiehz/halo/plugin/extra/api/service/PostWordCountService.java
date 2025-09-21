@@ -97,9 +97,11 @@ public class PostWordCountService {
         Mono<ContentWrapper> contentMono = isDraft ? postContentService.getHeadContent(postName)
             : postContentService.getReleaseContent(postName);
 
-        return contentMono.map(ContentWrapper::getContent).map(PostWordCountUtil::countHTMLWords)
+        return contentMono.publishOn(Schedulers.parallel()) // 切换下游到并行线程池
+            .map(ContentWrapper::getContent).map(PostWordCountUtil::countHTMLWords)
             .onErrorReturn(BigInteger.ZERO).defaultIfEmpty(BigInteger.ZERO).doOnNext(
-                count -> postStatsDataCacheManager.setPostWordCount(postName, count, isDraft));
+                count -> postStatsDataCacheManager.setPostWordCount(postName, count,
+                    isDraft)); // 更新缓存
     }
 
     /**
@@ -112,14 +114,13 @@ public class PostWordCountService {
      */
     public Mono<BigInteger> refreshAllPostCountCache(boolean isDraft) {
         return client.listAll(Post.class, ListOptions.builder().build(), Sort.unsorted())
-            .map(post -> post.getMetadata().getName())
+            .subscribeOn(Schedulers.parallel()).map(post -> post.getMetadata().getName())
             .flatMapSequential(postName -> refreshPostCountCache(postName, isDraft),
                 1024) // 并发处理以提升性能 / Process concurrently for better performance
-            .reduce(BigInteger.ZERO, BigInteger::add).doOnNext(
+            .reduce(BigInteger.ZERO, BigInteger::add).onErrorReturn(BigInteger.ZERO).doOnNext(
                 total -> postStatsDataCacheManager.setTotalPostWordCount(total,
                     isDraft))  // 更新总字数缓存 / Update total word count cache
-            .subscribeOn(Schedulers.parallel()).onErrorReturn(BigInteger.ZERO)
-            .defaultIfEmpty(BigInteger.ZERO);
+            ;
     }
 
     /**
@@ -142,7 +143,7 @@ public class PostWordCountService {
                     }
                 }
                 return total;
-            }).doOnNext(total -> postStatsDataCacheManager.setTotalPostWordCount(total, isDraft))
-            .subscribeOn(Schedulers.parallel()).onErrorReturn(BigInteger.ZERO);
+            }).subscribeOn(Schedulers.parallel()).onErrorReturn(BigInteger.ZERO)
+            .doOnNext(total -> postStatsDataCacheManager.setTotalPostWordCount(total, isDraft));
     }
 }
