@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.event.post.PostUpdatedEvent;
 import top.howiehz.halo.plugin.extra.api.finder.ExtraApiStatsFinderImpl;
 import java.util.Map;
+import java.math.BigInteger;
 
 /**
  * Sentry for evicting and updating word count cache when posts are updated.

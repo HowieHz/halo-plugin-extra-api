@@ -1,6 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.utils;
 
 import java.util.regex.Pattern;
+import java.math.BigInteger;
 
 /**
  * Utilities for counting words from HTML or plain text.
@@ -66,36 +67,33 @@ public class PostWordCountUtil {
      * 中日韩字符单独计数，ASCII 字母/数字按单词分组计数。
      *
      * @param text the input text / 输入文本
-     * @return word count / 返回词数统计
+     * @return word count / 返回词数统计（BigInteger）
      */
-    public static int countPlainTextWords(String text) {
+    public static BigInteger countPlainTextWords(String text) {
         if (text == null || text.isEmpty()) {
-            return 0;
+            return BigInteger.ZERO;
         }
-        int count = 0; // 字数计数器 / Word count counter
-        boolean inAsciiWord = false; // 是否在ASCII单词中 / Whether in an ASCII word
+        BigInteger count = BigInteger.ZERO; // 词数计数器 / Word count accumulator
+        boolean inAsciiWord = false; // 是否在ASCII单词中 / Whether currently in an ASCII word
         int length = text.length();
         for (int i = 0; i < length; ) {
             int codePoint = text.codePointAt(i); // 获取当前字符的码点 / Get code point of current character
             if (isCJK(codePoint)) {
-                // count each CJK code point as one word/char
-                // 每个CJK码点计为一个字/词 / Count each CJK code point as one word/char
-                count++;
-                inAsciiWord = false; // 重置ASCII单词状态 / Reset ASCII word state
+                // count each CJK character as a word / 每个CJK字符计为一个
+                count = count.add(BigInteger.ONE);
+                inAsciiWord = false;
             } else if (Character.isLetterOrDigit(codePoint)) {
-                // group consecutive ASCII letters/digits as one word
-                // 连续的ASCII字母/数字作为一个单词 / Group consecutive ASCII letters/digits as one word
+                // 连续的 ASCII 字母数字视为一个单词 / Consecutive ASCII letters/digits count as one word
                 if (!inAsciiWord) {
-                    count++; // 开始新的ASCII单词 / Start a new ASCII word
-                    inAsciiWord = true; // 设定在ASCII单词中 / Set in ASCII word
+                    count = count.add(BigInteger.ONE);  // 新单词开始 / New word starts
+                    inAsciiWord = true;  // 标记为在ASCII单词中 / Mark as in ASCII word
                 }
             } else {
-                inAsciiWord = false; // 非字母数字字符，重置状态 / Non-alphanumeric character, reset state
+                inAsciiWord = false; // 非字母数字，结束ASCII单词 / Non-letter/digit ends ASCII word
             }
-            // 使用位运算优化字符长度计算 / Optimize character length calculation with bitwise operations
             i += (codePoint <= 0xFFFF) ? 1 : 2;
         }
-        return Math.max(count, 0); // 确保返回非负数 / Ensure non-negative result
+        return count.max(BigInteger.ZERO);  // 确保非负 / Ensure non-negative
     }
 
     /**
@@ -103,9 +101,10 @@ public class PostWordCountUtil {
      * 从原始 HTML 中移除标签后统计文本词数。
      *
      * @param rawHtml raw HTML string / 原始 HTML 字符串
-     * @return word count / 返回词数统计
+     * @return word count / 返回词数统计（BigInteger）
      */
-    public static int countHTMLWords(String rawHtml) {
+    public static BigInteger countHTMLWords(String rawHtml) {
         return countPlainTextWords(extractText(rawHtml));
     }
+
 }

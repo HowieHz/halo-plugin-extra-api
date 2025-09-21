@@ -1,6 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.finder;
 
 import java.util.*;
+import java.math.BigInteger;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
@@ -31,11 +32,12 @@ public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
      * 统一的字数统计 API
      * 若提供 name 参数则按名称统计，否则统计所有文章的总字数（version 可选 release/draft）。
      *
-     * @param params parameter map: name? version? ('release'|'draft', default 'release') / 参数映射：name？version？（'release' 或 'draft'，默认 'release'）
+     * @param params parameter map: name? version? ('release'|'draft', default 'release') /
+     * 参数映射：name？version？（'release' 或 'draft'，默认 'release'）
      * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
      */
     @Override
-    public Mono<Integer> postWordCount(Map<String, Object> params) {
+    public Mono<BigInteger> postWordCount(Map<String, Object> params) {
         Map<String, Object> map = params == null ? java.util.Collections.emptyMap() : params;
         String postName = String.valueOf(map.get("name"));
         boolean isDraft =

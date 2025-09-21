@@ -2,6 +2,7 @@ package top.howiehz.halo.plugin.extra.api.finder;
 
 import reactor.core.publisher.Mono;
 import java.util.Collections;
+import java.math.BigInteger;
 
 /**
  * Finder for calculating post word/character counts for themes to use.
@@ -23,7 +24,7 @@ public interface ExtraApiStatsFinder {
      * @param params parameter map from templates / 来自模板的参数映射
      * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
      */
-    Mono<Integer> postWordCount(java.util.Map<String, Object> params);
+    Mono<BigInteger> postWordCount(java.util.Map<String, Object> params);
 
     /**
      * Get total word count of all published posts.
@@ -31,7 +32,7 @@ public interface ExtraApiStatsFinder {
      *
      * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
      */
-    default Mono<Integer> postWordCount(){
+    default Mono<BigInteger> postWordCount() {
         return postWordCount(Collections.emptyMap());
     }
 }
