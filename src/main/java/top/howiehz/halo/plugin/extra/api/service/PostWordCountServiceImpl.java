@@ -30,8 +30,8 @@ public class PostWordCountServiceImpl implements PostWordCountService {
     private final PostStatsDataCacheManager postStatsDataCacheManager;
 
     public PostWordCountServiceImpl(ReactiveExtensionClient client,
-                                    PostContentService postContentService,
-                                    PostStatsDataCacheManager postStatsDataCacheManager) {
+        PostContentService postContentService,
+        PostStatsDataCacheManager postStatsDataCacheManager) {
         this.client = client; // 注入响应式扩展客户端 / Inject reactive extension client
         this.postContentService = postContentService; // 注入文章内容服务 / Inject post content service
         this.postStatsDataCacheManager = postStatsDataCacheManager;
@@ -128,9 +128,9 @@ public class PostWordCountServiceImpl implements PostWordCountService {
     @Override
     public Mono<BigInteger> refreshAllPostCountCache(boolean isDraft) {
         return client.listAll(Post.class, ListOptions.builder().build(), Sort.unsorted())
-            .subscribeOn(Schedulers.parallel()).map(post -> post.getMetadata().getName())
+            .map(post -> post.getMetadata().getName())
             .flatMapSequential(postName -> refreshPostCountCache(postName, isDraft),
-                1024) // 并发处理以提升性能 / Process concurrently for better performance
+                16) // 并发处理以提升性能 / Process concurrently for better performance
             .reduce(BigInteger.ZERO, BigInteger::add).onErrorReturn(BigInteger.ZERO).doOnNext(
                 total -> postStatsDataCacheManager.setTotalPostWordCount(total,
                     isDraft))  // 更新总字数缓存 / Update total word count cache
@@ -158,7 +158,7 @@ public class PostWordCountServiceImpl implements PostWordCountService {
                     }
                 }
                 return total;
-            }).subscribeOn(Schedulers.parallel()).onErrorReturn(BigInteger.ZERO)
+            }).onErrorReturn(BigInteger.ZERO)
             .doOnNext(total -> postStatsDataCacheManager.setTotalPostWordCount(total, isDraft));
     }
 }
