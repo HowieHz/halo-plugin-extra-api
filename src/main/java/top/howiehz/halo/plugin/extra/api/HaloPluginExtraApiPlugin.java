@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
 import top.howiehz.halo.plugin.extra.api.service.PostWordCountService;
-import top.howiehz.halo.plugin.extra.api.service.PostWordCountServiceImpl;
 
 /**
  * Plugin main class to manage the lifecycle of the plugin.
@@ -17,9 +16,9 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
 
     private final PostWordCountService postWordCountService;
 
-    public HaloPluginExtraApiPlugin(PluginContext pluginContext, PostWordCountService postWordCountServiceImpl) {
+    public HaloPluginExtraApiPlugin(PluginContext pluginContext, PostWordCountService postWordCountService) {
         super(pluginContext);
-        this.postWordCountService = postWordCountServiceImpl;
+        this.postWordCountService = postWordCountService;
     }
 
     /**
@@ -29,7 +28,10 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     @Override
     public void start() {
         System.out.println("插件启动成功！");
-
+        // Preload all caches when the plugin starts
+        // 插件启动时预加载所有缓存
+        // post word count cache / 文章字数缓存
+        postWordCountService.warmUpAllCache();
     }
 
     /**
