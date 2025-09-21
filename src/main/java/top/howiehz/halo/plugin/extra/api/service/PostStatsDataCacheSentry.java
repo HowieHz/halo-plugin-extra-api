@@ -3,10 +3,8 @@ package top.howiehz.halo.plugin.extra.api.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import reactor.core.scheduler.Schedulers;
 import run.halo.app.event.post.PostUpdatedEvent;
-import top.howiehz.halo.plugin.extra.api.finder.ExtraApiStatsFinderImpl;
-import java.util.Map;
-import java.math.BigInteger;
 
 /**
  * Sentry for evicting and updating word count cache when posts are updated.
@@ -15,13 +13,10 @@ import java.math.BigInteger;
 @Slf4j
 @Component
 public class PostStatsDataCacheSentry {
-    private final PostStatsDataCacheManager postStatsDataCacheManager;
-    private final ExtraApiStatsFinderImpl extraApiStatsFinderImpl;
+    private final PostWordCountService postWordCountService;
 
-    public PostStatsDataCacheSentry(PostStatsDataCacheManager postStatsDataCacheManager,
-        ExtraApiStatsFinderImpl extraApiStatsFinderImpl) {
-        this.postStatsDataCacheManager = postStatsDataCacheManager;
-        this.extraApiStatsFinderImpl = extraApiStatsFinderImpl;
+    public PostStatsDataCacheSentry(PostWordCountService postWordCountService) {
+        this.postWordCountService = postWordCountService;
     }
 
     /**
@@ -32,23 +27,20 @@ public class PostStatsDataCacheSentry {
     void onPostUpdated(PostUpdatedEvent event) {
         String postName = event.getName();
         // Update release cache and invalidate total
-        // 异步更新发布版本缓存并使总数缓存失效
-        extraApiStatsFinderImpl.postWordCount(Map.of("name", postName, "version", "release"))
-            .doOnNext(count -> {
-                postStatsDataCacheManager.setPostWordCount(postName, count, false);
-                postStatsDataCacheManager.clearTotalPostWordCountCache(false);
-                log.debug("Updated release word count cache for post {}: {}", postName, count);
-            }).subscribe();
+        // 异步更新发布版本缓存
+        postWordCountService.refreshPostCountCache(postName, false)
+            .subscribeOn(Schedulers.parallel())
+            .then(postWordCountService.refreshTotalPostCountFromCache(false)).subscribe(v -> {
+            }, e -> log.warn("Update release word count failed for {}: {}", postName,
+                e.toString()));
 
         // Update draft cache and invalidate total
-        // 异步更新草稿版本缓存并使总数缓存失效
-        extraApiStatsFinderImpl.postWordCount(Map.of("name", postName, "version", "draft"))
-            .doOnNext(count -> {
-                postStatsDataCacheManager.setPostWordCount(postName, count, true);
-                postStatsDataCacheManager.clearTotalPostWordCountCache(true);
-                log.debug("Updated draft word count cache for post {}: {}", postName, count);
-            }).subscribe();
+        // 异步更新草稿版本缓存
+        postWordCountService.refreshPostCountCache(postName, true)
+            .subscribeOn(Schedulers.parallel())
+            .then(postWordCountService.refreshTotalPostCountFromCache(true)).subscribe(v -> {
+            }, e -> log.warn("Update draft word count failed for {}: {}", postName, e.toString()));
 
-        log.info("Received post updated event, and evicted page cache");
+        log.info("Received post updated event, and refresh page count cache");
     }
 }

@@ -90,7 +90,7 @@ public class PostWordCountService {
      * 是否获取草稿内容（true）或发布内容（false）
      * @return word count as Mono / 返回字数统计的 Mono
      */
-    private Mono<BigInteger> refreshPostCountCache(String postName, boolean isDraft) {
+    Mono<BigInteger> refreshPostCountCache(String postName, boolean isDraft) {
         if (postName == null || postName.isBlank()) {
             return Mono.just(BigInteger.ZERO);
         }
@@ -112,7 +112,7 @@ public class PostWordCountService {
      * 是否处理草稿内容（true）或发布内容（false）
      * @return Mono that emits the recomputed total when finished / 完成时发出重新计算后的总字数的 Mono
      */
-    public Mono<BigInteger> refreshAllPostCountCache(boolean isDraft) {
+     Mono<BigInteger> refreshAllPostCountCache(boolean isDraft) {
         return client.listAll(Post.class, ListOptions.builder().build(), Sort.unsorted())
             .subscribeOn(Schedulers.parallel()).map(post -> post.getMetadata().getName())
             .flatMapSequential(postName -> refreshPostCountCache(postName, isDraft),
@@ -131,7 +131,7 @@ public class PostWordCountService {
      * (false) / 是否统计草稿内容字数（true）或发布内容字数（false）
      * @return Mono emitting the recalculated total word count / 发出重新计算的总字数的 Mono
      */
-    public Mono<BigInteger> refreshTotalPostCountFromCache(boolean isDraft) {
+     Mono<BigInteger> refreshTotalPostCountFromCache(boolean isDraft) {
         return Mono.fromSupplier(() -> {
                 var values = (isDraft ? postStatsDataCacheManager.draftPostWordCounts
                     : postStatsDataCacheManager.releasePostWordCounts).values();
