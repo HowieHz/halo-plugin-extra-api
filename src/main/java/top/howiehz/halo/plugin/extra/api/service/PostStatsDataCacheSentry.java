@@ -1,6 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.scheduler.Schedulers;
@@ -42,5 +43,11 @@ public class PostStatsDataCacheSentry {
             }, e -> log.warn("Update draft word count failed for {}: {}", postName, e.toString()));
 
         log.info("Received post updated event, and refresh page count cache");
+    }
+
+    @EventListener
+    void onAppReady(ApplicationReadyEvent event) {
+        postWordCountService.warmUpAllCache();
+        log.info("App is ready, warm up all post word count caches");
     }
 }
