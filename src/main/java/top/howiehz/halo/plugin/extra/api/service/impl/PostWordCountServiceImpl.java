@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service;
+package top.howiehz.halo.plugin.extra.api.service.impl;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -9,6 +9,7 @@ import run.halo.app.content.PostContentService;
 import run.halo.app.core.extension.content.Post;
 import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.ReactiveExtensionClient;
+import top.howiehz.halo.plugin.extra.api.service.PostWordCountService;
 import top.howiehz.halo.plugin.extra.api.utils.PostWordCountUtil;
 import java.math.BigInteger;
 
@@ -27,14 +28,14 @@ public class PostWordCountServiceImpl implements PostWordCountService {
 
     private final ReactiveExtensionClient client; // 响应式扩展客户端 / Reactive extension client
     private final PostContentService postContentService; // 文章内容服务 / Post content service
-    private final PostStatsDataCacheManager postStatsDataCacheManager;
+    private final PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl;
 
     public PostWordCountServiceImpl(ReactiveExtensionClient client,
         PostContentService postContentService,
-        PostStatsDataCacheManager postStatsDataCacheManager) {
+        PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl) {
         this.client = client; // 注入响应式扩展客户端 / Inject reactive extension client
         this.postContentService = postContentService; // 注入文章内容服务 / Inject post content service
-        this.postStatsDataCacheManager = postStatsDataCacheManager;
+        this.postStatsDataCacheManagerImpl = postStatsDataCacheManagerImpl;
     }
 
     /**
@@ -58,7 +59,7 @@ public class PostWordCountServiceImpl implements PostWordCountService {
             return Mono.just(
                 BigInteger.ZERO);  // Return 0 for null or blank post name / 对于空或空白的文章名称返回 0
         }
-        BigInteger cached = postStatsDataCacheManager.getCachedPostWordCount(postName, isDraft);
+        BigInteger cached = postStatsDataCacheManagerImpl.getCachedPostWordCount(postName, isDraft);
         if (cached != null) {
             return Mono.just(cached);
         }
@@ -76,7 +77,7 @@ public class PostWordCountServiceImpl implements PostWordCountService {
      */
     @Override
     public Mono<BigInteger> getTotalPostWordCount(boolean isDraft) {
-        BigInteger cached = postStatsDataCacheManager.getCachedTotalWordCount(isDraft);
+        BigInteger cached = postStatsDataCacheManagerImpl.getCachedTotalWordCount(isDraft);
         if (cached != null) {
             return Mono.just(cached);
         }
@@ -113,7 +114,7 @@ public class PostWordCountServiceImpl implements PostWordCountService {
         return contentMono.publishOn(Schedulers.parallel()) // 切换下游到并行线程池
             .map(ContentWrapper::getContent).map(PostWordCountUtil::countHTMLWords)
             .onErrorReturn(BigInteger.ZERO).defaultIfEmpty(BigInteger.ZERO).doOnNext(
-                count -> postStatsDataCacheManager.setPostWordCount(postName, count,
+                count -> postStatsDataCacheManagerImpl.setPostWordCount(postName, count,
                     isDraft)); // 更新缓存
     }
 
@@ -132,7 +133,7 @@ public class PostWordCountServiceImpl implements PostWordCountService {
             .flatMapSequential(postName -> refreshPostCountCache(postName, isDraft),
                 16) // 并发处理以提升性能 / Process concurrently for better performance
             .reduce(BigInteger.ZERO, BigInteger::add).onErrorReturn(BigInteger.ZERO).doOnNext(
-                total -> postStatsDataCacheManager.setTotalPostWordCount(total,
+                total -> postStatsDataCacheManagerImpl.setTotalPostWordCount(total,
                     isDraft))  // 更新总字数缓存 / Update total word count cache
             ;
     }
@@ -148,8 +149,8 @@ public class PostWordCountServiceImpl implements PostWordCountService {
     @Override
     public Mono<BigInteger> refreshTotalPostCountFromCache(boolean isDraft) {
         return Mono.fromSupplier(() -> {
-                var values = (isDraft ? postStatsDataCacheManager.draftPostWordCounts
-                    : postStatsDataCacheManager.releasePostWordCounts).values();
+                var values = (isDraft ? postStatsDataCacheManagerImpl.draftPostWordCounts
+                    : postStatsDataCacheManagerImpl.releasePostWordCounts).values();
 
                 BigInteger total = BigInteger.ZERO;
                 for (BigInteger v : values) {
@@ -159,6 +160,6 @@ public class PostWordCountServiceImpl implements PostWordCountService {
                 }
                 return total;
             }).onErrorReturn(BigInteger.ZERO)
-            .doOnNext(total -> postStatsDataCacheManager.setTotalPostWordCount(total, isDraft));
+            .doOnNext(total -> postStatsDataCacheManagerImpl.setTotalPostWordCount(total, isDraft));
     }
 }
