@@ -12,6 +12,12 @@ repositories {
 
 dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.21.0')
+    implementation 'com.caoccao.javet:javet:4.1.7'
+//    implementation 'com.caoccao.javet:javet-node-linux-arm64:4.1.7'
+//    implementation 'com.caoccao.javet:javet-node-linux-x86_64:4.1.7'
+//    implementation 'com.caoccao.javet:javet-node-macos-arm64:4.1.7'
+//    implementation 'com.caoccao.javet:javet-node-macos-x86_64:4.1.7'
+    implementation 'com.caoccao.javet:javet-node-windows-x86_64:4.1.7'
     compileOnly 'run.halo.app:api'
     
     // Add Spring dependencies for IDE support
