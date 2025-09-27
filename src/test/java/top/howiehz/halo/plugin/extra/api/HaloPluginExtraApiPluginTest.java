@@ -1,12 +1,19 @@
 package top.howiehz.halo.plugin.extra.api;
 
+import com.caoccao.javet.exceptions.JavetException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import run.halo.app.plugin.PluginContext;
-import top.howiehz.halo.plugin.extra.api.service.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
+import top.howiehz.halo.plugin.extra.api.service.js.shiki.ShikiHighlightService;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HaloPluginExtraApiPluginTest {
@@ -17,11 +24,18 @@ class HaloPluginExtraApiPluginTest {
     @Mock
     PostWordCountService postWordCountService;
 
+    @Mock
+    V8EnginePoolService enginePoolService;
+
+    @Mock
+    ShikiHighlightService shikiHighlightService;
+
     @InjectMocks
     HaloPluginExtraApiPlugin plugin;
 
     @Test
-    void contextLoads() {
+    void contextLoads() throws JavetException {
+        // 执行测试
         plugin.start();
         plugin.stop();
     }

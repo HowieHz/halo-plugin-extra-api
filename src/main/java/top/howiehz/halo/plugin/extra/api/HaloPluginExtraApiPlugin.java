@@ -1,20 +1,13 @@
 package top.howiehz.halo.plugin.extra.api;
 
-import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.NodeRuntime;
-import com.caoccao.javet.interop.V8Host;
-import com.caoccao.javet.values.reference.V8ValueFunction;
-import com.caoccao.javet.values.reference.V8ValueObject;
-import com.caoccao.javet.values.reference.V8ValuePromise;
 import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
-import top.howiehz.halo.plugin.extra.api.service.PostWordCountService;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
+import top.howiehz.halo.plugin.extra.api.service.js.shiki.ShikiHighlightService;
+import java.util.Arrays;
 
 /**
  * Plugin main class to manage the lifecycle of the plugin.
@@ -26,12 +19,18 @@ import java.util.Map;
 public class HaloPluginExtraApiPlugin extends BasePlugin {
 
     private final PostWordCountService postWordCountService;
+    private final ShikiHighlightService shikiHighlightService;
+    private final V8EnginePoolService enginePoolService;
     private NodeRuntime nodeRuntime;
 
     public HaloPluginExtraApiPlugin(PluginContext pluginContext,
-        PostWordCountService postWordCountService) {
+        PostWordCountService postWordCountService,
+        ShikiHighlightService shikiHighlightService,
+        V8EnginePoolService enginePoolService) {
         super(pluginContext);
         this.postWordCountService = postWordCountService;
+        this.shikiHighlightService = shikiHighlightService;
+        this.enginePoolService = enginePoolService;
     }
 
     /**
@@ -46,51 +45,12 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
         // post word count cache / 文章字数缓存
         postWordCountService.warmUpAllCache();
 
-        try (NodeRuntime nodeRuntime = V8Host.getNodeInstance().createV8Runtime()) {
-            try (InputStream is = getClass().getClassLoader().getResourceAsStream("js/shiki.umd.cjs")) {
-                if (is == null) {
-                    throw new IOException("Cannot find shiki.umd.cjs file.");
-                }
+        // 测试代码高亮
+        testShikiHighlight();
 
-                // Load the UMD module content into V8Runtime
-                String jsCode = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                nodeRuntime.getExecutor(jsCode).executeVoid();
-            } catch (JavetException | IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            // 2. 获取全局对象
-            V8ValueObject global = nodeRuntime.getGlobalObject();
-
-            // 3. 获取 highlightCode 函数
-            var value  = global.get("highlightCode");
-            if (!(value instanceof V8ValueFunction highlightCode)) {
-                throw new IllegalStateException("highlightCode 不是函数，或未定义。");
-            }
-
-            Map<String, Object> options = new HashMap<>();
-            options.put("lang", "javascript");
-            options.put("theme", "github-light");
-
-            // 4. 调用 highlightCode (返回 Promise)
-            String code = "const a = 123;";
-            V8ValuePromise promise = highlightCode.call(null, code, options);
-
-            // 5. 等待 Promise 结算
-            while (promise.isPending()) {
-                nodeRuntime.await();
-            }
-
-            // 6. 读取结果
-            if (promise.isFulfilled()) {
-                String html = promise.getResultString();
-                System.out.println("高亮结果: " + html);
-            } else if (promise.isRejected()) {
-                System.err.println("Promise rejected: " + promise.getResultString());
-            }
-        } catch (JavetException e) {
-            throw new RuntimeException(e);
-        }
+        // 打印池状态
+        var stats = enginePoolService.getPoolStats();
+        System.out.println("V8 Engine pool stats: " + stats);
     }
 
     /**
@@ -100,5 +60,44 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     @Override
     public void stop() {
         System.out.println("插件停止！");
+    }
+
+    private void testShikiHighlight() {
+        try {
+            // 先验证函数是否存在
+            Boolean highlightExists = enginePoolService.executeScript(
+                "typeof highlightCode === 'function'", Boolean.class);
+            Boolean languagesExists = enginePoolService.executeScript(
+                "typeof getSupportedLanguages === 'function'", Boolean.class);
+
+            System.out.println("highlightCode 函数存在: " + highlightExists);
+            System.out.println("getSupportedLanguages 函数存在: " + languagesExists);
+
+            if (!highlightExists || !languagesExists) {
+                System.err.println("Shiki 模块未正确加载!");
+                return;
+            }
+
+            // 测试获取支持列表
+            String[] languages = shikiHighlightService.getSupportedLanguages();
+            String[] themes = shikiHighlightService.getSupportedThemes();
+
+            if (languages != null && themes != null) {
+                System.out.println("支持的语言数量: " + languages.length);
+                System.out.println("支持的主题数量: " + themes.length);
+
+                // 只有在获取到列表后才进行高亮测试
+                String code = "const greeting = 'Hello, World!';\nconsole.log(greeting);";
+                String html = shikiHighlightService.highlightCode(code, "javascript", "github-light");
+                System.out.println("Shiki 高亮成功，结果长度: " + html.length());
+                System.out.println(html);
+            } else {
+                System.err.println("无法获取语言或主题列表");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Shiki 高亮测试失败: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

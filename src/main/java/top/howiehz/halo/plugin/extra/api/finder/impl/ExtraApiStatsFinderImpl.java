@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
 import top.howiehz.halo.plugin.extra.api.finder.ExtraApiStatsFinder;
-import top.howiehz.halo.plugin.extra.api.service.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
 
 /**
  * Implementation of ExtraApiStatsFinder.
