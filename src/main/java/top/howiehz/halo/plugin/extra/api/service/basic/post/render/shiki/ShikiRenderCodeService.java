@@ -10,12 +10,29 @@ import org.springframework.stereotype.Component;
 import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfig;
 import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighlightService;
 
+/**
+ * Service for rendering code blocks in HTML content using Shiki.
+ * 使用 Shiki 渲染 HTML 内容中代码块的服务。
+ *
+ * <p>This service processes HTML content, finds code blocks within &lt;pre&gt;&lt;code&gt; tags,
+ * and applies syntax highlighting using the configured Shiki themes.</p>
+ * <p>此服务处理 HTML 内容，查找 &lt;pre&gt;&lt;code&gt; 标签内的代码块，
+ * 并使用配置的 Shiki 主题应用语法高亮。</p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ShikiRenderCodeService {
     private final ShikiHighlightService shikiHighlightService;
 
+    /**
+     * Render code blocks in HTML content using Shiki.
+     * 使用 Shiki 渲染 HTML 内容中的代码块。
+     *
+     * @param content the HTML content to process / 要处理的 HTML 内容
+     * @param shikiConfig the Shiki configuration / Shiki 配置
+     * @return the processed HTML content with highlighted code blocks / 处理后的 HTML 内容，代码块已高亮
+     */
     public String renderCode(String content, ShikiConfig shikiConfig) {
         Document doc = Jsoup.parse(content);
         Elements codeElements = doc.select("pre > code");

@@ -51,7 +51,12 @@ public interface V8EnginePoolService {
 
     /**
      * Pool statistics record.
-     * 池状态记录：minSize, maxSize, activeCount, idleCount。
+     * 池统计信息记录。
+     *
+     * @param minSize minimum pool size / 池的最小大小
+     * @param maxSize maximum pool size / 池的最大大小
+     * @param activeCount number of active engines / 活跃引擎数量
+     * @param idleCount number of idle engines / 空闲引擎数量
      */
     record PoolStats(int minSize, int maxSize, int activeCount, int idleCount) {}
 }

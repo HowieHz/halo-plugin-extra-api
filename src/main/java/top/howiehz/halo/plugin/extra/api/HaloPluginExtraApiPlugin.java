@@ -48,9 +48,6 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
         // post word count cache / 文章字数缓存
         postWordCountService.warmUpAllCache();
 
-        // 测试代码高亮
-        testShikiHighlight();
-
         // 打印池状态
         var stats = enginePoolService.getPoolStats();
         log.info("V8 Engine pool stats: {}", stats);
@@ -63,43 +60,5 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     @Override
     public void stop() {
         log.info("插件停止！");
-    }
-
-    private void testShikiHighlight() {
-        try {
-            // 先验证函数是否存在
-            Boolean highlightExists = enginePoolService.executeScript(
-                "typeof highlightCode === 'function'", Boolean.class);
-            Boolean languagesExists = enginePoolService.executeScript(
-                "typeof getSupportedLanguages === 'function'", Boolean.class);
-
-            log.debug("highlightCode 函数存在: {}", highlightExists);
-            log.debug("getSupportedLanguages 函数存在: {}", languagesExists);
-
-            if (!highlightExists || !languagesExists) {
-                log.error("Shiki 模块未正确加载!");
-                return;
-            }
-
-            // 测试获取支持列表
-            Set<String> languages = shikiHighlightService.getSupportedLanguages();
-            Set<String> themes = shikiHighlightService.getSupportedThemes();
-
-            if (languages != null && themes != null) {
-                log.debug("支持的语言数量: {}", languages.size());
-                log.debug("支持的主题数量: {}", themes.size());
-
-                // 只有在获取到列表后才进行高亮测试
-                String code = "const greeting = 'Hello, World!';\nconsole.log(greeting);";
-                String html = shikiHighlightService.highlightCode(code, "javascript", "github-light");
-                log.debug("Shiki 高亮成功，结果长度: {}", html.length());
-                log.debug(html);
-            } else {
-                log.error("无法获取 Shiki 语言或主题列表");
-            }
-
-        } catch (Exception e) {
-            log.error("Shiki 高亮测试失败:", Throwables.getRootCause(e));
-        }
     }
 }
