@@ -43,12 +43,45 @@ platforms.each { variant, platformList ->
     }
 }
 
+configurations {
+    liteCompile.extendsFrom configurations.implementation
+    liteCompile.extendsFrom configurations.compileOnly
+    liteRuntime.extendsFrom configurations.runtimeClasspath
+    liteRuntime.extendsFrom configurations.runtimeOnly
+}
+
+// Lite source set
+sourceSets {
+    lite {
+        java {
+            srcDirs = ['src/main/java']
+            exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
+            exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+            exclude 'js/**'
+            exclude 'extensions/extension-definitions.yaml'
+        }
+        test {
+            java {
+                srcDirs = ['src/test/java']
+                exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
+            }
+        }
+        compileClasspath = configurations.liteCompile
+        runtimeClasspath = configurations.liteRuntime
+    }
+}
+
 dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.21.0')
     compileOnly 'run.halo.app:api'
     
     // Javet 基础依赖（运行时需要）
-    implementation 'com.caoccao.javet:javet:4.1.7'
+    if (!project.hasProperty('lite')) {
+        implementation 'com.caoccao.javet:javet:4.1.7'
+    }
     
     // Add Spring dependencies for IDE support
     compileOnly 'org.springframework:spring-context'
@@ -62,7 +95,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     
     // Javet 基础依赖（测试运行时需要）
-    testImplementation 'com.caoccao.javet:javet:4.1.7'
+    if (!project.hasProperty('lite')) {
+        testImplementation 'com.caoccao.javet:javet:4.1.7'
+    }
 }
 
 test {
@@ -83,6 +118,16 @@ platforms.each { variant, platformList ->
         from configurations.getByName(configName).collect { it.isDirectory() ? it : zipTree(it) }
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
+}
+
+// 创建 lite JAR 包
+tasks.register('jarLite', Jar) {
+    group = 'build'
+    description = "Assembles a lite jar without JS and Javet dependencies"
+    archiveFileName = "extra-api-lite-1.0.0-SNAPSHOT.jar"
+    from sourceSets.lite.output
+    from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 // 修改默认 jar 任务使用全包含配置
