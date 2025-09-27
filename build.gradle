@@ -54,8 +54,17 @@ tasks.register('processUiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
+tasks.register('processShikiResources', Copy) {
+    from project(':shiki').layout.buildDirectory.dir('dist')
+    into layout.buildDirectory.dir('resources/main/js')
+    include 'shiki.umd.cjs'
+    dependsOn project(':shiki').tasks.named('assemble')
+    shouldRunAfter tasks.named('processResources')
+}
+
 tasks.named('classes') {
     dependsOn tasks.named('processUiResources')
+    dependsOn tasks.named('processShikiResources')
 }
 
 halo {
