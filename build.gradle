@@ -4,7 +4,7 @@ plugins {
     id "run.halo.plugin.devtools" version "0.6.1"
 }
 
-group 'top.howiehz.halopluginextraapi'
+group 'top.howiehz.halo.plugin.extra.api'
 
 repositories {
     mavenCentral()
