@@ -11,15 +11,15 @@ spec:
           name: enabledShikiRender
           id: enabledShikiRender
           key: enabledShikiRender
-          label: 启用渲染
-          help: 启用之后会自动渲染文章中的代码块
+          label: 自动渲染
+          help: 启用之后会自动渲染文章和单页中的代码块。注：Finder API 渲染不受此配置项影响。
           value: true
         - $formkit: code
-          label: 样式注入
+          label: 自定义注入 CSS 样式
           if: $get(enabledShikiRender).value
           name: inlineStyle
           key: inlineStyle
-          help: 内联样式以优化 Shiki 渲染效果，默认值提供了行号显示功能。
+          help: 启用自动渲染时将在页面 head 注入样式以优化 Shiki 渲染效果，默认值提供了边距调整/行号显示/基于媒体查询的明暗切换功能。
           language: css
           height: 150px
           value: |
@@ -31,6 +31,24 @@ spec:
             div pre.shiki code {
               counter-reset: count;
               padding: 0; !important
+            }
+            
+            div.light pre.shiki code {
+              display: block;
+            }
+            
+            div.dark pre.shiki code {
+              display: none;
+            }
+            
+            @media (prefers-color-scheme: dark) {
+              div.light pre.shiki code {
+                display: none;
+              }
+              
+              div.dark pre.shiki code {
+                display: block;
+              }
             }
               
             div pre.shiki code .line:before {
@@ -72,7 +90,7 @@ spec:
             - label: Docsme 文档（/docs/**）
               value: /docs/**
         - $formkit: select
-          if: "$enabledShikiRender === true && $enabledDoubleRenderMode === false"
+          if: "$enabledDoubleRenderMode === false"
           name: theme
           key: theme
           label: 主题
@@ -201,27 +219,26 @@ spec:
             - label: Vitesse Light（light）
               value: vitesse-light
         - $formkit: checkbox
-          if: "$enabledShikiRender === true"
           label: 明暗双倍渲染模式
           name: enabledDoubleRenderMode
           key: enabledDoubleRenderMode
           value: true
         - $formkit: text
-          if: "$enabledShikiRender === true && $enabledDoubleRenderMode === true"
+          if: "$enabledDoubleRenderMode === true"
           name: lightCodeClass
           key: lightCodeClass
           label: 亮色主题代码块类名
           value: light
           help: 文章内容中代码块渲染后的类名，默认为 light。
         - $formkit: text
-          if: "$enabledShikiRender === true && $enabledDoubleRenderMode === true"
+          if: "$enabledDoubleRenderMode === true"
           name: darkCodeClass
           key: darkCodeClass
           label: 暗色主题代码块类名
           value: dark
           help: 文章内容中代码块渲染后的类名，默认为 dark。
         - $formkit: select
-          if: "$enabledShikiRender === true && $enabledDoubleRenderMode === true"
+          if: "$enabledDoubleRenderMode === true"
           name: lightTheme
           key: lightTheme
           label: 亮色主题
@@ -350,7 +367,7 @@ spec:
             - label: Vitesse Light（light）
               value: vitesse-light
         - $formkit: select
-          if: "$enabledShikiRender === true && $enabledDoubleRenderMode === true"
+          if: "$enabledDoubleRenderMode === true"
           name: darkTheme
           key: darkTheme
           label: 暗色主题
