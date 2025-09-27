@@ -1,10 +1,10 @@
-package top.howiehz.halo.plugin.extra.api.finder.impl;
+package top.howiehz.halo.plugin.extra.api.finder.js.impl;
 
-import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
-import top.howiehz.halo.plugin.extra.api.finder.ExtraApiRenderFinder;
+import top.howiehz.halo.plugin.extra.api.finder.js.ExtraApiRenderFinder;
 import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfigSupplier;
 import top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki.ShikiRenderCodeService;
 

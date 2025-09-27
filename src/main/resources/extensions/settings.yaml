@@ -27,7 +27,7 @@ spec:
               border-radius: 1rem;
               padding: 1rem; !important
             }
-              
+            
             div pre.shiki code {
               counter-reset: count;
               padding: 0; !important
@@ -45,12 +45,12 @@ spec:
               div.light pre.shiki code {
                 display: none;
               }
-              
+            
               div.dark pre.shiki code {
                 display: block;
               }
             }
-              
+            
             div pre.shiki code .line:before {
               content: counter(count);
               counter-increment: count;
@@ -60,7 +60,7 @@ spec:
               margin-right: 1.5rem;
               display: inline-block;
             }
-              
+            
             div.dark pre.shiki code .line:before {
               content: counter(count);
               counter-increment: count;

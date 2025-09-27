@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.finder;
+package top.howiehz.halo.plugin.extra.api.finder.basic;
 
 import java.math.BigInteger;
 import java.util.Collections;

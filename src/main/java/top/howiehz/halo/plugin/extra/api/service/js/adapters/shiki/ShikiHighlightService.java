@@ -65,5 +65,6 @@ public interface ShikiHighlightService {
      * Request record for batch highlighting.
      * 批量高亮请求记录结构。
      */
-    record CodeHighlightRequest(String code, String language, String theme) {}
+    record CodeHighlightRequest(String code, String language, String theme) {
+    }
 }

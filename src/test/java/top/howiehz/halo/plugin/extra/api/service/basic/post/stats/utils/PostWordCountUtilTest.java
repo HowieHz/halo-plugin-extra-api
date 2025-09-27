@@ -96,7 +96,9 @@ public class PostWordCountUtilTest {
         assertEquals(BigInteger.valueOf(3), PostWordCountUtil.countPlainTextWords("Hello, Halo 2"));
         assertEquals(BigInteger.valueOf(2), PostWordCountUtil.countPlainTextWords("10.11"));
         // 𝓗𝑒𝓵𝓵𝑜 𝓌𝑜𝓇𝓁𝒹
-        assertEquals(BigInteger.valueOf(2), PostWordCountUtil.countPlainTextWords("\uD835\uDCD7\uD835\uDC52\uD835\uDCF5\uD835\uDCF5\uD835\uDC5C \uD835\uDCCC\uD835\uDC5C\uD835\uDCC7\uD835\uDCC1\uD835\uDCB9"));
+        assertEquals(BigInteger.valueOf(2), PostWordCountUtil.countPlainTextWords(
+            "\uD835\uDCD7\uD835\uDC52\uD835\uDCF5\uD835\uDCF5\uD835\uDC5C "
+                + "\uD835\uDCCC\uD835\uDC5C\uD835\uDCC7\uD835\uDCC1\uD835\uDCB9"));
     }
 
     @Test

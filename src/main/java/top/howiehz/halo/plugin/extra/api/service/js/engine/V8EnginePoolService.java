@@ -58,5 +58,6 @@ public interface V8EnginePoolService {
      * @param activeCount number of active engines / 活跃引擎数量
      * @param idleCount number of idle engines / 空闲引擎数量
      */
-    record PoolStats(int minSize, int maxSize, int activeCount, int idleCount) {}
+    record PoolStats(int minSize, int maxSize, int activeCount, int idleCount) {
+    }
 }

@@ -118,7 +118,8 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
     @Override
     public Set<String> getSupportedLanguages() throws JavetException {
         if (cachedLanguages == null) {
-            String[] langs = enginePoolService.executeScript("getSupportedLanguages()", String[].class);
+            String[] langs =
+                enginePoolService.executeScript("getSupportedLanguages()", String[].class);
             cachedLanguages = new HashSet<>(Arrays.asList(langs));
         }
         return cachedLanguages;
@@ -134,7 +135,8 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
     @Override
     public Set<String> getSupportedThemes() throws JavetException {
         if (cachedThemes == null) {
-            String[] themes = enginePoolService.executeScript("getSupportedThemes()", String[].class);
+            String[] themes =
+                enginePoolService.executeScript("getSupportedThemes()", String[].class);
             cachedThemes = new HashSet<>(Arrays.asList(themes));
         }
         return cachedThemes;

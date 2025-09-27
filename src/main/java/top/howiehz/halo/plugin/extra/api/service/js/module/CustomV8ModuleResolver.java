@@ -21,7 +21,8 @@ public class CustomV8ModuleResolver implements IV8ModuleResolver {
      * @param v8Runtime v8 runtime / V8 运行时
      * @param resourceName module resource name / 模块资源名称
      * @param v8ModuleReferrer optional referrer module / 可选的引用者模块
-     * @return IV8Module when module is ESM/CJS and a module object can be produced, otherwise null / ESM/CJS 返回模块实例，UMD 返回 null
+     * @return IV8Module when module is ESM/CJS and a module object can be produced, otherwise
+     * null / ESM/CJS 返回模块实例，UMD 返回 null
      * @throws JavetException when JS execution or compilation fails / JS 执行或编译失败时抛出
      */
     @Override
@@ -61,7 +62,8 @@ public class CustomV8ModuleResolver implements IV8ModuleResolver {
                                 v8Runtime.getExecutor(sourceCode).executeVoid();
 
                                 // 返回合成模块
-                                return v8Runtime.createV8Module(module.getModuleName(), exportsObject);
+                                return v8Runtime.createV8Module(module.getModuleName(),
+                                    exportsObject);
                             }
                         } finally {
                             // 清理全局变量
@@ -70,11 +72,13 @@ public class CustomV8ModuleResolver implements IV8ModuleResolver {
                         }
                     }
                     default -> {
-                        v8Runtime.getLogger().logWarn("Unknown module type: " + module.getType().name());
+                        v8Runtime.getLogger()
+                            .logWarn("Unknown module type: " + module.getType().name());
                     }
                 }
             } catch (IOException e) {
-                v8Runtime.getLogger().logError(e, "Failed to load module: " + module.getModuleName());
+                v8Runtime.getLogger()
+                    .logError(e, "Failed to load module: " + module.getModuleName());
             }
         }
 

@@ -22,7 +22,8 @@ import top.howiehz.halo.plugin.extra.api.service.js.engine.V8EnginePoolService;
  */
 @Slf4j
 @Service
-public class V8EnginePoolServiceImpl implements V8EnginePoolService, InitializingBean, DisposableBean {
+public class V8EnginePoolServiceImpl
+    implements V8EnginePoolService, InitializingBean, DisposableBean {
 
     private IJavetEnginePool<V8Runtime> enginePool;
     private volatile boolean initialized = false;
@@ -153,7 +154,8 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
         }
 
         // Diagnostic logging: record pool stats before/after acquisition and after release
-        String threadInfo = Thread.currentThread().getName() + "[" + Thread.currentThread().getId() + "]";
+        String threadInfo =
+            Thread.currentThread().getName() + "[" + Thread.currentThread().getId() + "]";
         if (enginePool instanceof JavetEnginePool<V8Runtime> poolBefore) {
             log.debug("[V8 POOL] {} requesting engine - before: active={}, idle={}", threadInfo,
                 poolBefore.getActiveEngineCount(), poolBefore.getIdleEngineCount());

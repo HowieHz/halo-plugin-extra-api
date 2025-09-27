@@ -1,8 +1,6 @@
 package top.howiehz.halo.plugin.extra.api;
 
 import com.caoccao.javet.interop.NodeRuntime;
-import com.google.common.base.Throwables;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;

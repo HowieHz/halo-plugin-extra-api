@@ -30,7 +30,8 @@ public class PostWordCountServiceImpl implements PostWordCountService {
 
     private final ReactiveExtensionClient client; // 响应式扩展客户端 / Reactive extension client
     private final PostContentService postContentService; // 文章内容服务 / Post content service
-    private final PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl; // 文章统计数据缓存管理器 / Post stats data cache manager
+    private final PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl;
+        // 文章统计数据缓存管理器 / Post stats data cache manager
 
     /**
      * Get the word count for a specific post, from cache if available; otherwise compute and

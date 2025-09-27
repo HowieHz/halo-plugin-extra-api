@@ -25,7 +25,8 @@ public class CustomJavetEnginePool extends JavetEnginePool<V8Runtime> {
      * Create a new Javet engine wrapping a Node V8Runtime instance.
      * 创建并返回一个新 JavetEngine，使用 Node 的 V8Runtime。
      *
-     * @return a new JavetEngine wrapped around the created V8Runtime / 包装 V8Runtime 的 JavetEngine 实例
+     * @return a new JavetEngine wrapped around the created V8Runtime / 包装 V8Runtime 的
+     * JavetEngine 实例
      * @throws JavetException when runtime creation fails / 运行时创建失败时抛出
      */
     @Override

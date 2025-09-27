@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.finder.impl;
+package top.howiehz.halo.plugin.extra.api.finder.basic.impl;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
-import top.howiehz.halo.plugin.extra.api.finder.ExtraApiStatsFinder;
+import top.howiehz.halo.plugin.extra.api.finder.basic.ExtraApiStatsFinder;
 import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
 
 /**

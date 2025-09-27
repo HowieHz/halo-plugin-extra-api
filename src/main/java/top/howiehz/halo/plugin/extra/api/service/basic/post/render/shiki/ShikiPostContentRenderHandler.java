@@ -38,10 +38,12 @@ public class ShikiPostContentRenderHandler implements ReactivePostContentHandler
             if (!shikiConfig.isEnabledShikiRender()) {
                 return contentContext;
             }
-            contentContext.setContent(shikiRenderCodeService.renderCode(contentContext.getContent(), shikiConfig));
+            contentContext.setContent(
+                shikiRenderCodeService.renderCode(contentContext.getContent(), shikiConfig));
             return contentContext;
         }).onErrorResume(e -> {
-            log.error("Error occurred while rendering code with Shiki: {}", Throwables.getStackTraceAsString(e));
+            log.error("Error occurred while rendering code with Shiki: {}",
+                Throwables.getStackTraceAsString(e));
             return Mono.just(contentContext);
         });
     }

@@ -44,7 +44,8 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
                 String errorMessage = value.toString();
                 getConfig().getJavetLogger().logError("Promise rejected: " + errorMessage);
             } catch (Exception e) {
-                getConfig().getJavetLogger().logError("Error handling promise rejection: " + e.getMessage());
+                getConfig().getJavetLogger()
+                    .logError("Error handling promise rejection: " + e.getMessage());
             }
         });
 
@@ -55,8 +56,9 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
     /**
      * Preload embedded modules like Shiki into the runtime to avoid runtime latency on first use.
      * 预加载嵌入的模块（例如 Shiki），避免首次使用时的延迟。
-     *
-     * This method logs diagnostic information but intentionally swallows errors to avoid failing engine creation.
+     * <p>
+     * This method logs diagnostic information but intentionally swallows errors to avoid failing
+     * engine creation.
      * 该方法会记录诊断信息，但为了不阻塞引擎创建会捕获并忽略异常。
      *
      * @throws JavetException if underlying JS operations fail / 底层 JS 操作失败时抛出（实践中通常被捕获）
@@ -65,7 +67,8 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
         log.debug("开始预加载 Shiki 模块");
         try {
             // 检查资源文件是否存在
-            try (var inputStream = getClass().getClassLoader().getResourceAsStream("js/shiki.umd.cjs")) {
+            try (var inputStream = getClass().getClassLoader()
+                .getResourceAsStream("js/shiki.umd.cjs")) {
                 if (inputStream == null) {
                     log.error("找不到资源文件 js/shiki.umd.cjs");
                     return;
@@ -86,8 +89,12 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
 
                 // 立即验证
                 try {
-                    boolean highlightExists = v8Runtime.getExecutor("typeof highlightCode === 'function'").executeBoolean();
-                    boolean languagesExists = v8Runtime.getExecutor("typeof getSupportedLanguages === 'function'").executeBoolean();
+                    boolean highlightExists =
+                        v8Runtime.getExecutor("typeof highlightCode === 'function'")
+                            .executeBoolean();
+                    boolean languagesExists =
+                        v8Runtime.getExecutor("typeof getSupportedLanguages === 'function'")
+                            .executeBoolean();
 
                     log.debug("验证结果 - highlightCode: {}, getSupportedLanguages: {}",
                         highlightExists, languagesExists);
@@ -98,7 +105,11 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
                         log.error("❌ Shiki 函数未正确暴露");
 
                         // 检查全局对象
-                        String globals = v8Runtime.getExecutor("Object.getOwnPropertyNames(globalThis).filter(name => name.includes('highlight') || name.includes('Language') || name.includes('Theme')).join(', ')").executeString();
+                        String globals = v8Runtime.getExecutor(
+                                "Object.getOwnPropertyNames(globalThis).filter(name => name"
+                                    + ".includes('highlight') || name.includes('Language') || "
+                                    + "name.includes('Theme')).join(', ')")
+                            .executeString();
                         log.info("全局对象中相关属性: {}", globals);
                     }
                 } catch (Exception e) {

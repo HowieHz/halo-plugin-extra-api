@@ -1,13 +1,10 @@
 package top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.PathContainer;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.web.util.pattern.PathPatternParser;
 import org.thymeleaf.context.Contexts;
 import org.thymeleaf.context.ITemplateContext;
@@ -35,6 +32,20 @@ public class ShikiHeadProcessor implements TemplateHeadProcessor {
     private final PluginContext pluginContext;
 
     private final ShikiConfigSupplier shikiConfigSupplier;
+
+    /**
+     * Check if the current request path matches any of the configured patterns.
+     * 检查当前请求路径是否与任何配置的模式匹配。
+     *
+     * @param patterns the list of path patterns to check against / 要检查的路径模式列表
+     * @param pathContainer the path container representing the current request path / 表示当前请求路径的路径容器
+     * @return true if any pattern matches, false otherwise / 如果有任何模式匹配则返回 true，否则返回 false
+     */
+    private static boolean isPathMatch(List<String> patterns, PathContainer pathContainer) {
+        var parser = PathPatternParser.defaultInstance;
+        return patterns.stream().map(parser::parse)
+            .anyMatch(pattern -> pattern.matches(pathContainer));
+    }
 
     /**
      * Process the head element and inject Shiki styles if needed.
@@ -72,19 +83,5 @@ public class ShikiHeadProcessor implements TemplateHeadProcessor {
                         "<style>" + shikiConfig.getInlineStyle() + "</style>"));
                 }
             }).then();
-    }
-
-    /**
-     * Check if the current request path matches any of the configured patterns.
-     * 检查当前请求路径是否与任何配置的模式匹配。
-     *
-     * @param patterns the list of path patterns to check against / 要检查的路径模式列表
-     * @param pathContainer the path container representing the current request path / 表示当前请求路径的路径容器
-     * @return true if any pattern matches, false otherwise / 如果有任何模式匹配则返回 true，否则返回 false
-     */
-    private static boolean isPathMatch(List<String> patterns, PathContainer pathContainer) {
-        var parser = PathPatternParser.defaultInstance;
-        return patterns.stream().map(parser::parse)
-            .anyMatch(pattern -> pattern.matches(pathContainer));
     }
 }

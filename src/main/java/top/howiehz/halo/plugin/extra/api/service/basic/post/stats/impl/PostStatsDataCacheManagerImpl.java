@@ -18,13 +18,13 @@ import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostStatsDataC
 @RequiredArgsConstructor
 public class PostStatsDataCacheManagerImpl implements PostStatsDataCacheManager {
 
+    final ConcurrentHashMap<String, BigInteger> releasePostWordCounts = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, BigInteger> draftPostWordCounts = new ConcurrentHashMap<>();
     // 文章发布版本字数统计缓存 / Total & per-post caches for release version
     private final AtomicReference<BigInteger> totalReleasePostWordCount =
         new AtomicReference<>(null);
-    final ConcurrentHashMap<String, BigInteger> releasePostWordCounts = new ConcurrentHashMap<>();
     // 文章草稿版本字数统计缓存 / Total & per-post caches for draft version
     private final AtomicReference<BigInteger> totalDraftPostWordCount = new AtomicReference<>(null);
-    final ConcurrentHashMap<String, BigInteger> draftPostWordCounts = new ConcurrentHashMap<>();
 
     /**
      * 获取缓存的总字数。
