@@ -117,23 +117,7 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
      */
     @Override
     public String[] getSupportedLanguages() throws JavetException {
-        return enginePoolService.withEngine(runtime -> {
-            try (V8ValueObject global = runtime.getGlobalObject();
-                 var value = global.get("getSupportedLanguages")) {
-                if (!(value instanceof V8ValueFunction getSupportedLanguagesFunc)) {
-                    throw new IllegalStateException("getSupportedLanguages function not found");
-                }
-                try (V8ValueArray v8ValueArray = getSupportedLanguagesFunc.call(null);) {
-                    String[] languages = new String[v8ValueArray.getLength()];
-                    AtomicInteger index = new AtomicInteger(0);
-                    v8ValueArray.forEach((V8ValueString v) -> {
-                        languages[index.getAndIncrement()] = v.getValue();
-                        v.close();
-                    });
-                    return languages;
-                }
-            }
-        });
+        return enginePoolService.executeScript("getSupportedLanguages()", String[].class);
     }
 
     /**
@@ -145,7 +129,6 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
      */
     @Override
     public String[] getSupportedThemes() throws JavetException {
-        // 直接调用 JS 函数
         return enginePoolService.executeScript("getSupportedThemes()", String[].class);
     }
 }
