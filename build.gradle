@@ -85,33 +85,10 @@ platforms.each { variant, platformList ->
     }
 }
 
-// 检测当前平台
-def os = System.getProperty("os.name").toLowerCase()
-def arch = System.getProperty("os.arch").toLowerCase()
-def platformConfig
-
-if (os.contains("windows")) {
-    platformConfig = configurations.runtimeWindowsX8664
-} else if (os.contains("linux")) {
-    if (arch.contains("aarch64") || arch.contains("arm64")) {
-        platformConfig = configurations.runtimeLinuxArm64
-    } else {
-        platformConfig = configurations.runtimeLinuxX8664
-    }
-} else if (os.contains("mac")) {
-    if (arch.contains("aarch64") || arch.contains("arm64")) {
-        platformConfig = configurations.runtimeMacosArm64
-    } else {
-        platformConfig = configurations.runtimeMacosX8664
-    }
-} else {
-    platformConfig = configurations.runtimeAll
-}
-
 // 修改默认 jar 任务使用全包含配置
 jar {
     archiveFileName = "extra-api-1.0.0-SNAPSHOT.jar"
-    from platformConfig.collect { it.isDirectory() ? it : zipTree(it) }
+    from configurations.runtimeAll.collect { it.isDirectory() ? it : zipTree(it) }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
