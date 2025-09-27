@@ -23,28 +23,34 @@ spec:
           language: css
           height: 150px
           value: |
-            div code {
+            div pre.shiki {
+              border-radius: 1rem;
+              padding: 1rem; !important
+            }
+              
+            div pre.shiki code {
               counter-reset: count;
+              padding: 0; !important
             }
-            
-            div code .line:before {
-                content: counter(count);
-                counter-increment: count;
-                text-align: right;
-                color: #24292e80;
-                width: 1rem;
-                margin-right: 1.5rem;
-                display: inline-block;
+              
+            div pre.shiki code .line:before {
+              content: counter(count);
+              counter-increment: count;
+              text-align: right;
+              color: #24292e80;
+              width: 1em;
+              margin-right: 1.5rem;
+              display: inline-block;
             }
-            
-            div.dark code .line:before {
-                content: counter(count);
-                counter-increment: count;
-                text-align: right;
-                color: #e1e4e880;
-                width: 1rem;
-                margin-right: 1.5rem;
-                display: inline-block;
+              
+            div.dark pre.shiki code .line:before {
+              content: counter(count);
+              counter-increment: count;
+              text-align: right;
+              color: #e1e4e880;
+              width: 1rem;
+              margin-right: 1.5rem;
+              display: inline-block;
             }
         - $formkit: select
           label: 额外注入规则
