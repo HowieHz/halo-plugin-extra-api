@@ -6,19 +6,49 @@ plugins {
 
 group 'top.howiehz.halo.plugin.extra.api'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
+// Javet 平台配置
+// 定义平台变体
+def platforms = [
+    'all': ['linux-arm64', 'linux-x86_64', 'macos-arm64', 'macos-x86_64', 'windows-x86_64'],
+    'linux-arm64': ['linux-arm64'],
+    'linux-x86_64': ['linux-x86_64'],
+    'macos-arm64': ['macos-arm64'],
+    'macos-x86_64': ['macos-x86_64'],
+    'windows-x86_64': ['windows-x86_64']
+]
+
+// 为每个平台创建配置
+platforms.each { variant, platformList ->
+    configurations.create("runtime${variant.capitalize()}") {
+        extendsFrom configurations.runtimeClasspath
+    }
+}
+
+// 为每个平台配置添加 Javet 依赖
+platforms.each { variant, platformList ->
+    dependencies.add("runtime${variant.capitalize()}", 'com.caoccao.javet:javet:4.1.7')
+    platformList.each { platform ->
+        def artifactName = "javet-node-${platform}"
+        dependencies.add("runtime${variant.capitalize()}", "com.caoccao.javet:${artifactName}:4.1.7")
+    }
+}
+
 dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.21.0')
-    implementation 'com.caoccao.javet:javet:4.1.7'
-//    implementation 'com.caoccao.javet:javet-node-linux-arm64:4.1.7'
-    implementation 'com.caoccao.javet:javet-node-linux-x86_64:4.1.7'
-//    implementation 'com.caoccao.javet:javet-node-macos-arm64:4.1.7'
-//    implementation 'com.caoccao.javet:javet-node-macos-x86_64:4.1.7'
-    implementation 'com.caoccao.javet:javet-node-windows-x86_64:4.1.7'
     compileOnly 'run.halo.app:api'
+    
+    // Javet 基础依赖（运行时需要）
+    implementation 'com.caoccao.javet:javet:4.1.7'
     
     // Add Spring dependencies for IDE support
     compileOnly 'org.springframework:spring-context'
@@ -30,16 +60,38 @@ dependencies {
     testImplementation 'run.halo.app:api'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    
+    // Javet 基础依赖（测试运行时需要）
+    testImplementation 'com.caoccao.javet:javet:4.1.7'
 }
 
 test {
     useJUnitPlatform()
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+// 创建平台特定的 JAR 包
+platforms.each { variant, platformList ->
+    def configName = "runtime${variant.capitalize()}"
+    def jarTaskName = "jar${variant.capitalize()}"
+    def archiveName = "extra-api-${variant}-1.0.0-SNAPSHOT.jar"
+    
+    tasks.register(jarTaskName, Jar) {
+        group = 'build'
+        description = "Assembles a jar archive containing the ${variant} platform dependencies"
+        archiveFileName = archiveName
+        from sourceSets.main.output
+        from configurations.getByName(configName).collect { it.isDirectory() ? it : zipTree(it) }
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
+}
+
+// 修改默认 jar 任务使用全包含配置
+jar {
+    archiveFileName = "extra-api-1.0.0-SNAPSHOT.jar"
+    from configurations.runtimeAll.collect { it.isDirectory() ? it : zipTree(it) }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.withType(JavaCompile).configureEach {
