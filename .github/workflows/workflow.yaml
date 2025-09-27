@@ -48,7 +48,7 @@ jobs:
           if [ -n "$version" ]; then
             sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
           fi
-          ./gradlew clean build -x test
+          ./gradlew clean jarAll jarLinux-arm64 jarLinux-x86_64 jarMacos-arm64 jarMacos-x86_64 jarWindows-x86_64
       - name: Archive extra-api jar
         uses: actions/upload-artifact@v4
         with:
@@ -67,17 +67,14 @@ jobs:
         with:
           name: extra-api
           path: build/libs
-      - name: Get Name of Artifact
-        id: get_artifact
+      - name: Get Name of Artifacts
+        id: get_artifacts
         run: |
-          ARTIFACT_PATHNAME=$(ls build/libs/*.jar | head -n 1)
-          ARTIFACT_NAME=$(basename ${ARTIFACT_PATHNAME})
-          echo "Artifact pathname: ${ARTIFACT_PATHNAME}"
-          echo "Artifact name: ${ARTIFACT_NAME}"
-          echo "ARTIFACT_PATHNAME=${ARTIFACT_PATHNAME}" >> $GITHUB_ENV
-          echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
+          ARTIFACT_PATHNAMES=$(ls build/libs/*.jar)
+          echo "Artifact pathnames: ${ARTIFACT_PATHNAMES}"
+          echo "ARTIFACT_PATHNAMES=${ARTIFACT_PATHNAMES}" >> $GITHUB_ENV
           echo "RELEASE_ID=${{ github.event.release.id }}" >> $GITHUB_ENV
-      - name: Upload a Release Asset
+      - name: Upload Release Assets
         uses: actions/github-script@v2
         if: github.event_name == 'release'
         with:
@@ -90,14 +87,17 @@ jobs:
             const { repo: { owner, repo }, sha } = context;
             console.log({ owner, repo, sha });
 
-            const releaseId = process.env.RELEASE_ID
-            const artifactPathName = process.env.ARTIFACT_PATHNAME
-            const artifactName = process.env.ARTIFACT_NAME
-            console.log('Releasing', releaseId, artifactPathName, artifactName)
+            const releaseId = process.env.RELEASE_ID;
+            const artifactPathNames = process.env.ARTIFACT_PATHNAMES.split(' ');
+            console.log('Releasing', releaseId, artifactPathNames);
 
-            await github.repos.uploadReleaseAsset({
-              owner, repo,
-              release_id: releaseId,
-              name: artifactName,
-              data: await fs.readFile(artifactPathName)
-            });
+            for (const artifactPathName of artifactPathNames) {
+              const artifactName = artifactPathName.split('/').pop();
+              console.log('Uploading', artifactPathName, artifactName);
+              await github.repos.uploadReleaseAsset({
+                owner, repo,
+                release_id: releaseId,
+                name: artifactName,
+                data: await fs.readFile(artifactPathName)
+              });
+            }

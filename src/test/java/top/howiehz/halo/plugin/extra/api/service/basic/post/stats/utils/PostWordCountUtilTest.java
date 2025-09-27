@@ -1,10 +1,19 @@
-package top.howiehz.halo.plugin.extra.api.utils;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Test class for PostWordCountUtil.
+ * PostWordCountUtil 的测试类。
+ *
+ * <p>Tests cover HTML text extraction, word counting with CJK characters,
+ * ASCII word grouping, and Unicode supplementary character handling.</p>
+ * <p>测试涵盖 HTML 文本提取、中日韩字符字数统计、ASCII 单词分组
+ * 以及 Unicode 补充字符处理。</p>
+ */
 public class PostWordCountUtilTest {
     @Test
     void testExtractTextNullInput() {
@@ -87,7 +96,9 @@ public class PostWordCountUtilTest {
         assertEquals(BigInteger.valueOf(3), PostWordCountUtil.countPlainTextWords("Hello, Halo 2"));
         assertEquals(BigInteger.valueOf(2), PostWordCountUtil.countPlainTextWords("10.11"));
         // 𝓗𝑒𝓵𝓵𝑜 𝓌𝑜𝓇𝓁𝒹
-        assertEquals(BigInteger.valueOf(2), PostWordCountUtil.countPlainTextWords("\uD835\uDCD7\uD835\uDC52\uD835\uDCF5\uD835\uDCF5\uD835\uDC5C \uD835\uDCCC\uD835\uDC5C\uD835\uDCC7\uD835\uDCC1\uD835\uDCB9"));
+        assertEquals(BigInteger.valueOf(2), PostWordCountUtil.countPlainTextWords(
+            "\uD835\uDCD7\uD835\uDC52\uD835\uDCF5\uD835\uDCF5\uD835\uDC5C "
+                + "\uD835\uDCCC\uD835\uDC5C\uD835\uDCC7\uD835\uDCC1\uD835\uDCB9"));
     }
 
     @Test

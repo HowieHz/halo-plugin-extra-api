@@ -1,7 +1,7 @@
-package top.howiehz.halo.plugin.extra.api.utils;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats.utils;
 
-import java.util.regex.Pattern;
 import java.math.BigInteger;
+import java.util.regex.Pattern;
 
 /**
  * Utilities for counting words from HTML or plain text.
