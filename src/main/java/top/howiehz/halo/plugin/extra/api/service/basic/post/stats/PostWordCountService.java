@@ -1,7 +1,7 @@
-package top.howiehz.halo.plugin.extra.api.service.basic;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats;
 
-import reactor.core.publisher.Mono;
 import java.math.BigInteger;
+import reactor.core.publisher.Mono;
 
 public interface PostWordCountService {
     Mono<BigInteger> getPostWordCount(String postName, boolean isDraft);

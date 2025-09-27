@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.impl;
+package top.howiehz.halo.plugin.extra.api.service.js.engine.impl;
 
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.V8Runtime;
@@ -8,16 +8,19 @@ import com.caoccao.javet.interop.engine.JavetEngineConfig;
 import com.caoccao.javet.interop.engine.JavetEnginePool;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.primitive.V8ValueString;
+import com.google.common.base.Throwables;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
-import top.howiehz.halo.plugin.extra.api.service.js.CustomJavetEnginePool;
-import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
+import top.howiehz.halo.plugin.extra.api.service.js.engine.CustomJavetEnginePool;
+import top.howiehz.halo.plugin.extra.api.service.js.engine.V8EnginePoolService;
 
 /**
  * V8 engine pool service implementation.
  * V8 引擎池服务实现类，负责初始化/关闭引擎池并提供脚本执行入口。
  */
+@Slf4j
 @Service
 public class V8EnginePoolServiceImpl implements V8EnginePoolService, InitializingBean, DisposableBean {
 
@@ -37,13 +40,13 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
             config.setPoolMinSize(2);
             config.setPoolMaxSize(Runtime.getRuntime().availableProcessors());
 
-            // 使用自定义引擎池，预加载 Shiki
+            // 使用自定义引擎池，预加载模块
             enginePool = new CustomJavetEnginePool(config);
 
             initialized = true;
-            System.out.println("Custom V8 engine pool with preloaded modules initialized successfully");
+            log.info("Custom V8 engine pool with preloaded modules initialized successfully");
         } catch (Exception e) {
-            System.err.println("Failed to initialize custom engine pool: " + e.getMessage());
+            log.info("Failed to initialize custom engine pool: {}", e.getMessage());
             throw e;
         }
     }
@@ -59,9 +62,9 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
         if (enginePool != null) {
             try {
                 enginePool.close();
-                System.out.println("V8 engine pool closed successfully");
+                log.info("V8 engine pool closed successfully");
             } catch (Exception e) {
-                System.err.println("Failed to close engine pool: " + e.getMessage());
+                log.error("Failed to close engine pool:", Throwables.getRootCause(e));
             }
         }
     }
@@ -149,8 +152,26 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
             throw new IllegalStateException("Engine pool not initialized");
         }
 
+        // Diagnostic logging: record pool stats before/after acquisition and after release
+        String threadInfo = Thread.currentThread().getName() + "[" + Thread.currentThread().getId() + "]";
+        if (enginePool instanceof JavetEnginePool<V8Runtime> poolBefore) {
+            log.debug("[V8 POOL] {} requesting engine - before: active={}, idle={}", threadInfo,
+                poolBefore.getActiveEngineCount(), poolBefore.getIdleEngineCount());
+        }
+
         try (IJavetEngine<V8Runtime> engine = enginePool.getEngine()) {
+            if (enginePool instanceof JavetEnginePool<V8Runtime> poolAcquired) {
+                log.debug("[V8 POOL] {} acquired engine - during: active={}, idle={}", threadInfo,
+                    poolAcquired.getActiveEngineCount(), poolAcquired.getIdleEngineCount());
+            }
+
             return operation.execute(engine.getV8Runtime());
+        } finally {
+            if (enginePool instanceof JavetEnginePool<V8Runtime> poolAfter) {
+                // Resource closed by try-with-resources before finally runs
+                log.debug("[V8 POOL] {} released engine - after: active={}, idle={}", threadInfo,
+                    poolAfter.getActiveEngineCount(), poolAfter.getIdleEngineCount());
+            }
         }
     }
 

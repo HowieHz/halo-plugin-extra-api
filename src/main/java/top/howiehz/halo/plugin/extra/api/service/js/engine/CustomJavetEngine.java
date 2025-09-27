@@ -1,17 +1,20 @@
-package top.howiehz.halo.plugin.extra.api.service.js;
+package top.howiehz.halo.plugin.extra.api.service.js.engine;
 
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interception.logging.JavetStandardConsoleInterceptor;
 import com.caoccao.javet.interop.V8Runtime;
 import com.caoccao.javet.interop.engine.IJavetEnginePool;
 import com.caoccao.javet.interop.engine.JavetEngine;
+import com.google.common.base.Throwables;
 import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
 import top.howiehz.halo.plugin.extra.api.service.js.module.CustomV8ModuleResolver;
 
 /**
  * Custom Javet engine that registers console interceptor, module resolver and preloads modules.
  * 自定义 Javet 引擎，注册控制台拦截、模块解析器并预加载需要的 JS 模块（如 Shiki）。
  */
+@Slf4j
 public class CustomJavetEngine extends JavetEngine<V8Runtime> {
 
     private JavetStandardConsoleInterceptor consoleInterceptor;
@@ -59,56 +62,55 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
      * @throws JavetException if underlying JS operations fail / 底层 JS 操作失败时抛出（实践中通常被捕获）
      */
     private void preloadModules() throws JavetException {
-        System.out.println("=== 开始预加载 Shiki 模块 ===");
+        log.debug("开始预加载 Shiki 模块");
         try {
             // 检查资源文件是否存在
             try (var inputStream = getClass().getClassLoader().getResourceAsStream("js/shiki.umd.cjs")) {
                 if (inputStream == null) {
-                    System.err.println("ERROR: 找不到资源文件 js/shiki.umd.cjs");
+                    log.error("找不到资源文件 js/shiki.umd.cjs");
                     return;
                 }
 
                 String shikiCode = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                System.out.println("Shiki 代码已读取，长度: " + shikiCode.length());
+                log.debug("Shiki 代码已读取，长度: {}", shikiCode.length());
 
-                if (shikiCode.length() == 0) {
-                    System.err.println("ERROR: Shiki 文件为空");
+                if (shikiCode.isEmpty()) {
+                    log.error("Shiki 文件为空");
                     return;
                 }
 
                 // 执行代码
-                System.out.println("开始执行 Shiki 代码...");
+                log.debug("开始执行 Shiki 代码...");
                 v8Runtime.getExecutor(shikiCode).executeVoid();
-                System.out.println("Shiki 代码执行完成");
+                log.debug("Shiki 代码执行完成");
 
                 // 立即验证
                 try {
                     boolean highlightExists = v8Runtime.getExecutor("typeof highlightCode === 'function'").executeBoolean();
                     boolean languagesExists = v8Runtime.getExecutor("typeof getSupportedLanguages === 'function'").executeBoolean();
 
-                    System.out.println("验证结果 - highlightCode: " + highlightExists + ", getSupportedLanguages: " + languagesExists);
+                    log.debug("验证结果 - highlightCode: {}, getSupportedLanguages: {}",
+                        highlightExists, languagesExists);
 
                     if (highlightExists && languagesExists) {
-                        System.out.println("✅ Shiki 模块预加载成功!");
+                        log.info("✅ Shiki 模块预加载成功!");
                     } else {
-                        System.err.println("❌ Shiki 函数未正确暴露");
+                        log.error("❌ Shiki 函数未正确暴露");
 
                         // 检查全局对象
                         String globals = v8Runtime.getExecutor("Object.getOwnPropertyNames(globalThis).filter(name => name.includes('highlight') || name.includes('Language') || name.includes('Theme')).join(', ')").executeString();
-                        System.out.println("全局对象中相关属性: " + globals);
+                        log.info("全局对象中相关属性: {}", globals);
                     }
                 } catch (Exception e) {
-                    System.err.println("验证时出错: " + e.getMessage());
-                    e.printStackTrace();
+                    log.error("验证时出错:", Throwables.getRootCause(e));
                 }
             }
 
         } catch (Exception e) {
-            System.err.println("预加载 Shiki 失败: " + e.getMessage());
-            e.printStackTrace();
+            log.error("预加载失败:", Throwables.getRootCause(e));
             // 不要抛出异常，让引擎继续初始化
         }
-        System.out.println("=== 预加载过程结束 ===");
+        log.debug("=== 预加载过程结束 ===");
     }
 
     /**

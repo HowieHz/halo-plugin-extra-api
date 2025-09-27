@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.utils;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -1,17 +1,17 @@
-package top.howiehz.halo.plugin.extra.api.service.js.shiki.impl;
+package top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.impl;
 
 import com.caoccao.javet.exceptions.JavetException;
-import com.caoccao.javet.values.primitive.V8ValueString;
-import com.caoccao.javet.values.reference.V8ValueArray;
 import com.caoccao.javet.values.reference.V8ValueFunction;
 import com.caoccao.javet.values.reference.V8ValueObject;
 import com.caoccao.javet.values.reference.V8ValuePromise;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.stereotype.Service;
-import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
-import top.howiehz.halo.plugin.extra.api.service.js.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.js.engine.V8EnginePoolService;
 
 /**
  * Implementation of Shiki highlight service.
@@ -21,6 +21,8 @@ import top.howiehz.halo.plugin.extra.api.service.js.shiki.ShikiHighlightService;
 public class ShikiHighlightServiceImpl implements ShikiHighlightService {
 
     private final V8EnginePoolService enginePoolService;
+    private Set<String> cachedLanguages;
+    private Set<String> cachedThemes;
 
     public ShikiHighlightServiceImpl(V8EnginePoolService enginePoolService) {
         this.enginePoolService = enginePoolService;
@@ -39,27 +41,27 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
     @Override
     public String highlightCode(String code, String language, String theme) throws JavetException {
         return enginePoolService.withEngine(runtime -> {
-            try (V8ValueObject global = runtime.getGlobalObject()) {
-                try (var value = global.get("highlightCode")) {
-                    if (!(value instanceof V8ValueFunction highlightFunc)) {
-                        throw new IllegalStateException("highlightCode function not found");
+            try (V8ValueObject global = runtime.getGlobalObject();
+                 var value = global.get("highlightCode")) {
+                if (!(value instanceof V8ValueFunction highlightFunc)) {
+                    throw new IllegalStateException("highlightCode function not found");
+                }
+
+                Map<String, Object> options = Map.of("lang", language, "theme", theme);
+
+                try (V8ValuePromise promise = highlightFunc.call(null, code, options)) {
+                    while (promise.isPending()) {
+                        runtime.await();
                     }
 
-                    Map<String, Object> options = Map.of("lang", language, "theme", theme);
-
-                    try (V8ValuePromise promise = highlightFunc.call(null, code, options)) {
-                        while (promise.isPending()) {
-                            runtime.await();
-                        }
-
-                        if (promise.isFulfilled()) {
-                            return promise.getResultString();
-                        } else if (promise.isRejected()) {
-                            throw new RuntimeException("Highlight failed: " + promise.getResultString());
-                        }
-
-                        return "Unknown promise state";
+                    if (promise.isFulfilled()) {
+                        return promise.getResultString();
+                    } else if (promise.isRejected()) {
+                        throw new RuntimeException(
+                            "Highlight failed: " + promise.getResultString());
                     }
+
+                    return "Unknown promise state";
                 }
             }
         });
@@ -75,7 +77,8 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
      * @return CompletableFuture with highlighted result / 包含高亮结果的 CompletableFuture
      */
     @Override
-    public CompletableFuture<String> highlightCodeAsync(String code, String language, String theme) {
+    public CompletableFuture<String> highlightCodeAsync(String code, String language,
+        String theme) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return highlightCode(code, language, theme);
@@ -95,17 +98,14 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
     @Override
     public Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests) {
         return requests.entrySet().parallelStream()
-            .collect(java.util.stream.Collectors.toConcurrentMap(
-                Map.Entry::getKey,
-                entry -> {
-                    try {
-                        CodeHighlightRequest req = entry.getValue();
-                        return highlightCode(req.code(), req.language(), req.theme());
-                    } catch (Exception e) {
-                        return "Error: " + e.getMessage();
-                    }
+            .collect(java.util.stream.Collectors.toConcurrentMap(Map.Entry::getKey, entry -> {
+                try {
+                    CodeHighlightRequest req = entry.getValue();
+                    return highlightCode(req.code(), req.language(), req.theme());
+                } catch (Exception e) {
+                    return "Error: " + e.getMessage();
                 }
-            ));
+            }));
     }
 
     /**
@@ -116,8 +116,12 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
      * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
     @Override
-    public String[] getSupportedLanguages() throws JavetException {
-        return enginePoolService.executeScript("getSupportedLanguages()", String[].class);
+    public Set<String> getSupportedLanguages() throws JavetException {
+        if (cachedLanguages == null) {
+            String[] langs = enginePoolService.executeScript("getSupportedLanguages()", String[].class);
+            cachedLanguages = new HashSet<>(Arrays.asList(langs));
+        }
+        return cachedLanguages;
     }
 
     /**
@@ -128,7 +132,11 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
      * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
     @Override
-    public String[] getSupportedThemes() throws JavetException {
-        return enginePoolService.executeScript("getSupportedThemes()", String[].class);
+    public Set<String> getSupportedThemes() throws JavetException {
+        if (cachedThemes == null) {
+            String[] themes = enginePoolService.executeScript("getSupportedThemes()", String[].class);
+            cachedThemes = new HashSet<>(Arrays.asList(themes));
+        }
+        return cachedThemes;
     }
 }

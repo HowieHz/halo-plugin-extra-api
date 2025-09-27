@@ -1,7 +1,8 @@
-package top.howiehz.halo.plugin.extra.api.service.js.shiki;
+package top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki;
 
 import com.caoccao.javet.exceptions.JavetException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -46,19 +47,19 @@ public interface ShikiHighlightService {
      * Get supported languages.
      * 获取支持的语言列表。
      *
-     * @return language identifiers array / 语言标识数组
+     * @return language identifiers set / 语言标识集合
      * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
-    String[] getSupportedLanguages() throws JavetException;
+    Set<String> getSupportedLanguages() throws JavetException;
 
     /**
      * Get supported themes.
-     * 获取支��的主题列表。
+     * 获取支持的主题列表。
      *
-     * @return theme names array / 主题名数组
+     * @return theme names set / 主题名集合
      * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
-    String[] getSupportedThemes() throws JavetException;
+    Set<String> getSupportedThemes() throws JavetException;
 
     /**
      * Request record for batch highlighting.

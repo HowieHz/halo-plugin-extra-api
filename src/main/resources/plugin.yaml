@@ -12,6 +12,8 @@ spec:
     name: HowieHz
     website: https://github.com/HowieHz
   logo: logo.png
+  settingName: plugin-extra-api-settings
+  configMapName: plugin-extra-api-configMap
   homepage: https://github.com/HowieHz/halo-plugin-extra-api#readme
   repo: https://github.com/HowieHz/halo-plugin-extra-api
   issues: https://github.com/HowieHz/halo-plugin-extra-api/issues

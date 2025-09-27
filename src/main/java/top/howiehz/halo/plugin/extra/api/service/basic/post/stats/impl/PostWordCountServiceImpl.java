@@ -1,5 +1,7 @@
-package top.howiehz.halo.plugin.extra.api.service.basic.impl;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats.impl;
 
+import java.math.BigInteger;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -9,9 +11,8 @@ import run.halo.app.content.PostContentService;
 import run.halo.app.core.extension.content.Post;
 import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.ReactiveExtensionClient;
-import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
-import top.howiehz.halo.plugin.extra.api.utils.PostWordCountUtil;
-import java.math.BigInteger;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.utils.PostWordCountUtil;
 
 /**
  * Service for computing and caching word counts for Halo posts.
@@ -24,19 +25,12 @@ import java.math.BigInteger;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class PostWordCountServiceImpl implements PostWordCountService {
 
     private final ReactiveExtensionClient client; // 响应式扩展客户端 / Reactive extension client
     private final PostContentService postContentService; // 文章内容服务 / Post content service
-    private final PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl;
-
-    public PostWordCountServiceImpl(ReactiveExtensionClient client,
-        PostContentService postContentService,
-        PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl) {
-        this.client = client; // 注入响应式扩展客户端 / Inject reactive extension client
-        this.postContentService = postContentService; // 注入文章内容服务 / Inject post content service
-        this.postStatsDataCacheManagerImpl = postStatsDataCacheManagerImpl;
-    }
+    private final PostStatsDataCacheManagerImpl postStatsDataCacheManagerImpl; // 文章统计数据缓存管理器 / Post stats data cache manager
 
     /**
      * Get the word count for a specific post, from cache if available; otherwise compute and

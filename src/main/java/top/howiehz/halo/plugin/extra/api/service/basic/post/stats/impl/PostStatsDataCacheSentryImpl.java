@@ -1,12 +1,13 @@
-package top.howiehz.halo.plugin.extra.api.service.basic.impl;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.scheduler.Schedulers;
 import run.halo.app.event.post.PostUpdatedEvent;
-import top.howiehz.halo.plugin.extra.api.service.basic.PostStatsDataCacheSentry;
-import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostStatsDataCacheSentry;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
 
 /**
  * Sentry for evicting and updating word count cache when posts are updated.
@@ -14,12 +15,9 @@ import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PostStatsDataCacheSentryImpl implements PostStatsDataCacheSentry {
     private final PostWordCountService postWordCountService;
-
-    public PostStatsDataCacheSentryImpl(PostWordCountService postWordCountService) {
-        this.postWordCountService = postWordCountService;
-    }
 
     /**
      * Handle post updated event and refresh caches asynchronously for release and draft.

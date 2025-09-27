@@ -1,13 +1,15 @@
 package top.howiehz.halo.plugin.extra.api;
 
 import com.caoccao.javet.interop.NodeRuntime;
+import com.google.common.base.Throwables;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
-import top.howiehz.halo.plugin.extra.api.service.basic.PostWordCountService;
-import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
-import top.howiehz.halo.plugin.extra.api.service.js.shiki.ShikiHighlightService;
-import java.util.Arrays;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.js.engine.V8EnginePoolService;
 
 /**
  * Plugin main class to manage the lifecycle of the plugin.
@@ -15,6 +17,7 @@ import java.util.Arrays;
  * <p>Only one main class extending {@link BasePlugin} is allowed per plugin.</p>
  * <p>每个插件只能有一个继承 {@link BasePlugin} 的主类。</p>
  */
+@Slf4j
 @Component
 public class HaloPluginExtraApiPlugin extends BasePlugin {
 
@@ -39,7 +42,7 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
      */
     @Override
     public void start() {
-        System.out.println("插件启动成功！");
+        log.info("插件启动成功！");
         // Preload all caches when the plugin starts
         // 插件启动时预加载所有缓存
         // post word count cache / 文章字数缓存
@@ -50,7 +53,7 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
 
         // 打印池状态
         var stats = enginePoolService.getPoolStats();
-        System.out.println("V8 Engine pool stats: " + stats);
+        log.info("V8 Engine pool stats: {}", stats);
     }
 
     /**
@@ -59,7 +62,7 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
      */
     @Override
     public void stop() {
-        System.out.println("插件停止！");
+        log.info("插件停止！");
     }
 
     private void testShikiHighlight() {
@@ -70,34 +73,33 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
             Boolean languagesExists = enginePoolService.executeScript(
                 "typeof getSupportedLanguages === 'function'", Boolean.class);
 
-            System.out.println("highlightCode 函数存在: " + highlightExists);
-            System.out.println("getSupportedLanguages 函数存在: " + languagesExists);
+            log.debug("highlightCode 函数存在: {}", highlightExists);
+            log.debug("getSupportedLanguages 函数存在: {}", languagesExists);
 
             if (!highlightExists || !languagesExists) {
-                System.err.println("Shiki 模块未正确加载!");
+                log.error("Shiki 模块未正确加载!");
                 return;
             }
 
             // 测试获取支持列表
-            String[] languages = shikiHighlightService.getSupportedLanguages();
-            String[] themes = shikiHighlightService.getSupportedThemes();
+            Set<String> languages = shikiHighlightService.getSupportedLanguages();
+            Set<String> themes = shikiHighlightService.getSupportedThemes();
 
             if (languages != null && themes != null) {
-                System.out.println("支持的语言数量: " + languages.length);
-                System.out.println("支持的主题数量: " + themes.length);
+                log.debug("支持的语言数量: {}", languages.size());
+                log.debug("支持的主题数量: {}", themes.size());
 
                 // 只有在获取到列表后才进行高亮测试
                 String code = "const greeting = 'Hello, World!';\nconsole.log(greeting);";
                 String html = shikiHighlightService.highlightCode(code, "javascript", "github-light");
-                System.out.println("Shiki 高亮成功，结果长度: " + html.length());
-                System.out.println(html);
+                log.debug("Shiki 高亮成功，结果长度: {}", html.length());
+                log.debug(html);
             } else {
-                System.err.println("无法获取语言或主题列表");
+                log.error("无法获取 Shiki 语言或主题列表");
             }
 
         } catch (Exception e) {
-            System.err.println("Shiki 高亮测试失败: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Shiki 高亮测试失败:", Throwables.getRootCause(e));
         }
     }
 }

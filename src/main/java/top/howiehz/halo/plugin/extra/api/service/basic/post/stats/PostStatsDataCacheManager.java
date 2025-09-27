@@ -1,7 +1,7 @@
-package top.howiehz.halo.plugin.extra.api.service.basic;
+package top.howiehz.halo.plugin.extra.api.service.basic.post.stats;
 
-import org.springframework.lang.Nullable;
 import java.math.BigInteger;
+import org.springframework.lang.Nullable;
 
 public interface PostStatsDataCacheManager {
     @Nullable
