@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.basic.plugin;
+package top.howiehz.halo.plugin.extra.api.service.basic.config;
 
 import java.util.List;
 import lombok.Data;

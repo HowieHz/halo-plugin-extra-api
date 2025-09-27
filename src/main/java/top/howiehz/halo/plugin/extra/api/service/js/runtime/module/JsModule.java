@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.module;
+package top.howiehz.halo.plugin.extra.api.service.js.runtime.module;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

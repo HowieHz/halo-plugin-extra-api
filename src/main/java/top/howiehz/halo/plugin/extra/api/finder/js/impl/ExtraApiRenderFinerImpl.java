@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
 import top.howiehz.halo.plugin.extra.api.finder.js.ExtraApiRenderFinder;
-import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfigSupplier;
-import top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki.ShikiRenderCodeService;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfigSupplier;
+import top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki.ShikiRenderCodeService;
 
 @Component
 @RequiredArgsConstructor

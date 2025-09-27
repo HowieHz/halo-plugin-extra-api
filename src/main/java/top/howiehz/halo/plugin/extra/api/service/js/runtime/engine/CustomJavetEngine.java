@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.engine;
+package top.howiehz.halo.plugin.extra.api.service.js.runtime.engine;
 
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interception.logging.JavetStandardConsoleInterceptor;
@@ -8,7 +8,7 @@ import com.caoccao.javet.interop.engine.JavetEngine;
 import com.google.common.base.Throwables;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
-import top.howiehz.halo.plugin.extra.api.service.js.module.CustomV8ModuleResolver;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.module.CustomV8ModuleResolver;
 
 /**
  * Custom Javet engine that registers console interceptor, module resolver and preloads modules.

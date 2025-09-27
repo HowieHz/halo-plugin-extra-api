@@ -3,7 +3,7 @@ kind: ExtensionDefinition
 metadata:
   name: extra-api-shiki-post-content-handler
 spec:
-  className: top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki.ShikiPostContentRenderHandler
+  className: top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki.ShikiPostContentRenderHandler
   extensionPointName: reactive-post-content-handler
   displayName: "ExtraAPI Shiki 代码高亮处理器"
   description: "为文章内容中的代码块提供 Shiki 语法高亮渲染"
@@ -13,7 +13,7 @@ kind: ExtensionDefinition
 metadata:
   name: extra-api-shiki-singlepage-content-handler
 spec:
-  className: top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki.ShikiSinglePageContentRenderHandler
+  className: top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki.ShikiSinglePageContentRenderHandler
   extensionPointName: reactive-singlepage-content-handler
   displayName: "ExtraAPI Shiki 代码高亮处理器"
   description: "为单页内容中的代码块提供 Shiki 语法高亮渲染"
@@ -24,6 +24,6 @@ metadata:
   name: extra-api-shiki-head-processor
 spec:
   extensionPointName: template-head-processor
-  className: top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki.ShikiHeadProcessor
+  className: top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki.ShikiHeadProcessor
   displayName: "ExtraAPI Shiki 头部处理器"
   description: "为使用 Shiki 渲染的页面注入 CSS 样式"

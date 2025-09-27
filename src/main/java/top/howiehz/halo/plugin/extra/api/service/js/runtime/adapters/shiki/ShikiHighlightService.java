@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki;
+package top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki;
 
 import com.caoccao.javet.exceptions.JavetException;
 import java.util.Map;

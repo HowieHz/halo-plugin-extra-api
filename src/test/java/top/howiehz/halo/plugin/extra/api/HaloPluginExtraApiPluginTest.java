@@ -8,8 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import run.halo.app.plugin.PluginContext;
 import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
-import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighlightService;
-import top.howiehz.halo.plugin.extra.api.service.js.engine.V8EnginePoolService;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
 
 @ExtendWith(MockitoExtension.class)
 class HaloPluginExtraApiPluginTest {

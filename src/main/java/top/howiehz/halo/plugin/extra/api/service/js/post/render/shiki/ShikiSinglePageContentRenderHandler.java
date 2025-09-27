@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki;
+package top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki;
 
 import com.google.common.base.Throwables;
 import lombok.RequiredArgsConstructor;
@@ -6,34 +6,34 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import run.halo.app.theme.ReactivePostContentHandler;
-import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfigSupplier;
+import run.halo.app.theme.ReactiveSinglePageContentHandler;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfigSupplier;
 
 /**
- * Handler for rendering code blocks in post content using Shiki.
- * 使用 Shiki 渲染文章内容中代码块的处理器。
+ * Handler for rendering code blocks in single page content using Shiki.
+ * 使用 Shiki 渲染单页内容中代码块的处理器。
  *
- * <p>This handler automatically processes HTML content in posts and applies
+ * <p>This handler automatically processes HTML content in single pages and applies
  * syntax highlighting to code blocks using the configured Shiki themes.</p>
- * <p>此处理器会自动处理文章中的 HTML 内容，并使用配置的 Shiki 主题
+ * <p>此处理器会自动处理单页中的 HTML 内容，并使用配置的 Shiki 主题
  * 对代码块应用语法高亮。</p>
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ShikiPostContentRenderHandler implements ReactivePostContentHandler {
+public class ShikiSinglePageContentRenderHandler implements ReactiveSinglePageContentHandler {
     private final ShikiConfigSupplier shikiConfigSupplier;
     private final ShikiRenderCodeService shikiRenderCodeService;
 
     /**
-     * Handle post content rendering by applying Shiki code highlighting.
-     * 处理文章内容渲染，应用 Shiki 代码高亮。
+     * Handle single page content rendering by applying Shiki code highlighting.
+     * 处理单页内容渲染，应用 Shiki 代码高亮。
      *
-     * @param contentContext the post content context / 文章内容上下文
+     * @param contentContext the single page content context / 单页内容上下文
      * @return Mono emitting the processed content context / 发出处理后的内容上下文的 Mono
      */
     @Override
-    public Mono<PostContentContext> handle(@NotNull PostContentContext contentContext) {
+    public Mono<SinglePageContentContext> handle(@NotNull SinglePageContentContext contentContext) {
         return shikiConfigSupplier.get().map(shikiConfig -> {
             if (!shikiConfig.isEnabledShikiRender()) {
                 return contentContext;

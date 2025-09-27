@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.impl;
+package top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.impl;
 
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.values.reference.V8ValueFunction;
@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
-import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighlightService;
-import top.howiehz.halo.plugin.extra.api.service.js.engine.V8EnginePoolService;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
 
 /**
  * Implementation of Shiki highlight service.

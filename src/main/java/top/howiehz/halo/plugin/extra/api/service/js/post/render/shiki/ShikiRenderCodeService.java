@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki;
+package top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,8 +7,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
-import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfig;
-import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfig;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
 
 /**
  * Service for rendering code blocks in HTML content using Shiki.

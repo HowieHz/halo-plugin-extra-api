@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki;
+package top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +14,8 @@ import org.thymeleaf.processor.element.IElementModelStructureHandler;
 import reactor.core.publisher.Mono;
 import run.halo.app.plugin.PluginContext;
 import run.halo.app.theme.dialect.TemplateHeadProcessor;
-import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfig;
-import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfigSupplier;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfig;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfigSupplier;
 
 /**
  * Thymeleaf processor that injects Shiki CSS styles into the HTML head.

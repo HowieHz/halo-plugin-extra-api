@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.module;
+package top.howiehz.halo.plugin.extra.api.service.js.runtime.module;
 
 /**
  * Types of JS modules supported by the resolver: UMD, ESM, CJS.

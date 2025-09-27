@@ -1,4 +1,4 @@
-package top.howiehz.halo.plugin.extra.api.service.js.module;
+package top.howiehz.halo.plugin.extra.api.service.js.runtime.module;
 
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.V8Runtime;
