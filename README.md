@@ -174,7 +174,7 @@
 <!--/* 先检测插件可用性，再使用 API */-->
 <th:block th:if="${pluginFinder.available('extra-api')}">
     <span
-            th:text="|总字数：${extraApiStatsFinder.getgetPostWordCount()}|"
+            th:text="|总字数：${extraApiStatsFinder.getPostWordCount()}|"
     ></span>
 </th:block>
 
