@@ -23,21 +23,25 @@ spec:
           language: css
           height: 150px
           value: |
+            div code {
+              counter-reset: count;
+            }
+            
             div code .line:before {
-                content: counter(step);
-                counter-increment: step;
+                content: counter(count);
+                counter-increment: count;
                 text-align: right;
-                color: #e1e4e880;
+                color: #24292e80;
                 width: 1rem;
                 margin-right: 1.5rem;
                 display: inline-block;
             }
             
             div.dark code .line:before {
-                content: counter(step);
-                counter-increment: step;
+                content: counter(count);
+                counter-increment: count;
                 text-align: right;
-                color: #24292e80;
+                color: #e1e4e880;
                 width: 1rem;
                 margin-right: 1.5rem;
                 display: inline-block;
