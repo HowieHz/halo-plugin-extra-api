@@ -5,7 +5,7 @@ metadata:
 spec:
   forms:
     - group: shiki
-      label: Shiki 代码高亮
+      label: 代码高亮（仅全量版可用）
       formSchema:
         - $formkit: checkbox
           name: enabledShikiRender

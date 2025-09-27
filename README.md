@@ -55,7 +55,7 @@
   - [TODO](#todo)
   - [快速跳转](#快速跳转)
   - [处理器文档](#处理器文档)
-    - [代码高亮（通过 Shiki.js 渲染）](#代码高亮通过-shikijs-渲染)
+    - [代码高亮](#代码高亮)
       - [特点](#特点)
       - [配置选项](#配置选项)
       - [支持的主题](#支持的主题)
@@ -63,17 +63,26 @@
   - [Finder API 文档](#finder-api-文档)
     - [检测本插件是否启用](#检测本插件是否启用)
     - [统计信息 API](#统计信息-api)
-      - [文章字数统计](#文章字数统计)
+      - [文章字数统计 API](#文章字数统计-api)
     - [渲染 API](#渲染-api)
-      - [代码高亮（通过 Shiki.js 渲染）](#代码高亮通过-shikijs-渲染-1)
+      - [代码高亮 API](#代码高亮-api)
+  - [下载和安装](#下载和安装)
+  - [版本说明](#版本说明)
+    - [轻量版的优势](#轻量版的优势)
+    - [轻量版本缺少的功能](#轻量版本缺少的功能)
+    - [稳定版（推荐）](#稳定版推荐)
+    - [开发版](#开发版)
+      - [下载步骤](#下载步骤)
   - [开发指南/贡献指南](#开发指南贡献指南)
   - [许可证](#许可证)
 
 ## 处理器文档
 
-### 代码高亮（通过 Shiki.js 渲染）
+### 代码高亮
 
 插件提供了自动化的代码高亮处理器，无需在模板中手动调用，即可对文章和页面内容中的代码块进行语法高亮渲染。
+
+此功能通过 Shiki.js 渲染，仅在[全量版](#版本说明)中可用。
 
 #### 特点
 
@@ -187,7 +196,7 @@
 
 **Finder 名称：** `extraApiStatsFinder`
 
-#### 文章字数统计
+#### 文章字数统计 API
 
 ```javascript
 extraApiStatsFinder.getPostWordCount({
@@ -246,7 +255,7 @@ extraApiStatsFinder.getPostWordCount();
 
 **Finder 名称：** `extraApiRenderFinder`
 
-#### 代码高亮（通过 Shiki.js 渲染）
+#### 代码高亮 API
 
 ```javascript
 extraApiRenderFinder.renderCodeHtml(htmlContent)
@@ -278,6 +287,69 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
     <div th:utext="${renderedContent}"></div>
 </div>
 ```
+
+## 下载和安装
+
+## 版本说明
+
+插件提供两个版本：
+
+- **全量版**：包含所有功能，包括代码高亮等依赖 JS 的相关功能。
+- **轻量版**：轻量级版本，不包含 JS 相关功能和相关依赖。
+
+### 轻量版的优势
+
+- 更小的插件体积
+- 更快的启动速度
+- 更低的内存占用
+- 更低的系统性能要求
+- 支持全平台（全量版仅支持以下平台：Linux ARM64、Linux x86_64、macOS ARM64、macOS x86_64、Windows x86_64）
+
+### 轻量版本缺少的功能
+
+- 代码高亮（Shiki.js 渲染）
+<!-- - 图表渲染（Mermaid）
+- 公式渲染（KaTeX） -->
+- 其他 JS 运行时相关功能
+
+如果您需要上述功能，请使用全量版。
+
+### 稳定版（推荐）
+
+稳定版通过 GitHub Releases 发布，建议生产环境使用。
+
+1. 访问 [Releases 页面](https://github.com/HowieHz/halo-plugin-extra-api/releases)
+2. 下载最新版本的 JAR 文件：
+   - `extra-api-lite-版本号.jar`：轻量版（适用于所有平台）
+   - `extra-api-all-版本号.jar`：全量版（包含所有平台依赖，体积较大，不推荐下载）
+   - 如需使用全量版，推荐下载平台特定版本：
+     - `extra-api-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
+     - `extra-api-linux-x86_64-版本号.jar`：适用于 Linux x86_64 平台的版本
+     - `extra-api-macos-arm64-版本号.jar`：适用于 macOS ARM64 平台的版本
+     - `extra-api-macos-x86_64-版本号.jar`：适用于 macOS x86_64 平台的版本
+     - `extra-api-windows-x86_64-版本号.jar`：适用于 Windows x86_64 平台的版本
+3. 将下载的 JAR 文件上传到 Halo 的插件管理页面安装
+
+### 开发版
+
+插件的开发版 JAR 文件通过 GitHub Actions 自动构建，仅用于测试和开发。
+
+- [GitHub Actions Workflow](https://github.com/HowieHz/halo-plugin-extra-api/actions/workflows/workflow.yaml)
+
+#### 下载步骤
+
+1. 访问上述链接，选择最新的成功运行的 workflow。
+2. 在 "Artifacts" 部分，下载 `extra-api` 压缩包。
+3. 解压后，您将找到以下 JAR 文件：
+   - `extra-api-lite-版本号-SNAPSHOT.jar`：轻量版（适用于所有平台）
+   - `extra-api-all-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
+   - `extra-api-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
+   - `extra-api-linux-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux x86_64 平台）
+   - `extra-api-macos-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS ARM64 平台）
+   - `extra-api-macos-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS x86_64 平台）
+   - `extra-api-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
+
+选择适合您系统的 JAR 文件安装到 Halo。
 
 ## 开发指南/贡献指南
 
