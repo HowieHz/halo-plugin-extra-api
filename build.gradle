@@ -81,7 +81,6 @@ platforms.each { variant, platformList ->
         archiveFileName = archiveName
         from sourceSets.main.output
         from configurations.getByName(configName).collect { it.isDirectory() ? it : zipTree(it) }
-        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 }
@@ -90,7 +89,6 @@ platforms.each { variant, platformList ->
 jar {
     archiveFileName = "extra-api-1.0.0-SNAPSHOT.jar"
     from configurations.runtimeAll.collect { it.isDirectory() ? it : zipTree(it) }
-    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
