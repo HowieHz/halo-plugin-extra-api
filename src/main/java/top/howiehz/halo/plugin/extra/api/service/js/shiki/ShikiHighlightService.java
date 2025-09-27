@@ -5,37 +5,64 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Shiki 代码高亮服务接口
+ * Shiki code highlight service interface.
+ * Shiki 代码高亮服务接口，定义同步/异步/批量及能力查询方法。
  */
 public interface ShikiHighlightService {
 
     /**
-     * 代码高亮（同步）
+     * Synchronously highlight code.
+     * 同步高亮代码。
+     *
+     * @param code source code / 源码
+     * @param language language id / 语言标识
+     * @param theme theme name / 主题名
+     * @return highlighted result / 高亮结果
+     * @throws JavetException when JS execution fails / JS 执行失败时抛出
      */
     String highlightCode(String code, String language, String theme) throws JavetException;
 
     /**
-     * 代码高亮（异步）
+     * Asynchronously highlight code.
+     * 异步高亮代码。
+     *
+     * @param code source code / 源码
+     * @param language language id / 语言标识
+     * @param theme theme name / 主题名
+     * @return CompletableFuture with highlighted result / 包含高亮结果的 CompletableFuture
      */
     CompletableFuture<String> highlightCodeAsync(String code, String language, String theme);
 
     /**
-     * 批量代码高亮
+     * Batch highlight multiple code requests.
+     * 批量高亮多个请求。
+     *
+     * @param requests map of id -> request / id 到请求的映射
+     * @return map of id -> highlighted result / id 到高亮结果的映射
      */
     Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests);
 
     /**
-     * 获取支持的语言列表
+     * Get supported languages.
+     * 获取支持的语言列表。
+     *
+     * @return language identifiers array / 语言标识数组
+     * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
     String[] getSupportedLanguages() throws JavetException;
 
     /**
-     * 获取支持的主题列表
+     * Get supported themes.
+     * 获取支��的主题列表。
+     *
+     * @return theme names array / 主题名数组
+     * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
     String[] getSupportedThemes() throws JavetException;
 
     /**
-     * 代码高亮请求记录
+     * Request record for batch highlighting.
+     * 批量高亮请求记录结构。
      */
     record CodeHighlightRequest(String code, String language, String theme) {}
 }

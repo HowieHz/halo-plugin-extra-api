@@ -9,6 +9,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Enumeration of embedded JS modules used by the runtime.
+ * 内置 JS 模块枚举，包含模块名称、资源文件名与类型。
+ */
 public enum JsModule {
     SHIKI("shiki", "shiki.umd.cjs", JsModuleType.UMD);
 
@@ -47,6 +51,13 @@ public enum JsModule {
         return type;
     }
 
+    /**
+     * Load module source code from resources.
+     * 从资源加载模块源码（UTF-8）。
+     *
+     * @return source code string / 源码字符串
+     * @throws IOException when resource read fails / 读取资源失败时抛出
+     */
     public String getSourceCode() throws IOException {
         String resourcePath = "js/" + fileName;
         return IOUtils.resourceToString(resourcePath, StandardCharsets.UTF_8,

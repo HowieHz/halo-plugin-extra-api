@@ -14,7 +14,8 @@ import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
 import top.howiehz.halo.plugin.extra.api.service.js.shiki.ShikiHighlightService;
 
 /**
- * Shiki 代码高亮服务实现
+ * Implementation of Shiki highlight service.
+ * Shiki 高亮服务实现，封装对 V8 引擎池的调用以执行高亮相关 JS 函数。
  */
 @Service
 public class ShikiHighlightServiceImpl implements ShikiHighlightService {
@@ -25,6 +26,16 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
         this.enginePoolService = enginePoolService;
     }
 
+    /**
+     * Highlight code synchronously using Shiki.
+     * 使用 Shiki 在 V8 中同步高亮代码。
+     *
+     * @param code source code / 源码
+     * @param language language id / 语言标识
+     * @param theme theme name / 主题名
+     * @return highlighted result / 高亮结果（通常为 HTML）
+     * @throws JavetException when JS execution fails / 当 JS 执行失败时抛出
+     */
     @Override
     public String highlightCode(String code, String language, String theme) throws JavetException {
         return enginePoolService.withEngine(runtime -> {
@@ -54,6 +65,15 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
         });
     }
 
+    /**
+     * Highlight code asynchronously.
+     * 异步高亮，返回 CompletableFuture。
+     *
+     * @param code source code / 源码
+     * @param language language id / 语言标识
+     * @param theme theme name / 主题名
+     * @return CompletableFuture with highlighted result / 包含高亮结果的 CompletableFuture
+     */
     @Override
     public CompletableFuture<String> highlightCodeAsync(String code, String language, String theme) {
         return CompletableFuture.supplyAsync(() -> {
@@ -65,6 +85,13 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
         });
     }
 
+    /**
+     * Batch highlight multiple requests in parallel.
+     * 并行批量高亮多个请求，返回 key->result 的映射。
+     *
+     * @param requests map of id -> request / id 到请求的映射
+     * @return map of id -> highlighted result / id 到高亮结果的映射
+     */
     @Override
     public Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests) {
         return requests.entrySet().parallelStream()
@@ -81,6 +108,13 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
             ));
     }
 
+    /**
+     * Get supported languages from the preloaded Shiki module.
+     * 从预加载的 Shiki 模块中获取支持的语言列表。
+     *
+     * @return array of language identifiers / 语言标识数组
+     * @throws JavetException when JS call fails / JS 调用失败时抛出
+     */
     @Override
     public String[] getSupportedLanguages() throws JavetException {
         return enginePoolService.withEngine(runtime -> {
@@ -102,9 +136,16 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
         });
     }
 
+    /**
+     * Get supported themes from the preloaded Shiki module.
+     * 从预加载的 Shiki 模块中获取支持的主题列表。
+     *
+     * @return array of theme names / 主题名数组
+     * @throws JavetException when JS call fails / JS 调用失败时抛出
+     */
     @Override
     public String[] getSupportedThemes() throws JavetException {
-        // 修改：直接调用 JS 函数
+        // 直接调用 JS 函数
         return enginePoolService.executeScript("getSupportedThemes()", String[].class);
     }
 }

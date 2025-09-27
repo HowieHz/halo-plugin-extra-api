@@ -4,27 +4,45 @@ import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.V8Runtime;
 
 /**
- * V8 引擎池接口
+ * V8 engine pool service interface.
+ * V8 引擎池服务接口，提供脚本执行和池管理能力。
  */
 public interface V8EnginePoolService {
 
     /**
-     * 执行 JavaScript 代码
+     * Execute JavaScript code.
+     * 执行 JavaScript 代码并以指定类型返回结果。
+     *
+     * @param script JS script / JS 脚本
+     * @param returnType expected return type / 期望的返回类型
+     * @param <T> generic return type / 泛型返回类型
+     * @return execution result / 执行结果
+     * @throws JavetException when execution fails / 执行失败时抛出
      */
     <T> T executeScript(String script, Class<T> returnType) throws JavetException;
 
     /**
-     * 使用引擎执行操作
+     * Use an engine to perform an operation.
+     * 使用池中引擎执行给定的操作，操作执行后引擎会被归还。
+     *
+     * @param operation operation to run with runtime / 使用 runtime 执行的操作
+     * @param <T> result type / 结果类型
+     * @return operation result / 操作结果
+     * @throws JavetException when operation fails / 操作失败时抛出
      */
     <T> T withEngine(EngineOperation<T> operation) throws JavetException;
 
     /**
-     * 获取池状态
+     * Get pool statistics.
+     * 获取引擎池统计信息。
+     *
+     * @return pool stats / 池统计
      */
     PoolStats getPoolStats();
 
     /**
-     * 引擎操作函数式接口
+     * Functional interface for engine operations.
+     * 引擎操作的函数式接口，接受 V8Runtime 并返回结果。
      */
     @FunctionalInterface
     interface EngineOperation<T> {
@@ -32,7 +50,8 @@ public interface V8EnginePoolService {
     }
 
     /**
-     * 池状态记录
+     * Pool statistics record.
+     * 池状态记录：minSize, maxSize, activeCount, idleCount。
      */
     record PoolStats(int minSize, int maxSize, int activeCount, int idleCount) {}
 }

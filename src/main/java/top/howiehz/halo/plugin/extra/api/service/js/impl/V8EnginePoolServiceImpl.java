@@ -15,7 +15,8 @@ import top.howiehz.halo.plugin.extra.api.service.js.CustomJavetEnginePool;
 import top.howiehz.halo.plugin.extra.api.service.js.V8EnginePoolService;
 
 /**
- * V8 引擎池实现
+ * V8 engine pool service implementation.
+ * V8 引擎池服务实现类，负责初始化/关闭引擎池并提供脚本执行入口。
  */
 @Service
 public class V8EnginePoolServiceImpl implements V8EnginePoolService, InitializingBean, DisposableBean {
@@ -23,6 +24,12 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
     private IJavetEnginePool<V8Runtime> enginePool;
     private volatile boolean initialized = false;
 
+    /**
+     * Initialize the custom engine pool and preload modules.
+     * 初始化引擎池并预加载必要的模块（如 Shiki）。
+     *
+     * @throws Exception when initialization fails / 初始化失败时抛出
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
@@ -41,6 +48,12 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
         }
     }
 
+    /**
+     * Destroy the engine pool and release resources.
+     * 销毁引擎池并释放资源。
+     *
+     * @throws Exception when destruction fails / 销毁失败时抛出
+     */
     @Override
     public void destroy() throws Exception {
         if (enginePool != null) {
@@ -53,6 +66,16 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
         }
     }
 
+    /**
+     * Execute JavaScript code using an engine from the pool.
+     * 使用池中的引擎执行 JavaScript 代码并按指定类型返回结果。
+     *
+     * @param script the JS script to execute / 要执行的 JS 脚本
+     * @param returnType expected return type class / 期望的返回类型
+     * @param <T> generic return type / 泛型返回类型
+     * @return execution result cast to returnType / 转换后的执行结果
+     * @throws JavetException if execution fails / 执行失败时抛出
+     */
     @Override
     public <T> T executeScript(String script, Class<T> returnType) throws JavetException {
         return withEngine(runtime -> {
@@ -111,6 +134,15 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
         });
     }
 
+    /**
+     * Acquire an engine and perform the provided operation.
+     * 获取一个引擎并执行传入的操作，操作完成后自动归还引擎。
+     *
+     * @param operation the operation to perform with the runtime / 使用 runtime 执行的操作
+     * @param <T> result type / 结果类型
+     * @return operation result / 操作结果
+     * @throws JavetException if engine acquisition or operation fails / 获取引擎或执行失败时抛出
+     */
     @Override
     public <T> T withEngine(EngineOperation<T> operation) throws JavetException {
         if (!initialized) {
@@ -122,6 +154,12 @@ public class V8EnginePoolServiceImpl implements V8EnginePoolService, Initializin
         }
     }
 
+    /**
+     * Get statistics of the engine pool.
+     * 获取引擎池状态统计信息（最小/最大/活跃/空闲）。
+     *
+     * @return pool statistics / 池状态
+     */
     @Override
     public PoolStats getPoolStats() {
         if (enginePool instanceof JavetEnginePool<V8Runtime> pool) {

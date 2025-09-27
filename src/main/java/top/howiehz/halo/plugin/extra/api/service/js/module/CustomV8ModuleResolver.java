@@ -6,10 +6,24 @@ import com.caoccao.javet.interop.callback.IV8ModuleResolver;
 import com.caoccao.javet.values.reference.IV8Module;
 import java.io.IOException;
 
+/**
+ * Custom V8 module resolver that loads modules from embedded resources.
+ * 自定义 V8 模块解析器，从资源加载并按模块类型处理（UMD/ESM/CJS）。
+ */
 public class CustomV8ModuleResolver implements IV8ModuleResolver {
 
     private static final String GLOBAL_THIS = "globalThis";
 
+    /**
+     * Resolve a module by resource name and return a compiled IV8Module for ESM/CJS as needed.
+     * 根据资源名解析模块，对于 ESM 会返回编译后的 IV8Module；UMD 直接执行；CJS 将模拟 module.exports。
+     *
+     * @param v8Runtime v8 runtime / V8 运行时
+     * @param resourceName module resource name / 模块资源名称
+     * @param v8ModuleReferrer optional referrer module / 可选的引用者模块
+     * @return IV8Module when module is ESM/CJS and a module object can be produced, otherwise null / ESM/CJS 返回模块实例，UMD 返回 null
+     * @throws JavetException when JS execution or compilation fails / JS 执行或编译失败时抛出
+     */
     @Override
     public IV8Module resolve(V8Runtime v8Runtime, String resourceName, IV8Module v8ModuleReferrer)
         throws JavetException {
