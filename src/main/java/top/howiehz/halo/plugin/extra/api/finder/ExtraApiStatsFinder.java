@@ -24,7 +24,7 @@ public interface ExtraApiStatsFinder {
      * @param params parameter map from templates / 来自模板的参数映射
      * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
      */
-    Mono<BigInteger> postWordCount(java.util.Map<String, Object> params);
+    Mono<BigInteger> getPostWordCount(java.util.Map<String, Object> params);
 
     /**
      * Get total word count of all published posts.
@@ -32,7 +32,7 @@ public interface ExtraApiStatsFinder {
      *
      * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
      */
-    default Mono<BigInteger> postWordCount() {
-        return postWordCount(Collections.emptyMap());
+    default Mono<BigInteger> getPostWordCount() {
+        return getPostWordCount(Collections.emptyMap());
     }
 }

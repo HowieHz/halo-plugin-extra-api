@@ -2,6 +2,7 @@ package top.howiehz.halo.plugin.extra.api.finder.impl;
 
 import java.math.BigInteger;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
@@ -13,18 +14,11 @@ import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountS
  * 统计 Finder 的实现，用于为主题提供字数统计能力。
  */
 @Component
+@RequiredArgsConstructor
 @Finder("extraApiStatsFinder")
 public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
 
     private final PostWordCountService postWordCountService;
-
-    /**
-     * Constructor to initialize ExtraApiStatsFinderImpl with required dependencies.
-     * 构造函数，注入所需依赖。
-     */
-    public ExtraApiStatsFinderImpl(PostWordCountService postWordCountService) {
-        this.postWordCountService = postWordCountService;
-    }
 
     /**
      * Unified word count API without slug support.
@@ -38,7 +32,7 @@ public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
      * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
      */
     @Override
-    public Mono<BigInteger> postWordCount(Map<String, Object> params) {
+    public Mono<BigInteger> getPostWordCount(Map<String, Object> params) {
         Map<String, Object> map = params == null ? java.util.Collections.emptyMap() : params;
         String postName = String.valueOf(map.get("name"));
         boolean isDraft =

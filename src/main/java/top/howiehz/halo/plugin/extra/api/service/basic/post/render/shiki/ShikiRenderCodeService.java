@@ -16,7 +16,7 @@ import top.howiehz.halo.plugin.extra.api.service.js.adapters.shiki.ShikiHighligh
 public class ShikiRenderCodeService {
     private final ShikiHighlightService shikiHighlightService;
 
-    String renderCode(String content, ShikiConfig shikiConfig) {
+    public String renderCode(String content, ShikiConfig shikiConfig) {
         Document doc = Jsoup.parse(content);
         Elements codeElements = doc.select("pre > code");
 

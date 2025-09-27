@@ -46,7 +46,7 @@
 
 </details>
 
-## API 文档
+## Finder API 文档
 
 ### 检测本插件是否启用
 
@@ -65,18 +65,18 @@
 <!--/* 先检测插件可用性，再使用 API */-->
 <th:block th:if="${pluginFinder.available('extra-api')}">
     <span 
-        th:text="|总字数：${extraApiStatsFinder.postWordCount()}|"
+        th:text="|总字数：${extraApiStatsFinder.getgetPostWordCount()}|"
     ></span>
 </th:block>
 
 <!--/* 写在一个标签内也可以，th:if 的优先级比 th:text 高 */-->
 <span
     th:if="${pluginFinder.available('extra-api')}"
-    th:text="|总字数：${extraApiStatsFinder.postWordCount()}|"
+    th:text="|总字数：${extraApiStatsFinder.getPostWordCount()}|"
 ></span>
 
 <!--/* 自然模板写法 */-->
-<span th:if="${pluginFinder.available('extra-api')}">总字数：[[${extraApiStatsFinder.postWordCount()}]]</span>
+<span th:if="${pluginFinder.available('extra-api')}">总字数：[[${extraApiStatsFinder.getPostWordCount()}]]</span>
 ```
 
 **说明**
@@ -90,14 +90,14 @@
 #### 文章字数统计
 
 ```javascript
-extraApiStatsFinder.postWordCount({
+extraApiStatsFinder.getPostWordCount({
   name: 'post-metadata-name',  // 可选，未传入则统计全部文章字数总和
   version: 'release' | 'draft'  // 可选，默认 'release'
 });
 ```
 
 ```javascript
-extraApiStatsFinder.postWordCount();
+extraApiStatsFinder.getPostWordCount();
 ```
 
 **描述**
@@ -125,45 +125,31 @@ extraApiStatsFinder.postWordCount();
 **使用示例**
 ```html
 <!--/* 统计文章已发布版本的字，适用于 /templates/post.html */-->
-<span th:text="${extraApiStatsFinder.postWordCount({name: post.metadata.name})}"></span>
+<span th:text="${extraApiStatsFinder.getPostWordCount({name: post.metadata.name})}"></span>
 
 <!--/* 统计文章最新版本的字数（含草稿），适用于 /templates/post.html */-->
-<span th:text="${extraApiStatsFinder.postWordCount({name: post.metadata.name, version: 'draft'})}"></span>
+<span th:text="${extraApiStatsFinder.getPostWordCount({name: post.metadata.name, version: 'draft'})}"></span>
 
 <!--/* 统计全站已发布文章的总字数，适用于全部模板 */-->
-<span th:text="${extraApiStatsFinder.postWordCount()}"></span>
+<span th:text="${extraApiStatsFinder.getPostWordCount()}"></span>
 <!--/* 与下方写法等价 */-->
- <span th:text="${extraApiStatsFinder.postWordCount({})}"></span>
+ <span th:text="${extraApiStatsFinder.getPostWordCount({})}"></span>
 
 <!--/* 统计全站所有文章最新版本的总字数（含草稿），适用于全部模板 */-->
-<span th:text="${extraApiStatsFinder.postWordCount({version: 'draft'})}"></span>
+<span th:text="${extraApiStatsFinder.getPostWordCount({version: 'draft'})}"></span>
 ```
 
-## 开发环境
+### 渲染 API
 
-- Java 21+
-- Node.js 18+
-- pnpm
+**Finder 名称：** `extraApiRenderFinder`
 
-## 开发
+#### 代码高亮（通过 Shiki.js 渲染）
 
-```bash
-# 构建插件
-./gradlew build
 
-# 开发前端
-cd ui
-pnpm install
-pnpm dev
-```
 
-## 构建
+## 开发指南/贡献指南
 
-```bash
-./gradlew build
-```
-
-构建完成后，可以在 `build/libs` 目录找到插件 jar 文件。
+参见 [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 许可证
 

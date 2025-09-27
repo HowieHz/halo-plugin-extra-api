@@ -1,6 +1,23 @@
 package top.howiehz.halo.plugin.extra.api.finder.impl;
 
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
+import run.halo.app.theme.finders.Finder;
 import top.howiehz.halo.plugin.extra.api.finder.ExtraApiRenderFinder;
+import top.howiehz.halo.plugin.extra.api.service.basic.plugin.ShikiConfigSupplier;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.render.shiki.ShikiRenderCodeService;
 
+@Component
+@RequiredArgsConstructor
+@Finder("extraApiRenderFinder")
 public class ExtraApiRenderFinerImpl implements ExtraApiRenderFinder {
+    private final ShikiRenderCodeService shikiRenderCodeService;
+    private final ShikiConfigSupplier shikiConfigSupplier;
+
+    @Override
+    public Mono<String> renderCodeHtml(String htmlContent) {
+        return shikiConfigSupplier.get()
+            .map(shikiConfig -> shikiRenderCodeService.renderCode(htmlContent, shikiConfig));
+    }
 }
