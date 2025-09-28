@@ -226,7 +226,7 @@ afterEvaluate {
         }
         
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn 'compileJava', 'processResources', jarLiteIndexTask
+        dependsOn 'compileJava', 'processResources', 'processUiResources', jarLiteIndexTask
         
         // 包含对应的组件索引文件 - Halo 需要此文件来注册插件组件
         into('META-INF') {

@@ -3,14 +3,6 @@ plugins {
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
-// Create the assemble task only if it doesn't already exist
-if (!tasks.findByName('assemble')) {
-    tasks.register('assemble') {
-        group = 'build'
-        description = 'Assembles the outputs of this project.'
-    }
-}
-
 group 'top.howiehz.halo.plugin.extra.api.js.bundle.shiki'
 
 node {
