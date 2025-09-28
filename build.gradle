@@ -117,18 +117,12 @@ tasks.register('processShikiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
-// plugin.yaml 版本同步逻辑
+// plugin.yaml 版本同步逻辑 - 使用官方风格的 YAML 处理
 // 为什么需要：确保 plugin.yaml 中的版本与构建版本一致，避免部署时版本不匹配
+// 为什么用 YamlPluginVersionSupport：比正则表达式更安全，保持 YAML 格式和注释
 def configurePluginYamlVersion() {
-    return { task ->
-        def pluginYaml = file('src/main/resources/plugin.yaml')
-        if (pluginYaml.exists()) {
-            def yamlContent = pluginYaml.text
-            def versionPattern = /(spec:\s*\n(?:\s+.*\n)*?\s+version:\s*)"[^"]*"/
-            def updatedContent = yamlContent.replaceFirst(versionPattern, '$1"' + project.version + '"')
-            pluginYaml.text = updatedContent
-        }
-    }
+    def manifestFile = file('src/main/resources/plugin.yaml')
+    return top.howiehz.gradle.YamlPluginVersionSupport.configurePluginYamlVersion(project, manifestFile)
 }
 
 def jarLiteIndexTask
