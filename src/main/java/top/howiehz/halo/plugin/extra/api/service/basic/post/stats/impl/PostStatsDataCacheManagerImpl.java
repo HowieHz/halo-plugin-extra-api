@@ -26,6 +26,16 @@ public class PostStatsDataCacheManagerImpl implements PostStatsDataCacheManager 
     // 文章草稿版本字数统计缓存 / Total & per-post caches for draft version
     private final AtomicReference<BigInteger> totalDraftPostWordCount = new AtomicReference<>(null);
 
+    @Override
+    public ConcurrentHashMap<String, BigInteger> getReleasePostWordCounts() {
+        return releasePostWordCounts;
+    }
+
+    @Override
+    public ConcurrentHashMap<String, BigInteger> getDraftPostWordCounts() {
+        return draftPostWordCounts;
+    }
+
     /**
      * 获取缓存的总字数。
      * Get cached total word count.

@@ -1,6 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.service.basic.post.stats;
 
 import java.math.BigInteger;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.lang.Nullable;
 
 /**
@@ -8,6 +9,11 @@ import org.springframework.lang.Nullable;
  * 文章统计数据缓存管理接口。
  */
 public interface PostStatsDataCacheManager {
+
+
+    ConcurrentHashMap<String, BigInteger> getReleasePostWordCounts();
+
+    ConcurrentHashMap<String, BigInteger> getDraftPostWordCounts();
 
     /**
      * Get the cached total word count for all posts.
