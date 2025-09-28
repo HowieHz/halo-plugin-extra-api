@@ -88,7 +88,7 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 21
 }
 
-// UI 资源处理
+// UI 资源处理（所有版本都需要）
 tasks.register('processUiResources', Copy) {
     from project(':ui').layout.buildDirectory.dir('dist')
     into layout.buildDirectory.dir('resources/main/console')
@@ -96,7 +96,7 @@ tasks.register('processUiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
-// Shiki 资源处理
+// Shiki 资源处理（仅完整版本需要）
 tasks.register('processShikiResources', Copy) {
     from project(':shiki').layout.buildDirectory.dir('dist')
     into layout.buildDirectory.dir('resources/main/js')
@@ -105,7 +105,21 @@ tasks.register('processShikiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
-// 编译任务依赖
+// 创建 jarLite 专用的资源处理任务
+tasks.register('processLiteResources', Copy) {
+    group = 'build'
+    description = 'Processes resources for lite version excluding JS dependencies'
+    
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'js/**'
+        exclude 'extensions/extension-definitions.yaml'
+    }
+    into layout.buildDirectory.dir('resources/lite')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    shouldRunAfter tasks.named('processResources')
+}
+
+// 完整版本的编译任务依赖
 tasks.named('classes') {
     dependsOn tasks.named('processUiResources')
     dependsOn tasks.named('processShikiResources')
@@ -113,10 +127,10 @@ tasks.named('classes') {
 
 // ============ JAR 任务定义 ============
 
-// 1. jarLite - 基础版本（不包含JS功能，但包含依赖）
+// 1. jarLite - 基础版本（完全排除JS功能和相关资源）
 tasks.register('jarLite', Jar) {
     group = 'build'
-    description = 'Assembles a lite jar without JS/Javet runtime dependencies'
+    description = 'Assembles a lite jar without JS/Javet dependencies and resources'
     archiveFileName = 'extra-api-lite-1.0.0-SNAPSHOT.jar'
     
     // 使用完整编译输出，但排除JS相关的class文件
@@ -124,6 +138,9 @@ tasks.register('jarLite', Jar) {
         exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
         exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
     }
+    
+    // 使用专门的lite资源（已排除JS相关资源）
+    from tasks.named('processLiteResources').get().destinationDir
     
     // 包含基础运行时依赖，排除Javet运行时
     from configurations.runtimeClasspath.filter { 
@@ -133,8 +150,12 @@ tasks.register('jarLite', Jar) {
     }
     
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn 'classes'
+    dependsOn 'compileJava'
+    dependsOn 'processLiteResources'
+    dependsOn 'processUiResources'  // UI资源仍然需要
     dependsOn 'generatePluginComponentsIdx'
+    
+    // jarLite 不依赖 src-js-bundle 的构建，所以不包含 processShikiResources
 }
 
 // 2. 平台特定的 jarFull 任务
