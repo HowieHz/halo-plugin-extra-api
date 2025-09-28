@@ -48,49 +48,49 @@ jobs:
           if [ -n "$version" ]; then
             sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
           fi
-          ./gradlew clean jarLite jarAll jarLinux-arm64 jarLinux-x86_64 jarMacos-arm64 jarMacos-x86_64 jarWindows-x86_64
+          ./gradlew clean buildAll
       - name: Archive extra-api jar
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api
+          name: extra-api-archive
           path: |
             build/libs/*.jar
           retention-days: 1
-      - name: Upload extra-api-all
+      - name: Upload extra-api-full-all-platforms
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api-all
-          path: build/libs/extra-api-all-*.jar
+          name: extra-api-full-all-platforms
+          path: build/libs/extra-api-full-all-platforms-*.jar
           retention-days: 1
-      - name: Upload extra-api-linux-arm64
+      - name: Upload extra-api-full-linux-arm64
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api-linux-arm64
-          path: build/libs/extra-api-linux-arm64-*.jar
+          name: extra-api-full-linux-arm64
+          path: build/libs/extra-api-full-linux-arm64-*.jar
           retention-days: 1
-      - name: Upload extra-api-linux-x86_64
+      - name: Upload extra-api-full-linux-x86_64
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api-linux-x86_64
-          path: build/libs/extra-api-linux-x86_64-*.jar
+          name: extra-api-full-linux-x86_64
+          path: build/libs/extra-api-full-linux-x86_64-*.jar
           retention-days: 1
-      - name: Upload extra-api-macos-arm64
+      - name: Upload extra-api-full-macos-arm64
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api-macos-arm64
-          path: build/libs/extra-api-macos-arm64-*.jar
+          name: extra-api-full-macos-arm64
+          path: build/libs/extra-api-full-macos-arm64-*.jar
           retention-days: 1
-      - name: Upload extra-api-macos-x86_64
+      - name: Upload extra-api-full-macos-x86_64
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api-macos-x86_64
-          path: build/libs/extra-api-macos-x86_64-*.jar
+          name: extra-api-full-macos-x86_64
+          path: build/libs/extra-api-full-macos-x86_64-*.jar
           retention-days: 1
-      - name: Upload extra-api-windows-x86_64
+      - name: Upload extra-api-full-windows-x86_64
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api-windows-x86_64
-          path: build/libs/extra-api-windows-x86_64-*.jar
+          name: extra-api-full-windows-x86_64
+          path: build/libs/extra-api-full-windows-x86_64-*.jar
           retention-days: 1
       - name: Upload extra-api-lite
         uses: actions/upload-artifact@v4
