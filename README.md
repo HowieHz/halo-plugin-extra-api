@@ -73,6 +73,25 @@
     - [稳定版（推荐）](#稳定版推荐)
     - [开发版](#开发版)
       - [下载步骤](#下载步骤)
+  - [构建说明](#构建说明)
+    - [🏗️ 构建系统概述](#️-构建系统概述)
+    - [📋 构建任务详解](#-构建任务详解)
+      - [资源处理任务](#资源处理任务)
+      - [核心构建任务](#核心构建任务)
+      - [便捷任务](#便捷任务)
+    - [🚀 构建命令速查表](#-构建命令速查表)
+      - [开发环境构建](#开发环境构建)
+      - [生产环境构建](#生产环境构建)
+    - [🔧 构建系统技术架构](#-构建系统技术架构)
+      - [版本差异实现](#版本差异实现)
+      - [依赖管理策略](#依赖管理策略)
+      - [构建流程优化](#构建流程优化)
+    - [📊 构建性能对比](#-构建性能对比)
+    - [🐛 常见构建问题](#-常见构建问题)
+      - [文件锁定问题](#文件锁定问题)
+      - [内存不足](#内存不足)
+      - [清理构建缓存](#清理构建缓存)
+    - [🔄 CI/CD集成](#-cicd集成)
   - [开发指南/贡献指南](#开发指南贡献指南)
   - [许可证](#许可证)
 
@@ -350,6 +369,161 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
    - `extra-api-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
 
 选择适合您系统的 JAR 文件安装到 Halo。
+
+## 构建说明
+
+### 🏗️ 构建系统概述
+
+本项目使用Gradle多模块构建系统，支持生成不同版本的JAR包，以满足不同用户的需求。构建系统的核心设计理念是：
+
+- **轻量版**：面向不需要JS功能的用户，体积极小（约57KB）
+- **完整版**：包含所有功能，支持代码高亮等JS相关特性
+- **平台特定版本**：针对特定操作系统平台优化的完整版
+
+### 📋 构建任务详解
+
+#### 资源处理任务
+
+| 任务名 | 描述 | 用途 |
+|--------|------|------|
+| `processResources` | 标准资源处理 | 复制src/main/resources到构建目录 |
+| `processUiResources` | UI前端资源处理 | 将ui子项目构建输出复制到console目录 |
+| `processShikiResources` | Shiki代码高亮资源处理 | 将Shiki相关JS文件复制到js目录（仅完整版需要） |
+| `processLiteResources` | 轻量版资源处理 | 排除JS相关资源，专为轻量版优化 |
+
+#### 核心构建任务
+
+| 任务名 | 文件名 | 大小 | 描述 |
+|--------|--------|------|------|
+| `jarLite` | `extra-api-lite-*.jar` | ~57KB | 轻量版，排除所有JS功能和Javet依赖 |
+| `jarFullAllPlatforms` | `extra-api-full-all-platforms-*.jar` | ~120MB | 包含所有平台支持的完整版 |
+| `jarFullLinux-arm64` | `extra-api-full-linux-arm64-*.jar` | ~30MB | Linux ARM64平台专用完整版 |
+| `jarFullLinux-x86_64` | `extra-api-full-linux-x86_64-*.jar` | ~30MB | Linux x86_64平台专用完整版 |
+| `jarFullMacos-arm64` | `extra-api-full-macos-arm64-*.jar` | ~30MB | macOS ARM64平台专用完整版 |
+| `jarFullMacos-x86_64` | `extra-api-full-macos-x86_64-*.jar` | ~30MB | macOS x86_64平台专用完整版 |
+| `jarFullWindows-x86_64` | `extra-api-full-windows-x86_64-*.jar` | ~30MB | Windows x86_64平台专用完整版 |
+
+#### 便捷任务
+
+| 任务名 | 描述 |
+|--------|------|
+| `buildAll` | 构建所有版本（轻量版 + 全平台完整版 + 各平台特定版本） |
+| `buildLite` | 仅构建轻量版 |
+| `build` | 默认构建任务，构建完整版（jarFullAllPlatforms） |
+| `jar` | 同build，构建完整版 |
+
+### 🚀 构建命令速查表
+
+#### 开发环境构建
+
+```bash
+# 构建轻量版（推荐用于快速测试）
+./gradlew jarLite
+
+# 构建完整版（包含所有平台）
+./gradlew jarFullAllPlatforms
+
+# 构建当前平台的完整版（根据运行环境自动选择）
+./gradlew jarFull$(uname -s)-$(uname -m | sed 's/x86_64/x86_64/;s/aarch64/arm64/')
+
+# 构建所有版本
+./gradlew buildAll
+
+# 清理后重新构建轻量版
+./gradlew clean jarLite
+```
+
+#### 生产环境构建
+
+```bash
+# 发布前构建所有版本
+./gradlew clean buildAll
+
+# 仅构建轻量版用于发布
+./gradlew clean buildLite
+```
+
+### 🔧 构建系统技术架构
+
+#### 版本差异实现
+
+1. **轻量版 (jarLite)**
+   - 排除Java类：`service/js/**`、`finder/js/**`
+   - 排除资源文件：`js/**`、`extensions/extension-definitions.yaml`
+   - 排除依赖：所有Javet相关依赖
+   - 使用专用资源处理：`processLiteResources`
+
+2. **完整版 (jarFull*)**
+   - 包含所有Java类和资源
+   - 包含Javet JavaScript引擎
+   - 包含Shiki代码高亮支持
+   - 根据平台包含对应的native库
+
+#### 依赖管理策略
+
+```gradle
+// 基础依赖（所有版本共享）
+implementation platform('run.halo.tools.platform:plugin:2.21.0')
+compileOnly 'run.halo.app:api'
+
+// Javet依赖（仅完整版包含）
+implementation 'com.caoccao.javet:javet:4.1.7'
+
+// 平台特定配置
+configurations {
+    javetLinux-arm64 { /* Linux ARM64专用Javet */ }
+    javetAllPlatforms { /* 包含所有平台的Javet */ }
+}
+```
+
+#### 构建流程优化
+
+1. **并行构建**：UI和Shiki资源独立构建
+2. **依赖缓存**：Gradle daemon和依赖缓存加速构建
+3. **增量构建**：仅在源码变更时重新构建
+4. **资源隔离**：不同版本使用独立的资源处理流程
+
+### 📊 构建性能对比
+
+| 构建任务 | 构建时间 | 输出大小 | 内存占用 |
+|----------|----------|----------|----------|
+| jarLite | ~10s | 57KB | 低 |
+| jarFullAllPlatforms | ~40s | 120MB | 高 |
+| jarFull{Platform} | ~30s | 30MB | 中等 |
+| buildAll | ~60s | 全部版本 | 高 |
+
+### 🐛 常见构建问题
+
+#### 文件锁定问题
+```bash
+# 如果遇到"文件被另一进程使用"错误
+./gradlew --stop  # 停止Gradle守护进程
+# 然后重新运行构建命令
+```
+
+#### 内存不足
+```bash
+# 设置更大的堆内存
+export GRADLE_OPTS="-Xmx4g"
+./gradlew buildAll
+```
+
+#### 清理构建缓存
+```bash
+# 完全清理
+./gradlew clean cleanBuildCache
+# 重新下载依赖
+./gradlew clean --refresh-dependencies
+```
+
+### 🔄 CI/CD集成
+
+GitHub Actions自动构建配置位于`.github/workflows/`，支持：
+
+- 推送时自动构建所有版本
+- PR检查轻量版构建
+- 发布时自动上传到GitHub Releases
+- 多平台并行构建优化
 
 ## 开发指南/贡献指南
 

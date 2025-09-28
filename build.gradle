@@ -133,8 +133,8 @@ tasks.register('jarLite', Jar) {
     description = 'Assembles a lite jar without JS/Javet dependencies and resources'
     archiveFileName = 'extra-api-lite-1.0.0-SNAPSHOT.jar'
     
-    // 使用完整编译输出，但排除JS相关的class文件
-    from(sourceSets.main.output) {
+    // 只使用编译后的class文件，排除JS相关的class文件
+    from(sourceSets.main.output.classesDirs) {
         exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
         exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
     }
@@ -151,6 +151,7 @@ tasks.register('jarLite', Jar) {
     
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn 'compileJava'
+    dependsOn 'processResources'  // 需要先处理标准资源
     dependsOn 'processLiteResources'
     dependsOn 'processUiResources'  // UI资源仍然需要
     dependsOn 'generatePluginComponentsIdx'

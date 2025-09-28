@@ -24,6 +24,24 @@ pnpm dev
 ./gradlew build
 ```
 
+### 资源处理任务
+
+- __processUiResources__ - 处理UI前端资源，将ui子项目的构建输出复制到console目录
+- __processShikiResources__ - 处理Shiki代码高亮的JS资源，仅完整版需要
+- __processLiteResources__ - 专门为轻量版处理资源，排除JS相关内容
+
+### 📦 核心构建任务
+
+- __jarLite__ - 构建轻量版，完全排除JS功能和Javet依赖
+- __jarFullAllPlatforms__ - 构建包含所有平台支持的完整版
+- __jarFull{Platform}__ - 构建特定平台的完整版(如jarFullLinux-x86_64)
+
+### 🚀 便捷任务
+
+- __buildAll__ - 构建所有版本
+- __buildLite__ - 仅构建轻量版
+- __build__/__jar__ - 默认构建包含所有平台支持的完整版
+
 构建完成后，可以在 `build/libs` 目录找到插件 jar 文件。
 
 ## 如何添加新的嵌入式 JS 模块
