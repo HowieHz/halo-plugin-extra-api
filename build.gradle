@@ -17,65 +17,43 @@ repositories {
 }
 
 // Javet 平台配置
-// 定义平台变体
 def platforms = [
-    'all': ['linux-arm64', 'linux-x86_64', 'macos-arm64', 'macos-x86_64', 'windows-x86_64'],
-    'linux-arm64': ['linux-arm64'],
-    'linux-x86_64': ['linux-x86_64'],
-    'macos-arm64': ['macos-arm64'],
-    'macos-x86_64': ['macos-x86_64'],
-    'windows-x86_64': ['windows-x86_64']
+    'Linux-arm64': ['linux-arm64'],
+    'Linux-x86_64': ['linux-x86_64'],
+    'Macos-arm64': ['macos-arm64'],
+    'Macos-x86_64': ['macos-x86_64'],
+    'Windows-x86_64': ['windows-x86_64']
 ]
 
-// 为每个平台创建配置
+// 创建平台特定的配置
 platforms.each { variant, platformList ->
-    configurations.create("runtime${variant.capitalize()}") {
+    configurations.create("javet${variant}") {
         extendsFrom configurations.runtimeClasspath
     }
 }
 
 // 为每个平台配置添加 Javet 依赖
 platforms.each { variant, platformList ->
-    dependencies.add("runtime${variant.capitalize()}", 'com.caoccao.javet:javet:4.1.7')
+    dependencies.add("javet${variant}", 'com.caoccao.javet:javet:4.1.7')
     platformList.each { platform ->
         def artifactName = "javet-node-${platform}"
-        dependencies.add("runtime${variant.capitalize()}", "com.caoccao.javet:${artifactName}:4.1.7")
+        dependencies.add("javet${variant}", "com.caoccao.javet:${artifactName}:4.1.7")
     }
 }
 
+// 全平台配置
 configurations {
-    liteCompile.extendsFrom configurations.implementation
-    liteCompile.extendsFrom configurations.compileOnly
-    liteRuntime.extendsFrom configurations.runtimeClasspath
-    liteRuntime.extendsFrom configurations.runtimeOnly
-    
-    // 在 liteRuntime 配置中排除 javet 依赖
-    liteRuntime {
-        exclude group: 'com.caoccao.javet'
+    javetAllPlatforms {
+        extendsFrom configurations.runtimeClasspath
     }
 }
 
-// Lite source set
-sourceSets {
-    lite {
-        java {
-            srcDirs = ['src/main/java']
-            exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
-            exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
-        }
-        resources {
-            srcDirs = ['src/main/resources']
-            exclude 'js/**'
-            exclude 'extensions/extension-definitions.yaml'
-        }
-        test {
-            java {
-                srcDirs = ['src/test/java']
-                exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
-            }
-        }
-        compileClasspath = configurations.liteCompile
-        runtimeClasspath = configurations.liteRuntime
+// 添加全平台 Javet 依赖
+dependencies.add("javetAllPlatforms", 'com.caoccao.javet:javet:4.1.7')
+platforms.each { variant, platformList ->
+    platformList.each { platform ->
+        def artifactName = "javet-node-${platform}"
+        dependencies.add("javetAllPlatforms", "com.caoccao.javet:${artifactName}:4.1.7")
     }
 }
 
@@ -83,72 +61,34 @@ dependencies {
     implementation platform('run.halo.tools.platform:plugin:2.21.0')
     compileOnly 'run.halo.app:api'
     
-    // Javet 基础依赖（运行时需要）
-    if (!project.hasProperty('lite')) {
-        implementation 'com.caoccao.javet:javet:4.1.7'
-    }
+    // 包含 Javet 依赖
+    implementation 'com.caoccao.javet:javet:4.1.7'
     
-    // Add Spring dependencies for IDE support
+    // Spring 依赖
     compileOnly 'org.springframework:spring-context'
     compileOnly 'org.springframework:spring-core'
     compileOnly 'org.springframework:spring-beans'
     compileOnly 'org.springframework.data:spring-data-commons'
     compileOnly 'io.projectreactor:reactor-core'
 
+    // 测试依赖
     testImplementation 'run.halo.app:api'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    
-    // Javet 基础依赖（测试运行时需要）
-    if (!project.hasProperty('lite')) {
-        testImplementation 'com.caoccao.javet:javet:4.1.7'
-    }
+    testImplementation 'com.caoccao.javet:javet:4.1.7'
 }
 
 test {
     useJUnitPlatform()
 }
 
-// 创建平台特定的 JAR 包
-platforms.each { variant, platformList ->
-    def configName = "runtime${variant.capitalize()}"
-    def jarTaskName = "jar${variant.capitalize()}"
-    def archiveName = "extra-api-${variant}-1.0.0-SNAPSHOT.jar"
-    
-    tasks.register(jarTaskName, Jar) {
-        group = 'build'
-        description = "Assembles a jar archive containing the ${variant} platform dependencies"
-        archiveFileName = archiveName
-        from sourceSets.main.output
-        from configurations.getByName(configName).collect { it.isDirectory() ? it : zipTree(it) }
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn 'generatePluginComponentsIdx'  // 确保注入 version 到 plugin.yaml
-    }
-}
-
-// 创建 lite JAR 包
-tasks.register('jarLite', Jar) {
-    group = 'build'
-    description = "Assembles a lite jar without JS and Javet dependencies"
-    archiveFileName = "extra-api-lite-1.0.0-SNAPSHOT.jar"
-    from sourceSets.lite.output
-    from configurations.liteRuntime.collect { it.isDirectory() ? it : zipTree(it) }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn 'generatePluginComponentsIdx'  // 确保注入 version 到 plugin.yaml
-}
-
-// 修改默认 jar 任务使用全包含配置
-jar {
-    archiveFileName = "extra-api-1.0.0-SNAPSHOT.jar"
-    from configurations.runtimeAll.collect { it.isDirectory() ? it : zipTree(it) }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
+// 任务配置
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     options.release = 21
 }
 
+// UI 资源处理
 tasks.register('processUiResources', Copy) {
     from project(':ui').layout.buildDirectory.dir('dist')
     into layout.buildDirectory.dir('resources/main/console')
@@ -156,6 +96,7 @@ tasks.register('processUiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
+// Shiki 资源处理
 tasks.register('processShikiResources', Copy) {
     from project(':shiki').layout.buildDirectory.dir('dist')
     into layout.buildDirectory.dir('resources/main/js')
@@ -164,9 +105,107 @@ tasks.register('processShikiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
+// 编译任务依赖
 tasks.named('classes') {
     dependsOn tasks.named('processUiResources')
     dependsOn tasks.named('processShikiResources')
+}
+
+// ============ JAR 任务定义 ============
+
+// 1. jarLite - 基础版本（不包含JS功能，但包含依赖）
+tasks.register('jarLite', Jar) {
+    group = 'build'
+    description = 'Assembles a lite jar without JS/Javet runtime dependencies'
+    archiveFileName = 'extra-api-lite-1.0.0-SNAPSHOT.jar'
+    
+    // 使用完整编译输出，但排除JS相关的class文件
+    from(sourceSets.main.output) {
+        exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
+        exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
+    }
+    
+    // 包含基础运行时依赖，排除Javet运行时
+    from configurations.runtimeClasspath.filter { 
+        !it.name.contains('javet') 
+    }.collect { 
+        it.isDirectory() ? it : zipTree(it) 
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn 'classes'
+    dependsOn 'generatePluginComponentsIdx'
+}
+
+// 2. 平台特定的 jarFull 任务
+platforms.each { variant, platformList ->
+    def taskName = "jarFull${variant}"
+    def configName = "javet${variant}"
+    def archiveName = "extra-api-full-${variant.toLowerCase()}-1.0.0-SNAPSHOT.jar"
+    
+    tasks.register(taskName, Jar) {
+        group = 'build'
+        description = "Assembles a full jar with ${variant} platform dependencies"
+        archiveFileName = archiveName
+        
+        from sourceSets.main.output
+        from configurations.getByName(configName).collect { 
+            it.isDirectory() ? it : zipTree(it) 
+        }
+        
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn 'classes'
+        dependsOn 'generatePluginComponentsIdx'
+    }
+}
+
+// 3. jarFullAllPlatforms - 包含所有平台的完整版本
+tasks.register('jarFullAllPlatforms', Jar) {
+    group = 'build'
+    description = 'Assembles a full jar with all platform dependencies'
+    archiveFileName = 'extra-api-full-all-platforms-1.0.0-SNAPSHOT.jar'
+    
+    from sourceSets.main.output
+    from configurations.javetAllPlatforms.collect { 
+        it.isDirectory() ? it : zipTree(it) 
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn 'classes'
+    dependsOn 'generatePluginComponentsIdx'
+}
+
+// ============ 默认任务配置 ============
+
+// 修改默认 jar 任务为 jarFullAllPlatforms
+jar {
+    enabled = false
+    dependsOn 'jarFullAllPlatforms'
+}
+
+// 修改默认 build 任务
+build {
+    dependsOn 'jarFullAllPlatforms'
+}
+
+// ============ 便捷任务 ============
+
+// 构建所有版本的任务
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Build all jar variants'
+    dependsOn 'jarLite'
+    dependsOn 'jarFullAllPlatforms'
+    platforms.each { variant, platformList ->
+        dependsOn "jarFull${variant}"
+    }
+}
+
+// 只构建 lite 版本的任务
+tasks.register('buildLite') {
+    group = 'build'
+    description = 'Build lite version only'
+    dependsOn 'jarLite'
 }
 
 halo {
