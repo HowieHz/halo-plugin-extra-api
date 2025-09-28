@@ -166,6 +166,7 @@ afterEvaluate {
         })
         jarTaskName.set('jarLite')
         outputFile.set(layout.buildDirectory.file('tmp/jarLite/META-INF/plugin-components.idx'))
+        dependsOn 'processResources' // 确保在 processResources 之后运行
         doFirst(configurePluginYamlVersion())
     }
 
