@@ -130,6 +130,16 @@ tasks.register('jarLite', Jar) {
     from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn 'generatePluginComponentsIdx'  // 确保注入 version 到 plugin.yaml
+    doFirst {
+        // 复制修改后的 plugin.yaml 到 lite resources dir
+        def mainResourcesDir = sourceSets.main.output.resourcesDir
+        def liteResourcesDir = sourceSets.lite.output.resourcesDir
+        def mainPluginYaml = new File(mainResourcesDir, 'plugin.yaml')
+        def litePluginYaml = new File(liteResourcesDir, 'plugin.yaml')
+        if (mainPluginYaml.exists() && litePluginYaml.exists()) {
+            litePluginYaml.text = mainPluginYaml.text
+        }
+    }
 }
 
 // 修改默认 jar 任务使用全包含配置
