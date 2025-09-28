@@ -3,6 +3,14 @@ plugins {
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
+// Create the assemble task only if it doesn't already exist
+if (!tasks.findByName('assemble')) {
+    tasks.register('assemble') {
+        group = 'build'
+        description = 'Assembles the outputs of this project.'
+    }
+}
+
 group 'top.howiehz.halo.plugin.extra.api.js.bundle.shiki'
 
 node {
@@ -21,7 +29,7 @@ tasks.register('pnpmBuild', PnpmTask) {
     outputs.dir(layout.buildDirectory.dir('dist'))
 }
 
-// 配置 assemble 任务
-assemble {
-    dependsOn pnpmBuild
+// 配置 assemble 任务依赖
+tasks.named('assemble') {
+    dependsOn tasks.named('pnpmBuild')
 }
