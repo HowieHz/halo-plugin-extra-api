@@ -139,8 +139,11 @@ tasks.register('jarLite', Jar) {
         exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
     }
     
-    // 使用专门的lite资源（已排除JS相关资源）
-    from tasks.named('processLiteResources').get().destinationDir
+    // 使用标准处理后的资源（确保plugin.yaml有正确的spec.version），然后排除不需要的文件
+    from(sourceSets.main.output.resourcesDir) {
+        exclude 'js/**'
+        exclude 'extensions/extension-definitions.yaml'
+    }
     
     // 包含基础运行时依赖，排除Javet运行时
     from configurations.runtimeClasspath.filter { 
@@ -152,9 +155,8 @@ tasks.register('jarLite', Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn 'compileJava'
     dependsOn 'processResources'  // 需要先处理标准资源
-    dependsOn 'processLiteResources'
     dependsOn 'processUiResources'  // UI资源仍然需要
-    dependsOn 'generatePluginComponentsIdx'
+    dependsOn 'generatePluginComponentsIdx'  // 确保plugin.yaml被正确处理
     
     // jarLite 不依赖 src-js-bundle 的构建，所以不包含 processShikiResources
 }
