@@ -61,7 +61,9 @@
       - [支持的主题](#支持的主题)
       - [补充说明](#补充说明)
   - [Finder API 文档](#finder-api-文档)
-    - [检测本插件是否启用](#检测本插件是否启用)
+    - [插件本体信息相关 API](#插件本体信息相关-api)
+      - [检测本插件是否启用](#检测本插件是否启用)
+      - [插件版本检测 API](#插件版本检测-api)
     - [统计信息 API](#统计信息-api)
       - [文章字数统计 API](#文章字数统计-api)
     - [渲染 API](#渲染-api)
@@ -154,7 +156,9 @@
 
 ## Finder API 文档
 
-### 检测本插件是否启用
+### 插件本体信息相关 API
+
+#### 检测本插件是否启用
 
 **描述**
 
@@ -191,6 +195,81 @@
 **说明**
 
 使用 `pluginFinder.available('extra-api')` 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。
+
+#### 插件版本检测 API
+
+**Finder 名称：** `extraApiPluginInfoFinder`
+
+**描述**
+
+提供插件版本类型检测功能，让主题或其他代码能够检测当前运行的是轻量版还是完整版插件，以便有条件地使用高级功能。
+
+**API 方法**
+
+```javascript
+// 检查是否为完整版
+extraApiPluginInfoFinder.isFullVersion()
+
+// 检查是否为轻量版  
+extraApiPluginInfoFinder.isLiteVersion()
+
+// 获取版本类型字符串
+extraApiPluginInfoFinder.getVersionType()
+
+// 检查 JavaScript 功能是否可用
+extraApiPluginInfoFinder.isJavaScriptAvailable()
+```
+
+**参数**
+
+- 无
+
+**返回值**
+
+- `isFullVersion()` → `boolean` - 完整版时返回 true，轻量版时返回 false
+- `isLiteVersion()` → `boolean` - 轻量版时返回 true，完整版时返回 false  
+- `getVersionType()` → `string` - 返回 "full" 或 "lite"
+- `isJavaScriptAvailable()` → `boolean` - JavaScript 功能可用时返回 true
+
+**描述**
+
+- 检测原理
+  - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
+    - 完整版：包含 JavaScript 运行时，V8EnginePoolService 类存在
+    - 轻量版：构建时排除 js 包下所有类，V8EnginePoolService 类不存在
+- 应用场景
+  - 主题兼容性：主题可以根据插件版本提供不同的功能体验
+  - 用户提示：向用户说明当前版本的功能限制
+  - 条件渲染：仅在支持的版本中启用特定功能（主题请求不存在的 Finder API 会报错并阻止页面渲染）
+
+**使用示例**
+
+```html
+<!--/* 根据插件版本条件性显示功能 */-->
+<th:block th:if="${extraApiPluginInfoFinder.isFullVersion()}">
+    <div th:utext="${extraApiRenderFinder.renderCodeHtml(post.content?.content)}"></div>
+</th:block>
+
+<th:block th:unless="${extraApiPluginInfoFinder.isFullVersion()}">
+    <p>当前使用轻量版插件，代码高亮功能不可用</p>
+</th:block>
+
+<!--/* 显示当前版本类型 */-->
+<span>插件版本：[[${extraApiPluginInfoFinder.getVersionType()}]]</span>
+
+<!--/* 检查 JavaScript 功能可用性 */-->
+<div th:if="${extraApiPluginInfoFinder.isJavaScriptAvailable()}">
+    <p>JavaScript 功能可用，支持高级渲染功能</p>
+</div>
+
+<!--/* 结合其他条件使用 */-->
+<th:block th:if="${pluginFinder.available('extra-api') and extraApiPluginInfoFinder.isFullVersion()}">
+    <!-- 只有在插件可用且为完整版时才显示 -->
+    <div class="code-highlight">
+        <div th:utext="${extraApiRenderFinder.renderCodeHtml(content)}"></div>
+    </div>
+</th:block>
+```
 
 ### 统计信息 API
 
