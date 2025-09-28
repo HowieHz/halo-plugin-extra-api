@@ -117,6 +117,7 @@ platforms.each { variant, platformList ->
         from sourceSets.main.output
         from configurations.getByName(configName).collect { it.isDirectory() ? it : zipTree(it) }
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn 'generatePluginComponentsIdx'  // 确保注入 version 到 plugin.yaml
     }
 }
 
@@ -128,6 +129,7 @@ tasks.register('jarLite', Jar) {
     from sourceSets.lite.output
     from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn 'generatePluginComponentsIdx'  // 确保注入 version 到 plugin.yaml
 }
 
 // 修改默认 jar 任务使用全包含配置
