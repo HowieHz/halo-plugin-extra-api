@@ -1,137 +1,124 @@
-// ========================================================================================
-// 插件和基本配置
-// ========================================================================================
+/*
+ * Halo Plugin Extra API - Build Configuration
+ * 
+ * 解决的核心问题：Halo 官方插件工具硬编码了对 "jar" 任务的依赖，
+ * 无法支持多 JAR 变体构建。通过 buildSrc 自定义组件索引生成来绕过限制。
+ * 
+ * 构建变体：
+ * - jarLite: 轻量版，不包含 JavaScript 功能 - 用于不需要 JS 功能的场景
+ * - jarFullAllPlatforms: 完整版，包含所有平台 Javet 支持 - 用于多平台部署
+ * - jarFull[Platform]: 特定平台完整版 - 用于单平台优化部署
+ */
 
 plugins {
-    id 'java'  // Java 构建支持
-    id "io.freefair.lombok" version "8.14"  // Lombok 注解处理
-    id "run.halo.plugin.devtools" version "0.6.1" apply false  // Halo 插件开发工具 - 禁用自动应用
+    id 'java'
+    id 'io.freefair.lombok' version '8.14'
+    id 'run.halo.plugin.devtools' version '0.6.1' apply false // 禁用自动应用，因为需要手动控制组件索引生成
 }
 
-// 手动应用 Halo 插件但禁用默认组件索引任务
-apply plugin: "run.halo.plugin.devtools"
+apply plugin: 'run.halo.plugin.devtools' // 手动应用以便后续禁用默认组件索引任务
 
-group 'top.howiehz.halo.plugin.extra.api'  // Maven 坐标的 groupId
+group = 'top.howiehz.halo.plugin.extra.api'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)  // 使用 Java 21
+        languageVersion = JavaLanguageVersion.of(21) // 使用 Java 21 以获得最新特性和性能优化
     }
 }
 
 repositories {
-    mavenCentral()  // Maven 中央仓库
+    mavenCentral()
 }
 
-// ========================================================================================
-// 多平台 Javet 依赖配置
-// ========================================================================================
-
-// 定义支持的平台列表，每个平台对应其 native 库标识符
+// 为什么需要多平台 Javet 配置：
+// Javet 包含 native 库，不同平台需要不同的二进制文件
+// 通过平台特定配置可以生成针对性的部署包，减少包大小
 def platforms = [
-    'Linux-arm64': ['linux-arm64'],
-    'Linux-x86_64': ['linux-x86_64'],
-    'Macos-arm64': ['macos-arm64'],
-    'Macos-x86_64': ['macos-x86_64'],
+    'Linux-arm64'   : ['linux-arm64'],
+    'Linux-x86_64'  : ['linux-x86_64'], 
+    'Macos-arm64'   : ['macos-arm64'],
+    'Macos-x86_64'  : ['macos-x86_64'],
     'Windows-x86_64': ['windows-x86_64']
 ]
 
-// 为每个平台创建专用的 Gradle 配置，继承自 runtimeClasspath
+// 为每个平台创建专用配置，继承 runtimeClasspath 以保证依赖一致性
 platforms.each { variant, platformList ->
     configurations.create("javet${variant}") {
         extendsFrom configurations.runtimeClasspath
     }
 }
 
-// 为每个平台配置添加对应的 Javet 核心和 native 库依赖
+// 为每个平台添加对应的 Javet 依赖
+// 为什么分开配置：允许按需打包，避免在单平台部署时包含不必要的 native 库
 platforms.each { variant, platformList ->
-    dependencies.add("javet${variant}", 'com.caoccao.javet:javet:4.1.7')  // Javet 核心
+    dependencies.add("javet${variant}", 'com.caoccao.javet:javet:4.1.7')
     platformList.each { platform ->
-        def artifactName = "javet-node-${platform}"
-        dependencies.add("javet${variant}", "com.caoccao.javet:${artifactName}:4.1.7")  // 平台特定 native 库
+        dependencies.add("javet${variant}", "com.caoccao.javet:javet-node-${platform}:4.1.7")
     }
 }
 
-// 创建包含所有平台的配置，用于构建全平台版本
+// 全平台配置：用于生成包含所有平台支持的通用版本
 configurations {
     javetAllPlatforms {
         extendsFrom configurations.runtimeClasspath
     }
 }
 
-// 为全平台配置添加 Javet 核心和所有平台的 native 库
-dependencies.add("javetAllPlatforms", 'com.caoccao.javet:javet:4.1.7')  // Javet 核心
+dependencies.add('javetAllPlatforms', 'com.caoccao.javet:javet:4.1.7')
 platforms.each { variant, platformList ->
     platformList.each { platform ->
-        def artifactName = "javet-node-${platform}"
-        dependencies.add("javetAllPlatforms", "com.caoccao.javet:${artifactName}:4.1.7")  // 所有平台 native 库
+        dependencies.add('javetAllPlatforms', "com.caoccao.javet:javet-node-${platform}:4.1.7")
     }
 }
 
-// ========================================================================================
-// 项目依赖
-// ========================================================================================
-
 dependencies {
     // Halo 平台依赖
-    implementation platform('run.halo.tools.platform:plugin:2.21.0')  // Halo BOM，统一版本管理
-    compileOnly 'run.halo.app:api'  // Halo API，编译时需要，运行时由 Halo 提供
+    implementation platform('run.halo.tools.platform:plugin:2.21.0') // BOM 确保版本一致性
+    compileOnly 'run.halo.app:api' // compileOnly：运行时由 Halo 提供，避免冲突
     
-    // JavaScript 引擎依赖 - Javet，用于执行 JS 代码
+    // JavaScript 引擎 - 为什么选择 Javet：支持 Node.js 模块，性能好，维护活跃
     implementation 'com.caoccao.javet:javet:4.1.7'
     
-    // Spring 框架依赖 - 编译时需要，运行时由 Halo 提供
-    compileOnly 'org.springframework:spring-context'     // Spring 上下文
-    compileOnly 'org.springframework:spring-core'        // Spring 核心
-    compileOnly 'org.springframework:spring-beans'       // Spring Bean 管理
-    compileOnly 'org.springframework.data:spring-data-commons'  // Spring Data 通用组件
-    compileOnly 'io.projectreactor:reactor-core'         // 响应式编程支持
+    // Spring 依赖 - compileOnly：Halo 已内置，避免版本冲突和包体积增加
+    compileOnly 'org.springframework:spring-context'
+    compileOnly 'org.springframework:spring-core' 
+    compileOnly 'org.springframework:spring-beans'
+    compileOnly 'org.springframework.data:spring-data-commons'
+    compileOnly 'io.projectreactor:reactor-core'
 
-
-    // 测试依赖
-    testImplementation 'run.halo.app:api'                // 测试时需要 Halo API 实现
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'  // Spring Boot 测试支持
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'           // JUnit 平台启动器
-    testImplementation 'com.caoccao.javet:javet:4.1.7'  // 测试时需要 Javet
+    // 测试依赖 - testImplementation：测试时需要真实实现
+    testImplementation 'run.halo.app:api'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'com.caoccao.javet:javet:4.1.7'
 }
 
 test {
-    useJUnitPlatform()  // 使用 JUnit 5 平台
+    useJUnitPlatform()
 }
-
-// ========================================================================================
-// 编译配置
-// ========================================================================================
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"   // 使用 UTF-8 编码
-    options.release = 21         // 编译目标为 Java 21
+    options.encoding = 'UTF-8' // 确保中文注释和字符串正确处理
+    options.release = 21
 }
 
-// ========================================================================================
-// 资源处理任务
-// ========================================================================================
-
-// UI 前端资源处理 - 将 ui 子项目的构建输出复制到插件的 console 目录
+// 前端资源处理
+// 为什么需要这些任务：插件包含 Web 管理界面，需要将前端构建产物打包进 JAR
 tasks.register('processUiResources', Copy) {
-    from project(':ui').layout.buildDirectory.dir('dist')          // 来源：ui 项目构建输出
-    into layout.buildDirectory.dir('resources/main/console')       // 目标：插件控制台资源目录
-    shouldRunAfter tasks.named('processResources')                 // 在标准资源处理后执行
+    from project(':ui').layout.buildDirectory.dir('dist')
+    into layout.buildDirectory.dir('resources/main/console') // Halo 约定的管理界面路径
+    shouldRunAfter tasks.named('processResources') // 确保在标准资源处理后执行
 }
 
-// Shiki 代码高亮资源处理 - 将 Shiki JS 库复制到插件的 js 目录（仅完整版需要）
 tasks.register('processShikiResources', Copy) {
-    from project(':shiki').layout.buildDirectory.dir('dist')       // 来源：shiki 项目构建输出
-    into layout.buildDirectory.dir('resources/main/js')            // 目标：插件 JS 资源目录
-    include 'shiki.umd.cjs'                                        // 只包含 Shiki UMD 模块
-    shouldRunAfter tasks.named('processResources')                 // 在标准资源处理后执行
+    from project(':shiki').layout.buildDirectory.dir('dist')
+    into layout.buildDirectory.dir('resources/main/js') // 插件 JS 资源目录
+    include 'shiki.umd.cjs' // 只包含 UMD 格式，兼容性好
+    shouldRunAfter tasks.named('processResources')
 }
 
-// ========================================================================================
-// 自定义组件索引生成 - 使用 buildSrc 中的任务
-// ========================================================================================
-
-// YAML 版本设置逻辑
+// plugin.yaml 版本同步逻辑
+// 为什么需要：确保 plugin.yaml 中的版本与构建版本一致，避免部署时版本不匹配
 def configurePluginYamlVersion() {
     return { task ->
         def pluginYaml = file('src/main/resources/plugin.yaml')
@@ -140,144 +127,135 @@ def configurePluginYamlVersion() {
             def versionPattern = /(spec:\s*\n(?:\s+.*\n)*?\s+version:\s*)"[^"]*"/
             def updatedContent = yamlContent.replaceFirst(versionPattern, '$1"' + project.version + '"')
             pluginYaml.text = updatedContent
-            logger.info("Updated plugin.yaml version to: ${project.version}")
         }
     }
 }
 
-// 在 afterEvaluate 中创建任务，确保 buildSrc 类可用
 def jarLiteIndexTask
 def jarFullAllPlatformsIndexTask
 
-// 统一的 afterEvaluate 块，处理所有延迟配置
+/*
+ * 核心解决方案：自定义组件索引生成
+ * 
+ * 为什么需要：
+ * 1. Halo 官方插件工具硬编码了对 "jar" 任务的依赖
+ * 2. 我们需要多个 JAR 变体，每个都需要正确的组件索引
+ * 3. 通过 buildSrc 中的自定义任务绕过官方工具限制
+ * 4. 使用 afterEvaluate 确保所有依赖都已解析
+ */
 afterEvaluate {
-    // 禁用 Halo 插件自动创建的组件索引任务，使用我们的自定义实现
+    // 禁用官方组件索引任务 - 避免与自定义实现冲突
     tasks.matching { it.name == 'generatePluginComponentsIdx' }.configureEach {
         enabled = false
     }
     
-    // 配置子项目依赖，确保子项目任务已经完全注册
+    // 配置子项目依赖 - 为什么在 afterEvaluate：确保子项目任务已注册
     tasks.named('processUiResources') {
         dependsOn project(':ui').tasks.named('assemble')
     }
     tasks.named('processShikiResources') {
         dependsOn project(':shiki').tasks.named('assemble')
     }
-    
-    // 配置完整版本的编译任务依赖
     tasks.named('classes') {
-        dependsOn tasks.named('processUiResources')    // UI 资源必须先处理
-        dependsOn tasks.named('processShikiResources') // Shiki 资源必须先处理
+        dependsOn tasks.named('processUiResources'), tasks.named('processShikiResources')
     }
-    // 导入 buildSrc 中的任务类
+    
+    // 导入自定义组件索引任务类 - 为什么用自定义：支持多 JAR 任务，官方不支持
     def MultiJarPluginComponentsIndexTask = top.howiehz.gradle.MultiJarPluginComponentsIndexTask
     
-    // 为 jarLite 创建组件索引任务 - 只扫描基础类
+    // 轻量版组件索引 - 为什么过滤 JS 类：轻量版不包含 JS 功能，避免无效组件注册
     jarLiteIndexTask = tasks.register('generatePluginComponentsIdxJarLite', MultiJarPluginComponentsIndexTask) {
         group = 'halo server'
-        description = 'Generates plugin components index file for jarLite'
-        
+        description = 'Generates plugin components index for lite version'
         classesDirs.from(sourceSets.main.output.classesDirs.filter { dir ->
-            // 只包含基础类，排除 JS 相关功能
-            !dir.toString().contains('js')
+            !dir.toString().contains('js') // 过滤 JS 相关类目录
         })
         jarTaskName.set('jarLite')
-        outputFile.set(layout.buildDirectory.file("tmp/jarLite/META-INF/plugin-components.idx"))
-        
+        outputFile.set(layout.buildDirectory.file('tmp/jarLite/META-INF/plugin-components.idx'))
         doFirst(configurePluginYamlVersion())
     }
 
-    // 为 jarFullAllPlatforms 创建组件索引任务 - 扫描所有类
+    // 完整版组件索引 - 包含所有类，支持完整功能
     jarFullAllPlatformsIndexTask = tasks.register('generatePluginComponentsIdxJarFullAllPlatforms', MultiJarPluginComponentsIndexTask) {
         group = 'halo server'
-        description = 'Generates plugin components index file for jarFullAllPlatforms'
-        
-        classesDirs.from(sourceSets.main.output.classesDirs)
+        description = 'Generates plugin components index for full version'
+        classesDirs.from(sourceSets.main.output.classesDirs) // 包含所有编译输出
         jarTaskName.set('jarFullAllPlatforms')
-        outputFile.set(layout.buildDirectory.file("tmp/jarFullAllPlatforms/META-INF/plugin-components.idx"))
-        
+        outputFile.set(layout.buildDirectory.file('tmp/jarFullAllPlatforms/META-INF/plugin-components.idx'))
         doFirst(configurePluginYamlVersion())
     }
 
-    // 为每个平台特定的完整版 JAR 创建组件索引任务
+    // 为每个平台生成专用组件索引
     platforms.each { variant, platformList ->
         def taskName = "jarFull${variant}"
         def indexTaskName = "generatePluginComponentsIdx${taskName.capitalize()}"
         
         tasks.register(indexTaskName, MultiJarPluginComponentsIndexTask) {
             group = 'halo server'
-            description = "Generates plugin components index file for ${taskName}"
-            
+            description = "Generates plugin components index for ${taskName}"
             classesDirs.from(sourceSets.main.output.classesDirs)
             jarTaskName.set(taskName)
             outputFile.set(layout.buildDirectory.file("tmp/${taskName}/META-INF/plugin-components.idx"))
-            
             doFirst(configurePluginYamlVersion())
         }
     }
     
-    // 创建 jarLite 任务
+    // JAR 构建任务
+    
+    // 轻量版：为什么需要：提供不依赖 JS 的基础功能版本，减少资源占用
     tasks.register('jarLite', Jar) {
         group = 'build'
-        description = 'Assembles a lite jar without JS/Javet dependencies and resources'
+        description = 'Assembles lite version without JS features'
         archiveFileName = 'extra-api-lite-1.0.0-SNAPSHOT.jar'
         
-        // 包含编译后的 class 文件，但排除 JS 相关功能的类
+        // 排除 JS 相关类 - 减少包大小，避免未使用的依赖
         from(sourceSets.main.output.classesDirs) {
-            exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'   // 排除 JS 服务类
-            exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'    // 排除 JS Finder 类
+            exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
+            exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
         }
-        
-        // 使用标准资源目录确保 plugin.yaml 被正确处理（包含 spec.version），但排除 JS 相关资源
+        // 排除 JS 相关资源
         from(sourceSets.main.output.resourcesDir) {
-            exclude 'js/**'                              // 排除 JS 资源文件
-            exclude 'extensions/extension-definitions.yaml'  // 排除扩展定义文件（JS 功能需要）
+            exclude 'js/**'
+            exclude 'extensions/extension-definitions.yaml' // JS 功能的扩展定义
         }
-        
-        // 包含基础运行时依赖，排除 Javet JavaScript 引擎
+        // 排除 Javet 依赖 - 轻量版不需要 JS 引擎，减少 JAR 大小
         from configurations.runtimeClasspath.filter { 
-            !it.name.contains('javet')  // 过滤掉所有 javet 相关依赖
+            !it.name.contains('javet')
         }.collect { 
-            it.isDirectory() ? it : zipTree(it)  // 展开 JAR 文件内容
+            it.isDirectory() ? it : zipTree(it)
         }
         
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE  // 排除重复文件
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn 'compileJava', 'processResources', jarLiteIndexTask
         
-        // 任务依赖关系 - 暂时跳过 UI 依赖
-        dependsOn 'compileJava'                                // 依赖 Java 编译
-        dependsOn 'processResources'                           // 依赖标准资源处理
-        dependsOn jarLiteIndexTask                             // 依赖对应的组件索引生成任务
-        
-        // 包含生成的组件索引文件
+        // 包含对应的组件索引文件 - Halo 需要此文件来注册插件组件
         into('META-INF') {
             from jarLiteIndexTask.get().outputFile
             rename { 'plugin-components.idx' }
         }
     }
     
-    // 创建 jarFullAllPlatforms 任务
+    // 完整版：包含所有平台 Javet 支持 - 通用部署，无需考虑平台兼容性
     tasks.register('jarFullAllPlatforms', Jar) {
         group = 'build'
-        description = 'Assembles a full jar with all platform dependencies'
+        description = 'Assembles full version with all platforms'
         archiveFileName = 'extra-api-full-all-platforms-1.0.0-SNAPSHOT.jar'
         
-        from sourceSets.main.output                     // 包含所有编译输出（类和资源）
-        from configurations.javetAllPlatforms.collect { // 包含全平台 Javet 依赖
-            it.isDirectory() ? it : zipTree(it)         // 展开 JAR 文件内容
+        from sourceSets.main.output // 包含所有编译输出
+        from configurations.javetAllPlatforms.collect {
+            it.isDirectory() ? it : zipTree(it)
         }
         
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE  // 排除重复文件
-        dependsOn 'classes'                             // 依赖完整编译（包含 UI 和 Shiki 资源）
-        dependsOn jarFullAllPlatformsIndexTask          // 依赖对应的组件索引生成任务
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn 'classes', jarFullAllPlatformsIndexTask
         
-        // 包含生成的组件索引文件
         into('META-INF') {
             from jarFullAllPlatformsIndexTask.get().outputFile
             rename { 'plugin-components.idx' }
         }
     }
     
-    // 为每个平台生成特定的完整版 JAR
+    // 平台特定完整版 - 优化部署包大小，只包含目标平台的 native 库
     platforms.each { variant, platformList ->
         def taskName = "jarFull${variant}"
         def configName = "javet${variant}"
@@ -286,19 +264,17 @@ afterEvaluate {
         
         tasks.register(taskName, Jar) {
             group = 'build'
-            description = "Assembles a full jar with ${variant} platform dependencies"
+            description = "Assembles full version for ${variant}"
             archiveFileName = archiveName
             
-            from sourceSets.main.output                         // 包含所有编译输出
-            from configurations.getByName(configName).collect { // 包含特定平台 Javet 依赖
-                it.isDirectory() ? it : zipTree(it)             // 展开 JAR 文件内容
+            from sourceSets.main.output
+            from configurations.getByName(configName).collect {
+                it.isDirectory() ? it : zipTree(it)
             }
             
-            duplicatesStrategy = DuplicatesStrategy.EXCLUDE  // 排除重复文件
-            dependsOn 'classes'                             // 依赖完整编译
-            dependsOn indexTaskName                         // 依赖对应的组件索引生成任务
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            dependsOn 'classes', indexTaskName
             
-            // 包含生成的组件索引文件
             into('META-INF') {
                 from tasks.named(indexTaskName).get().outputFile
                 rename { 'plugin-components.idx' }
@@ -307,53 +283,32 @@ afterEvaluate {
     }
 }
 
-// ========================================================================================
-// JAR 构建任务
-// ========================================================================================
-
-// 所有 JAR 任务都在 afterEvaluate 块中创建，以确保正确的依赖解析
-
-// ========================================================================================
 // 默认任务配置
-// ========================================================================================
-
-// 禁用默认的 jar 任务，改为使用 jarFullAllPlatforms
 jar {
-    enabled = false                      // 禁用默认 jar 任务
-    dependsOn 'jarFullAllPlatforms'      // 执行 jar 时实际构建完整版
+    enabled = false // 禁用标准 jar 任务 - 使用自定义 JAR 任务替代
+    dependsOn 'jarFullAllPlatforms'
 }
 
-// 默认 build 任务构建完整版
 build {
-    dependsOn 'jarFullAllPlatforms'      // 执行 build 时构建完整版
+    dependsOn 'jarFullAllPlatforms' // 默认构建完整版 - 提供完整功能
 }
 
-// ========================================================================================
 // 便捷构建任务
-// ========================================================================================
-
-// 构建所有版本的任务 - 包括轻量版和所有平台的完整版
 tasks.register('buildAll') {
     group = 'build'
-    description = 'Build all jar variants'
-    dependsOn 'jarLite'                  // 构建轻量版
-    dependsOn 'jarFullAllPlatforms'      // 构建全平台完整版
+    description = 'Build all jar variants' // 为什么需要：CI/CD 中一次性构建所有版本
+    dependsOn 'jarLite', 'jarFullAllPlatforms'
     platforms.each { variant, platformList ->
-        dependsOn "jarFull${variant}"    // 构建每个平台特定版本
+        dependsOn "jarFull${variant}"
     }
 }
 
-// 只构建轻量版的任务 - 用于快速测试和不需要 JS 功能的场景
 tasks.register('buildLite') {
     group = 'build'
-    description = 'Build lite version only'
+    description = 'Build lite version only' // 为什么需要：快速测试和开发时的轻量构建
     dependsOn 'jarLite'
 }
 
-// ========================================================================================
-// Halo 插件配置
-// ========================================================================================
-
 halo {
-    version = '2.21'  // 目标 Halo 版本
+    version = '2.21' // 目标 Halo 版本
 }
