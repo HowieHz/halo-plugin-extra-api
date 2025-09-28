@@ -48,6 +48,11 @@ configurations {
     liteCompile.extendsFrom configurations.compileOnly
     liteRuntime.extendsFrom configurations.runtimeClasspath
     liteRuntime.extendsFrom configurations.runtimeOnly
+    
+    // 在 liteRuntime 配置中排除 javet 依赖
+    liteRuntime {
+        exclude group: 'com.caoccao.javet'
+    }
 }
 
 // Lite source set
@@ -127,19 +132,9 @@ tasks.register('jarLite', Jar) {
     description = "Assembles a lite jar without JS and Javet dependencies"
     archiveFileName = "extra-api-lite-1.0.0-SNAPSHOT.jar"
     from sourceSets.lite.output
-    from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    from configurations.liteRuntime.collect { it.isDirectory() ? it : zipTree(it) }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn 'generatePluginComponentsIdx'  // 确保注入 version 到 plugin.yaml
-    doFirst {
-        // 复制修改后的 plugin.yaml 到 lite resources dir
-        def mainResourcesDir = sourceSets.main.output.resourcesDir
-        def liteResourcesDir = sourceSets.lite.output.resourcesDir
-        def mainPluginYaml = new File(mainResourcesDir, 'plugin.yaml')
-        def litePluginYaml = new File(liteResourcesDir, 'plugin.yaml')
-        if (mainPluginYaml.exists() && litePluginYaml.exists()) {
-            litePluginYaml.text = mainPluginYaml.text
-        }
-    }
 }
 
 // 修改默认 jar 任务使用全包含配置
@@ -177,4 +172,3 @@ tasks.named('classes') {
 halo {
     version = '2.21'
 }
-
