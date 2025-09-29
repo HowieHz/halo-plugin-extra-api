@@ -37,9 +37,6 @@ public class V8EnginePoolServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
-            // 注意: Javet 库加载配置已在 HaloPluginExtraApiPlugin 静态初始化块中设置
-            // 参考: https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html
-            
             JavetEngineConfig config = new JavetEngineConfig();
             config.setPoolMinSize(2);
             config.setPoolMaxSize(Runtime.getRuntime().availableProcessors());

@@ -87,34 +87,34 @@ public class CustomJavetEngine extends JavetEngine<V8Runtime> {
                 v8Runtime.getExecutor(shikiCode).executeVoid();
                 log.debug("Shiki 代码执行完成");
 
-                // 立即验证
-                try {
-                    boolean highlightExists =
-                        v8Runtime.getExecutor("typeof highlightCode === 'function'")
-                            .executeBoolean();
-                    boolean languagesExists =
-                        v8Runtime.getExecutor("typeof getSupportedLanguages === 'function'")
-                            .executeBoolean();
+                // // 立即验证
+                // try {
+                //     boolean highlightExists =
+                //         v8Runtime.getExecutor("typeof highlightCode === 'function'")
+                //             .executeBoolean();
+                //     boolean languagesExists =
+                //         v8Runtime.getExecutor("typeof getSupportedLanguages === 'function'")
+                //             .executeBoolean();
 
-                    log.debug("验证结果 - highlightCode: {}, getSupportedLanguages: {}",
-                        highlightExists, languagesExists);
+                //     log.debug("验证结果 - highlightCode: {}, getSupportedLanguages: {}",
+                //         highlightExists, languagesExists);
 
-                    if (highlightExists && languagesExists) {
-                        log.info("✅ Shiki 模块预加载成功!");
-                    } else {
-                        log.error("❌ Shiki 函数未正确暴露");
+                //     if (highlightExists && languagesExists) {
+                //         log.info("Shiki 模块预加载成功!");
+                //     } else {
+                //         log.error("Shiki 函数未正确暴露");
 
-                        // 检查全局对象
-                        String globals = v8Runtime.getExecutor(
-                                "Object.getOwnPropertyNames(globalThis).filter(name => name"
-                                    + ".includes('highlight') || name.includes('Language') || "
-                                    + "name.includes('Theme')).join(', ')")
-                            .executeString();
-                        log.info("全局对象中相关属性: {}", globals);
-                    }
-                } catch (Exception e) {
-                    log.error("验证时出错:", Throwables.getRootCause(e));
-                }
+                //         // 检查全局对象
+                //         String globals = v8Runtime.getExecutor(
+                //                 "Object.getOwnPropertyNames(globalThis).filter(name => name"
+                //                     + ".includes('highlight') || name.includes('Language') || "
+                //                     + "name.includes('Theme')).join(', ')")
+                //             .executeString();
+                //         log.info("全局对象中相关属性: {}", globals);
+                //     }
+                // } catch (Exception e) {
+                //     log.error("验证时出错:", Throwables.getRootCause(e));
+                // }
             }
 
         } catch (Exception e) {

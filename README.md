@@ -63,14 +63,72 @@
 
 ### 全量版使用须知
 
-1. 全量版依赖原生库组件，**请勿直接覆盖更新**（如使用应用商店的快捷更新操作）
-2. 全量版更新流程：先停止插件——卸载插件——重启 Halo CMS——安装新版本插件——启动插件。
-3. 推荐在卸载全量版后重启 Halo CMS 确保资源完全释放。
-<!-- 4. 这是 JVM 和 JNI 的根本限制，在以下场景中，问题无法避免：
-   - Eclipse/IDE 热重载项目
-   - Halo 插件重新加载
-   - 任何使用隔离 classloader 的插件系统
-5. 相关文档[Javet doc](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html)、[Javet#124](https://github.com/caoccao/Javet/issues/124) -->
+> ⚠️ **重要**: 全量版依赖 Javet 原生库(JNI),在插件重新加载场景下存在已知限制。
+
+⏱️ 首次使用提示: 全量版的 JavaScript 功能（如 Shiki 代码高亮）在首次调用时需要 1-3 秒进行环境初始化。这是正常现象，之后的调用速度会非常快。
+
+#### 基本使用要求
+
+1. **禁止热重载更新**: 全量版依赖原生库组件，**请勿直接覆盖更新**（如使用应用商店的快捷更新操作）
+2. **正确的更新流程**: 
+   - 停止插件 → 卸载插件 → **重启 Halo** → 安装新版本 → 启动插件
+3. **卸载推荐做法**: 在卸载全量版后**重启 Halo** 确保原生库资源完全释放
+
+#### 插件重新加载问题说明
+
+由于 **JVM 和 JNI 的根本限制**,在以下场景中会出现原生库冲突:
+
+- ✅ **首次安装并启动**: 正常工作
+- ✅ **禁用后重新启用**: 正常工作
+- ❌ **卸载后重新安装**: 会出现 `UnsatisfiedLinkError` 错误
+- ✅ **重启 Halo 后**: 恢复正常工作
+
+**问题根源**: JVM 只允许一个原生库副本,且原生方法绑定到首次加载它的 classloader。当插件重新加载时，新的 classloader 无法访问已绑定到旧 classloader 的原生方法。
+
+#### 解决方案
+
+##### 方案 1: JVM 启动参数(推荐)
+
+在启动 Halo 时添加 JVM 参数以抑制原生库加载错误:
+
+```bash
+java -Djavet.lib.loading.suppress.error=true -jar halo.jar
+```
+
+**Docker 环境配置示例**:
+
+```yaml
+# docker-compose.yml
+services:
+  halo:
+    # 其他配置...
+    environment:
+      - JVM_OPTS=-Djavet.lib.loading.suppress.error=true
+    # 其他配置...
+```
+
+**systemd 服务配置示例**:
+
+```ini
+# /etc/systemd/system/halo.service
+[Service]
+Environment="JAVA_OPTS=-Djavet.lib.loading.suppress.error=true"
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/halo/halo.jar
+# 其他配置...
+```
+
+##### 方案 2: 完全重启(通用方案)
+
+每次更新或重新加载插件后,**完全重启 Halo** 以清除原生库状态。
+
+##### 方案 3: 使用轻量版
+
+如果不需要代码高亮等 JS 相关功能,建议使用[轻量版](#轻量版的优势),完全避免此问题。
+
+#### 相关技术文档
+
+- [Javet 官方文档 - 加载和卸载](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html)
+- [Javet Issue #124 - Classloader 重新加载问题](https://github.com/caoccao/Javet/issues/124)
 
 ## TODO
 
@@ -93,6 +151,13 @@
     - [轻量版的优势](#轻量版的优势)
     - [轻量版本缺少的功能](#轻量版本缺少的功能)
     - [全量版使用须知](#全量版使用须知)
+      - [基本使用要求](#基本使用要求)
+      - [插件重新加载问题说明](#插件重新加载问题说明)
+      - [解决方案](#解决方案)
+        - [方案 1: JVM 启动参数(推荐)](#方案-1-jvm-启动参数推荐)
+        - [方案 2: 完全重启(通用方案)](#方案-2-完全重启通用方案)
+        - [方案 3: 使用轻量版](#方案-3-使用轻量版)
+      - [相关技术文档](#相关技术文档)
   - [TODO](#todo)
   - [快速跳转](#快速跳转)
   - [处理器文档](#处理器文档)
