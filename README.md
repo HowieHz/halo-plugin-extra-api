@@ -121,9 +121,9 @@
 - 性能说明：
     - 使用 V8 引擎池和异步处理，提升渲染效率
 - 默认自动渲染范围：
-  - 处理器会自动处理以下页面内容并在页面 `head` 注入自定义 CSS 样式：
-      - 文章内容 (`post`)
-      - 页面内容 (`page`)
+    - 处理器会自动处理以下页面内容并在页面 `head` 注入自定义 CSS 样式：
+        - 文章内容 (`post`)
+        - 页面内容 (`page`)
 
 #### 配置选项
 
@@ -156,8 +156,8 @@
 #### 补充说明
 
 - 工作原理：
-  1. 内容处理阶段：在内容渲染时，处理器会扫描 HTML 中的 `<pre><code>` 结构
-  2. 语言检测：从 `class` 属性中提取语言标识（如 `language-java`、`lang-python`）
+    1. 内容处理阶段：在内容渲染时，处理器会扫描 HTML 中的 `<pre><code>` 结构
+    2. 语言检测：从 `class` 属性中提取语言标识（如 `language-java`、`lang-python`）
     ```html
     <!-- 标准 Markdown 格式 -->
     <pre><code class="language-java">public class Hello { }</code></pre>
@@ -168,15 +168,15 @@
     <!-- 直接在 pre 标签上指定 -->
     <pre class="language-javascript"><code>console.log("Hello");</code></pre>
     ```
-  3. 主题应用：根据配置应用相应的 Shiki 主题进行高亮
-  4. 样式注入：在页面头部注入配置的 CSS
+    3. 主题应用：根据配置应用相应的 Shiki 主题进行高亮
+    4. 样式注入：在页面头部注入配置的 CSS
 - 错误处理：
-  - 不支持的语言/主题会被跳过渲染
-  - 渲染失败时保留原始格式
+    - 不支持的语言/主题会被跳过渲染
+    - 渲染失败时保留原始格式
 - 性能说明：
-  - 使用 V8 引擎池和异步处理，提升渲染效率
+    - 使用 V8 引擎池和异步处理，提升渲染效率
 - 补充说明：
-  - 双主题模式会生成两个并列的 div 元素 
+    - 双主题模式会生成两个并列的 div 元素
 
 ## Finder API 文档
 
@@ -252,20 +252,20 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 **返回值**
 
 - `isFullVersion()` → `boolean` - 完整版时返回 true，轻量版时返回 false
-- `isLiteVersion()` → `boolean` - 轻量版时返回 true，完整版时返回 false  
+- `isLiteVersion()` → `boolean` - 轻量版时返回 true，完整版时返回 false
 - `getVersionType()` → `string` - 返回 "full" 或 "lite"
 - `isJavaScriptAvailable()` → `boolean` - JavaScript 功能可用时返回 true
 
 **描述**
 
 - 检测原理
-  - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
-    - 完整版：包含 JavaScript 运行时，V8EnginePoolService 类存在
-    - 轻量版：构建时排除 js 包下所有类，V8EnginePoolService 类不存在
+    - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
+        - 完整版：包含 JavaScript 运行时，V8EnginePoolService 类存在
+        - 轻量版：构建时排除 js 包下所有类，V8EnginePoolService 类不存在
 - 应用场景
-  - 主题兼容性：主题可以根据插件版本提供不同的功能体验
-  - 用户提示：向用户说明当前版本的功能限制
-  - 条件渲染：仅在支持的版本中启用特定功能（主题请求不存在的 Finder API 会报错并阻止页面渲染）
+    - 主题兼容性：主题可以根据插件版本提供不同的功能体验
+    - 用户提示：向用户说明当前版本的功能限制
+    - 条件渲染：仅在支持的版本中启用特定功能（主题请求不存在的 Finder API 会报错并阻止页面渲染）
 
 **使用示例**
 
@@ -374,9 +374,9 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 **描述**
 
 - 参数说明：
-  - `htmlContent`：包含代码块的 HTML 内容，通常是文章或页面的内容字段。
+    - `htmlContent`：包含代码块的 HTML 内容，通常是文章或页面的内容字段。
 - 功能特性：
-  - 同 [处理器文档 - 代码高亮（通过 Shiki.js 渲染）](#代码高亮通过-shikijs-渲染) 中描述的功能特性一致。也受同样的配置项影响。
+    - 同 [处理器文档 - 代码高亮（通过 Shiki.js 渲染）](#代码高亮通过-shikijs-渲染) 中描述的功能特性一致。也受同样的配置项影响。
 
 **使用示例**
 
@@ -398,14 +398,14 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 
 1. 访问 [Releases 页面](https://github.com/HowieHz/halo-plugin-extra-api/releases)
 2. 下载最新版本的 JAR 文件：
-   - `extra-api-lite-版本号.jar`：轻量版（适用于所有平台）
-   - `extra-api-all-版本号.jar`：全量版（包含所有平台依赖，体积较大，不推荐下载）
-   - 如需使用全量版，推荐下载平台特定版本：
-     - `extra-api-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
-     - `extra-api-linux-x86_64-版本号.jar`：适用于 Linux x86_64 平台的版本
-     - `extra-api-macos-arm64-版本号.jar`：适用于 macOS ARM64 平台的版本
-     - `extra-api-macos-x86_64-版本号.jar`：适用于 macOS x86_64 平台的版本
-     - `extra-api-windows-x86_64-版本号.jar`：适用于 Windows x86_64 平台的版本
+    - `extra-api-lite-版本号.jar`：轻量版（适用于所有平台）
+    - `extra-api-all-版本号.jar`：全量版（包含所有平台依赖，体积较大，不推荐下载）
+    - 如需使用全量版，推荐下载平台特定版本：
+        - `extra-api-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
+        - `extra-api-linux-x86_64-版本号.jar`：适用于 Linux x86_64 平台的版本
+        - `extra-api-macos-arm64-版本号.jar`：适用于 macOS ARM64 平台的版本
+        - `extra-api-macos-x86_64-版本号.jar`：适用于 macOS x86_64 平台的版本
+        - `extra-api-windows-x86_64-版本号.jar`：适用于 Windows x86_64 平台的版本
 3. 将下载的 JAR 文件上传到 Halo 的插件管理页面安装
 
 ### 开发版
@@ -419,13 +419,13 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 1. 访问上述链接，选择最新的成功运行的 workflow。
 2. 在 "Artifacts" 部分，下载 `extra-api` 压缩包。
 3. 解压后，您将找到以下 JAR 文件：
-   - `extra-api-lite-版本号-SNAPSHOT.jar`：轻量版（适用于所有平台）
-   - `extra-api-all-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
-   - `extra-api-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
-   - `extra-api-linux-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux x86_64 平台）
-   - `extra-api-macos-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS ARM64 平台）
-   - `extra-api-macos-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS x86_64 平台）
-   - `extra-api-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
+    - `extra-api-lite-版本号-SNAPSHOT.jar`：轻量版（适用于所有平台）
+    - `extra-api-all-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
+    - `extra-api-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
+    - `extra-api-linux-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux x86_64 平台）
+    - `extra-api-macos-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS ARM64 平台）
+    - `extra-api-macos-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS x86_64 平台）
+    - `extra-api-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
 
 选择适合您系统的 JAR 文件安装到 Halo。
 
