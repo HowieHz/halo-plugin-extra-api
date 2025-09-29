@@ -194,6 +194,7 @@
 **描述**
 
 检测 ExtraAPI 插件是否已安装并启用。建议在主题中使用本插件 API 前先进行检测，以确保插件可用性。
+官方文档：[插件 Finder API](https://docs.halo.run/developer-guide/theme/finder-apis/plugin#availablepluginname-requiresversion)
 
 **参数**
 
@@ -202,6 +203,11 @@
 **返回值**
 
 - `boolean` - 插件可用时返回 true，否则返回 false
+
+**说明**
+
+使用 `pluginFinder.available('extra-api')` 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。
+注：在此基础上可以使用 `pluginFinder.available('extra-api', '2.*')` 锁定大版本号，避免 API 破坏性更新时导致主题渲染报错。
 
 **示例**
 
@@ -223,23 +229,19 @@
 <span th:if="${pluginFinder.available('extra-api')}">总字数：[[${extraApiStatsFinder.getPostWordCount()}]]</span>
 ```
 
-**说明**
-
-使用 `pluginFinder.available('extra-api')` 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。
-
 #### 插件版本检测 API
 
 **Finder 名称：** `extraApiPluginInfoFinder`
 
 **描述**
 
-提供插件版本类型检测功能，让主题或其他代码能够检测当前运行的是轻量版还是完整版插件，以便有条件地使用高级功能。
+提供插件版本类型检测功能，让主题或其他代码能够检测当前运行的是轻量版还是全量版插件，以便有条件地使用高级功能。
 （注：以下四个 API 本质上是同一个 API，您可以选择使用其中任何一个进行主题编写。）
 
 **API 方法**
 
 ```javascript
-// 检查是否为完整版
+// 检查是否为全量版
 extraApiPluginInfoFinder.isFullVersion()
 
 // 检查是否为轻量版  
@@ -258,8 +260,8 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 
 **返回值**
 
-- `isFullVersion()` → `boolean` - 完整版时返回 true，轻量版时返回 false
-- `isLiteVersion()` → `boolean` - 轻量版时返回 true，完整版时返回 false
+- `isFullVersion()` → `boolean` - 全量版时返回 true，轻量版时返回 false
+- `isLiteVersion()` → `boolean` - 轻量版时返回 true，全量版时返回 false
 - `getVersionType()` → `string` - 返回 "full" 或 "lite"
 - `isJavaScriptAvailable()` → `boolean` - JavaScript 功能可用时返回 true
 
@@ -267,7 +269,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 
 - 检测原理
     - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
-        - 完整版：包含 JavaScript 运行时，V8EnginePoolService 类存在
+        - 全量版：包含 JavaScript 运行时，V8EnginePoolService 类存在
         - 轻量版：构建时排除 js 包下所有类，V8EnginePoolService 类不存在
 - 应用场景
     - 主题兼容性：主题可以根据插件版本提供不同的功能体验
@@ -296,7 +298,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 
 <!--/* 结合其他条件使用 */-->
 <th:block th:if="${pluginFinder.available('extra-api') and extraApiPluginInfoFinder.isFullVersion()}">
-    <!-- 只有在插件可用且为完整版时才显示 -->
+    <!-- 只有在插件可用且为全量版时才显示 -->
     <div th:utext="${extraApiRenderFinder.renderCodeHtml(content)}"></div>
 </th:block>
 ```
