@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
 import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
-import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
 
 import java.lang.reflect.Method;
 
@@ -22,13 +21,26 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
 
     private final PostWordCountService postWordCountService;
     
-    @Autowired(required = false)
-    private V8EnginePoolService v8EnginePoolService;
+    private Object v8EnginePoolService;
 
     public HaloPluginExtraApiPlugin(PluginContext pluginContext,
         PostWordCountService postWordCountService) {
         super(pluginContext);
         this.postWordCountService = postWordCountService;
+    }
+    
+    /**
+     * Setter injection for V8EnginePoolService to avoid ClassNotFoundException in lite version.
+     * 使用 setter 注入 V8EnginePoolService 以避免 lite 版本中的 ClassNotFoundException。
+     * 
+     * We use Object type and setter injection to avoid Spring trying to load the class
+     * during component scanning, which would fail in lite version where the class doesn't exist.
+     * 我们使用 Object 类型和 setter 注入，以避免 Spring 在组件扫描时尝试加载该类，
+     * 这在类不存在的 lite 版本中会失败。
+     */
+    @Autowired(required = false)
+    public void setV8EnginePoolService(Object v8EnginePoolService) {
+        this.v8EnginePoolService = v8EnginePoolService;
     }
 
     /**
@@ -38,10 +50,64 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     @Override
     public void start() {
         log.info("插件启动成功！");
+        
+        // Setup library loading listener to suppress "already loaded" errors
+        // 设置库加载监听器以抑制"已加载"错误
+        setupLibLoadingListener();
+        
         // Preload all caches when the plugin starts
         // 插件启动时预加载所有缓存
         // post word count cache / 文章字数缓存
         postWordCountService.warmUpAllCache();
+    }
+    
+    /**
+     * Setup Javet library loading listener to suppress "already loaded" errors.
+     * 设置 Javet 库加载监听器以抑制"已加载"错误。
+     * 
+     * This is necessary because after unloadLibrary() is called, the actual unloading
+     * depends on GC. If the plugin is reinstalled before GC completes, the library
+     * may still be in memory, causing an "already loaded" error.
+     * 
+     * 这是必要的，因为调用 unloadLibrary() 后，实际的卸载依赖于 GC。
+     * 如果在 GC 完成之前重新安装插件，库可能仍在内存中，导致"已加载"错误。
+     */
+    private void setupLibLoadingListener() {
+        try {
+            Class<?> javetLibLoaderClass = Class.forName("com.caoccao.javet.interop.loader.JavetLibLoader");
+            Class<?> listenerInterface = Class.forName("com.caoccao.javet.interop.loader.IJavetLibLoadingListener");
+            
+            // Create a listener that suppresses "already loaded" errors
+            // 创建一个抑制"已加载"错误的监听器
+            Object listener = java.lang.reflect.Proxy.newProxyInstance(
+                listenerInterface.getClassLoader(),
+                new Class<?>[] { listenerInterface },
+                (proxy, method, args) -> {
+                    if ("isSuppressingError".equals(method.getName())) {
+                        // Suppress the "already loaded" error
+                        // 抑制"已加载"错误
+                        return true;
+                    }
+                    // Use default behavior for other methods
+                    // 其他方法使用默认行为
+                    return null;
+                }
+            );
+            
+            // Set the listener - must be called before V8Host is called
+            // 设置监听器 - 必须在 V8Host 被调用之前
+            Method setListenerMethod = javetLibLoaderClass.getMethod("setLibLoadingListener", listenerInterface);
+            setListenerMethod.invoke(null, listener);
+            
+            log.info("Javet 库加载监听器设置成功，已启用 'already loaded' 错误抑制");
+            
+        } catch (ClassNotFoundException e) {
+            // Javet not available - expected in lite version
+            // Javet 不可用 - lite 版本中的预期行为
+            log.debug("Javet 类未找到，跳过库加载监听器设置（可能是 lite 版本）");
+        } catch (Exception e) {
+            log.warn("设置 Javet 库加载监听器时出错: {}", e.getMessage(), e);
+        }
     }
 
     /**
