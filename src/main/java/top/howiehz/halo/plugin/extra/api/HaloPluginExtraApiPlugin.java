@@ -31,7 +31,7 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     @Override
     public void start() {
         log.info("插件启动成功！");
-        
+
         // Preload all caches when the plugin starts
         // 插件启动时预加载所有缓存
         // post word count cache / 文章字数缓存
