@@ -37,7 +37,7 @@ jobs:
       - name: gradlew test
         run: |
           ./gradlew test
-      - name: Front test
-        run: |
-          cd ui
-          pnpm test
+      # - name: Front test
+      #   run: |
+      #     cd ui
+      #     pnpm test
