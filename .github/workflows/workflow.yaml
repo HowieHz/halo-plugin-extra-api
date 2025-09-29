@@ -48,13 +48,55 @@ jobs:
           if [ -n "$version" ]; then
             sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
           fi
-          ./gradlew clean build -x test
+          ./gradlew clean buildAll
       - name: Archive extra-api jar
         uses: actions/upload-artifact@v4
         with:
-          name: extra-api
+          name: extra-api-archive
           path: |
             build/libs/*.jar
+          retention-days: 1
+      - name: Upload extra-api-full-all-platforms
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-full-all-platforms
+          path: build/libs/extra-api-full-all-platforms-*.jar
+          retention-days: 1
+      - name: Upload extra-api-full-linux-arm64
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-full-linux-arm64
+          path: build/libs/extra-api-full-linux-arm64-*.jar
+          retention-days: 1
+      - name: Upload extra-api-full-linux-x86_64
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-full-linux-x86_64
+          path: build/libs/extra-api-full-linux-x86_64-*.jar
+          retention-days: 1
+      - name: Upload extra-api-full-macos-arm64
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-full-macos-arm64
+          path: build/libs/extra-api-full-macos-arm64-*.jar
+          retention-days: 1
+      - name: Upload extra-api-full-macos-x86_64
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-full-macos-x86_64
+          path: build/libs/extra-api-full-macos-x86_64-*.jar
+          retention-days: 1
+      - name: Upload extra-api-full-windows-x86_64
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-full-windows-x86_64
+          path: build/libs/extra-api-full-windows-x86_64-*.jar
+          retention-days: 1
+      - name: Upload extra-api-lite
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-api-lite
+          path: build/libs/extra-api-lite-*.jar
           retention-days: 1
 
   github-release:
@@ -67,17 +109,14 @@ jobs:
         with:
           name: extra-api
           path: build/libs
-      - name: Get Name of Artifact
-        id: get_artifact
+      - name: Get Name of Artifacts
+        id: get_artifacts
         run: |
-          ARTIFACT_PATHNAME=$(ls build/libs/*.jar | head -n 1)
-          ARTIFACT_NAME=$(basename ${ARTIFACT_PATHNAME})
-          echo "Artifact pathname: ${ARTIFACT_PATHNAME}"
-          echo "Artifact name: ${ARTIFACT_NAME}"
-          echo "ARTIFACT_PATHNAME=${ARTIFACT_PATHNAME}" >> $GITHUB_ENV
-          echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
+          ARTIFACT_PATHNAMES=$(ls build/libs/*.jar)
+          echo "Artifact pathnames: ${ARTIFACT_PATHNAMES}"
+          echo "ARTIFACT_PATHNAMES=${ARTIFACT_PATHNAMES}" >> $GITHUB_ENV
           echo "RELEASE_ID=${{ github.event.release.id }}" >> $GITHUB_ENV
-      - name: Upload a Release Asset
+      - name: Upload Release Assets
         uses: actions/github-script@v2
         if: github.event_name == 'release'
         with:
@@ -90,14 +129,17 @@ jobs:
             const { repo: { owner, repo }, sha } = context;
             console.log({ owner, repo, sha });
 
-            const releaseId = process.env.RELEASE_ID
-            const artifactPathName = process.env.ARTIFACT_PATHNAME
-            const artifactName = process.env.ARTIFACT_NAME
-            console.log('Releasing', releaseId, artifactPathName, artifactName)
+            const releaseId = process.env.RELEASE_ID;
+            const artifactPathNames = process.env.ARTIFACT_PATHNAMES.split(' ');
+            console.log('Releasing', releaseId, artifactPathNames);
 
-            await github.repos.uploadReleaseAsset({
-              owner, repo,
-              release_id: releaseId,
-              name: artifactName,
-              data: await fs.readFile(artifactPathName)
-            });
+            for (const artifactPathName of artifactPathNames) {
+              const artifactName = artifactPathName.split('/').pop();
+              console.log('Uploading', artifactPathName, artifactName);
+              await github.repos.uploadReleaseAsset({
+                owner, repo,
+                release_id: releaseId,
+                name: artifactName,
+                data: await fs.readFile(artifactPathName)
+              });
+            }

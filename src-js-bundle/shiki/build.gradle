@@ -3,11 +3,15 @@ plugins {
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
-group 'top.howiehz.halo.plugin.extra.api.ui'
+group 'top.howiehz.halo.plugin.extra.api.js.bundle.shiki'
+
+node {
+    // Node configuration
+}
 
 tasks.register('pnpmBuild', PnpmTask) {
     group = 'build'
-    description = 'Build the UI project using pnpm'
+    description = 'Build the Shiki bundle using pnpm'
     args = ['build']
     dependsOn tasks.named('pnpmInstall')
     inputs.dir(layout.projectDirectory.dir('src'))
@@ -17,17 +21,7 @@ tasks.register('pnpmBuild', PnpmTask) {
     outputs.dir(layout.buildDirectory.dir('dist'))
 }
 
-tasks.register('pnpmCheck', PnpmTask) {
-    group = 'verification'
-    description = 'Run unit tests for the UI project using pnpm'
-    args = ['test:unit']
-    dependsOn tasks.named('pnpmInstall')
-}
-
-tasks.named('check') {
-    dependsOn tasks.named('pnpmCheck')
-}
-
+// 配置 assemble 任务依赖
 tasks.named('assemble') {
     dependsOn tasks.named('pnpmBuild')
 }
