@@ -4,7 +4,7 @@
 
 一个为 Halo CMS 提供额外 API 的轻量级插件。
 
-快捷跳转：[版本说明](#版本说明)/[全量版使用须知](#全量版使用须知)
+快捷跳转：[版本说明](#版本说明)/[全量版使用须知](#全量版使用须知)/[文档目录](#文档目录)
 
 ## 核心理念
 
@@ -37,6 +37,23 @@
 
 </details>
 
+## 功能介绍
+
+本插件现版本已提供以下功能：
+- 无需主题适配即可使用的功能：
+  - [代码高亮处理器](#代码高亮处理器)（仅全量版可用）
+- 需要主题适配的 Finder API：
+  - [文章字数统计 API](#文章字数统计-api)
+  - [代码高亮 API](#代码高亮-api)（仅全量版可用）
+
+未来将实现的功能：[TODO](#TODO)
+
+欢迎为此插件提 [Issue](https://github.com/HowieHz/halo-plugin-extra-api/issues/new)，任何你需要的功能都可以在此处提出，我将在能力范围内尽力实现。
+
+💖 支持本项目: 如果你觉得这个插件有用，点个 [Star](https://github.com/HowieHz/halo-plugin-extra-api) 就是对我最大的鼓励!
+
+感谢所有支持本项目的用户和开发者，也特别感谢 Halo CMS 团队为插件生态提供的优秀平台。
+
 ## 版本说明
 
 插件提供两个版本：
@@ -61,79 +78,109 @@
 
 如果您需要上述功能，请使用全量版。
 
-### 全量版使用须知
+## 全量版使用须知
 
-> ⚠️ **重要**: 全量版依赖 Javet 原生库(JNI),在插件重新加载场景下存在已知限制。
+⏱️ **首次使用提示**: 全量版的 JavaScript 功能（如 Shiki 代码高亮）在首次调用时需要 1~3 秒进行环境初始化。这是正常现象，之后的调用速度会非常快。
 
-⏱️ 首次使用提示: 全量版的 JavaScript 功能（如 Shiki 代码高亮）在首次调用时需要 1-3 秒进行环境初始化。这是正常现象，之后的调用速度会非常快。
+> ⚠️ **重要**: 全量版依赖 Javet 加载 Node.js 原生库（基于 JNI），受 Halo 插件架构限制，存在[已知问题](#全量版已知问题)。
 
-#### 基本使用要求
+### 基本使用要求
 
-1. **禁止热重载更新**: 全量版依赖原生库组件，**请勿直接覆盖更新**（如使用应用商店的快捷更新操作）
+1. **请勿热重载更新**: 请勿直接覆盖更新（如使用应用商店/插件列表的快捷更新操作）
 2. **正确的更新流程**: 
-   - 停止插件 → 卸载插件 → **重启 Halo** → 安装新版本 → 启动插件
-3. **卸载推荐做法**: 在卸载全量版后**重启 Halo** 确保原生库资源完全释放
+   - 方法一：停止插件 → 卸载插件 → **重启 Halo** → 安装新版本 → 启动插件
+   - 方法二：停止插件 → 卸载插件 → 安装新版本 → **重启 Halo** → 启动插件
+3. **卸载推荐做法**: 在卸载全量版后**重启 Halo** 确保原生库资源完全释放。
 
-#### 插件重新加载问题说明
+### 全量版已知问题
 
-由于 **JVM 和 JNI 的根本限制**,在以下场景中会出现原生库冲突:
+- 问题一：卸载后重新安装全量版插件，不重启就启用。调用 JS 相关 API 时会出现错误：
+  - **首次安装并启动**: 正常工作
+  - **禁用后重新启用**: 正常工作
+  - **卸载后重新安装**: ❌ 会出现 `JavetException: Javet library is not loaded` 错误
+  - **重启 Halo 后**: 恢复正常工作
 
-- ✅ **首次安装并启动**: 正常工作
-- ✅ **禁用后重新启用**: 正常工作
-- ❌ **卸载后重新安装**: 会出现 `UnsatisfiedLinkError` 错误
-- ✅ **重启 Halo 后**: 恢复正常工作
+#### 问题一解决方案
 
-**问题根源**: JVM 只允许一个原生库副本,且原生方法绑定到首次加载它的 classloader。当插件重新加载时，新的 classloader 无法访问已绑定到旧 classloader 的原生方法。
+安装好新版本插件后**先别启用**！   
+在启用新版本插件之前，请**先重启 Halo CMS**。
 
-#### 解决方案
+未来版本会将引擎作为前置依赖插件，更新本插件不再需要重启。
 
-##### 方案 1: JVM 启动参数(推荐)
+<details>
+<summary>📖 技术原因分析（展开查看详细说明）</summary>
 
-在启动 Halo 时添加 JVM 参数以抑制原生库加载错误:
+根据错误日志和 Halo 架构分析:
 
-```bash
-java -Djavet.lib.loading.suppress.error=true -jar halo.jar
+**问题根源**:
+
+1. **Halo 插件架构**: 根据 [Halo 开发文档 - 插件架构](https://docs.halo.run/developer-guide/core/framework), Halo 使用 Spring Plugin Framework 实现插件隔离
+   - 每个插件拥有独立的 Spring ApplicationContext
+   - 每个插件使用独立的 classloader 加载资源
+   - 插件间通过 ExtensionPoint 机制通信
+   - classloader 完全隔离,无法跨插件共享类或资源
+
+2. **Javet 原生库加载机制**:
+   - Javet 需要从 JAR 中提取原生库文件(`.dll`/`.so`/`.dylib`)到临时目录
+   - JVM 通过 JNI 加载这些原生库文件
+   - 原生库文件一旦加载,会被 JVM 锁定
+
+3. **冲突发生过程**:
+   - 安装插件时,Javet 提取原生库文件到 `C:\Users\用户名\AppData\Local\Temp\javet\进程ID\`（以 Windows 举例）
+   - JVM 加载这些文件并锁定
+   - 卸载插件时,虽然 classloader 被销毁,但原生库文件仍被 JVM 锁定,无法删除
+   - 重新安装时,Javet 尝试提取新文件到同一位置
+   - 因为文件被锁定,提取失败
+   - Javet 初始化失败,报错 `Javet library is not loaded because <null>`
+
+**典型错误日志解读**:
+
+```
+WARN - Failed to write to ...libjavet-node-windows-x86_64.v.4.1.7.dll because it is locked
+ERROR - Native Library already loaded in another classloader
+ERROR - JavetException: Javet library is not loaded because <null>
 ```
 
-**Docker 环境配置示例**:
+这三条日志清晰地展示了整个失败过程:
+1. 尝试写入文件失败(文件被锁定)
+2. 检测到库已在其他 classloader 中加载
+3. 初始化失败，因为无法提取必要的库文件
 
-```yaml
-# docker-compose.yml
-services:
-  halo:
-    # 其他配置...
-    environment:
-      - JVM_OPTS=-Djavet.lib.loading.suppress.error=true
-    # 其他配置...
-```
+**为什么重启有效**:
 
-**systemd 服务配置示例**:
+- 重启 Halo 会终止 JVM 进程
+- JVM 终止时会释放所有文件锁
+- 临时目录中的原生库文件会被清理
+- 新的 Halo 进程启动后，Javet 可以正常提取和加载原生库
 
-```ini
-# /etc/systemd/system/halo.service
-[Service]
-Environment="JAVA_OPTS=-Djavet.lib.loading.suppress.error=true"
-ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/halo/halo.jar
-# 其他配置...
-```
+**为什么 Javet 文档中提到的 JVM 参数无效**:
 
-##### 方案 2: 完全重启(通用方案)
+`-Djavet.lib.loading.suppress.error=true` 这个参数的作用是:
+- 抑制 Javet 在检测到"already loaded in another classloader"时的错误日志
+- **但无法解决文件锁定问题**
+- 当库文件无法提取时，Javet 根本无法完成初始化
+- 因此该参数在这个场景下无效
 
-每次更新或重新加载插件后,**完全重启 Halo** 以清除原生库状态。
+**架构层面的限制**:
 
-##### 方案 3: 使用轻量版
+这个问题是 JVM/JNI + 插件 classloader 隔离的固有矛盾:
+- Halo 的插件隔离设计保证了安全性和稳定性
+- 但也导致原生库这类 JVM 级别资源难以管理
+- 类似问题在所有使用 classloader 隔离的插件系统中都存在
+- 这不是 Javet 或本插件的 bug，而是架构层面的限制
 
-如果不需要代码高亮等 JS 相关功能,建议使用[轻量版](#轻量版的优势),完全避免此问题。
+**相关技术文档**:
+- [Javet - Load and Unload](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html)
+- [Javet Issue #124 - Classloader Reload](https://github.com/caoccao/Javet/issues/124)
+- [Halo - Plugin Framework](https://docs.halo.run/developer-guide/core/framework)
 
-#### 相关技术文档
-
-- [Javet 官方文档 - 加载和卸载](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html)
-- [Javet Issue #124 - Classloader 重新加载问题](https://github.com/caoccao/Javet/issues/124)
+</details>
 
 ## TODO
 
 <details><summary>展开折叠内容</summary>
 
+- [ ] 优化代码高亮 API，减少调用次数，降低调用开销
 - [ ] 提供随机文章 API
 - [ ] 提供预计阅读时间 API，及相关配置项
 - [ ] 提供图表渲染 API
@@ -142,26 +189,23 @@ ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/halo/halo.jar
 
 </details>
 
-## 快速跳转
+## 文档目录
 
 - [halo-plugin-extra-api](#halo-plugin-extra-api)
   - [简介](#简介)
   - [核心理念](#核心理念)
+  - [功能介绍](#功能介绍)
   - [版本说明](#版本说明)
     - [轻量版的优势](#轻量版的优势)
     - [轻量版本缺少的功能](#轻量版本缺少的功能)
-    - [全量版使用须知](#全量版使用须知)
-      - [基本使用要求](#基本使用要求)
-      - [插件重新加载问题说明](#插件重新加载问题说明)
-      - [解决方案](#解决方案)
-        - [方案 1: JVM 启动参数(推荐)](#方案-1-jvm-启动参数推荐)
-        - [方案 2: 完全重启(通用方案)](#方案-2-完全重启通用方案)
-        - [方案 3: 使用轻量版](#方案-3-使用轻量版)
-      - [相关技术文档](#相关技术文档)
+  - [全量版使用须知](#全量版使用须知)
+    - [基本使用要求](#基本使用要求)
+    - [全量版已知问题](#全量版已知问题)
+      - [问题一解决方案](#问题一解决方案)
   - [TODO](#todo)
-  - [快速跳转](#快速跳转)
+  - [文档目录](#文档目录)
   - [处理器文档](#处理器文档)
-    - [代码高亮](#代码高亮)
+    - [代码高亮处理器](#代码高亮处理器)
       - [特点](#特点)
       - [配置选项](#配置选项)
       - [支持的主题](#支持的主题)
@@ -183,7 +227,7 @@ ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/halo/halo.jar
 
 ## 处理器文档
 
-### 代码高亮
+### 代码高亮处理器
 
 插件提供了自动化的代码高亮处理器，无需在模板中手动调用，即可对文章和页面内容中的代码块进行语法高亮渲染。
 
