@@ -289,9 +289,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 <!--/* 结合其他条件使用 */-->
 <th:block th:if="${pluginFinder.available('extra-api') and extraApiPluginInfoFinder.isFullVersion()}">
     <!-- 只有在插件可用且为完整版时才显示 -->
-    <div class="code-highlight">
-        <div th:utext="${extraApiRenderFinder.renderCodeHtml(content)}"></div>
-    </div>
+    <div th:utext="${extraApiRenderFinder.renderCodeHtml(content)}"></div>
 </th:block>
 ```
 
