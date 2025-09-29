@@ -9,7 +9,7 @@ import top.howiehz.halo.plugin.extra.api.finder.basic.ExtraApiPluginInfoFinder;
 
 /**
  * Plugin Version Finder Implementation - 插件版本信息查询器实现
- * 
+ * <p>
  * 检测逻辑：
  * 1. 通过检查 V8EnginePoolService 类是否存在来判断是否为完整版
  * 2. 轻量版构建时会排除 js 包下的所有类，包括 V8EnginePoolService
@@ -24,7 +24,8 @@ public class ExtraApiPluginInfoFinderImpl implements ExtraApiPluginInfoFinder {
     /**
      * 用于检测的关键类名 - V8 引擎服务只在完整版中存在
      */
-    private static final String V8_ENGINE_SERVICE_CLASS = "top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService";
+    private static final String V8_ENGINE_SERVICE_CLASS =
+        "top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService";
 
     /**
      * 缓存检测结果 - 避免重复类加载检查
