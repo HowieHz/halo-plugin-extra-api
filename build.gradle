@@ -161,10 +161,13 @@ afterEvaluate {
     jarLiteIndexTask = tasks.register('generatePluginComponentsIdxJarLite', MultiJarPluginComponentsIndexTask) {
         group = 'halo server'
         description = 'Generates plugin components index for lite version'
-        classesDirs.from(sourceSets.main.output.classesDirs.filter { dir ->
-            !dir.toString().contains('js') // 过滤 JS 相关类目录
-        })
+        classesDirs.from(sourceSets.main.output.classesDirs)
         jarTaskName.set('jarLite')
+        // 排除 JS 相关的包，避免在 lite 版本中注册这些组件
+        excludePackages.set([
+            'top.howiehz.halo.plugin.extra.api.service.js',
+            'top.howiehz.halo.plugin.extra.api.finder.js'
+        ])
         outputFile.set(layout.buildDirectory.file('tmp/jarLite/META-INF/plugin-components.idx'))
         dependsOn 'processResources' // 确保在 processResources 之后运行
         doFirst(configurePluginYamlVersion())
