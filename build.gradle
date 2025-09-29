@@ -282,10 +282,12 @@ afterEvaluate {
 jar {
     enabled = false // 禁用标准 jar 任务 - 使用自定义 JAR 任务替代
     dependsOn 'jarFullAllPlatforms'
+//    dependsOn 'jarLite'
 }
 
 build {
     dependsOn 'jarFullAllPlatforms' // 默认构建完整版 - 提供完整功能
+//    dependsOn 'jarLite'
 }
 
 // 便捷构建任务
