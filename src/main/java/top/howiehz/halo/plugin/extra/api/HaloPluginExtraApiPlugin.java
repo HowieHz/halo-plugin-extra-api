@@ -38,64 +38,10 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     @Override
     public void start() {
         log.info("插件启动成功！");
-        
-        // Setup library loading listener to suppress "already loaded" errors
-        // 设置库加载监听器以抑制"已加载"错误
-        setupLibLoadingListener();
-        
         // Preload all caches when the plugin starts
         // 插件启动时预加载所有缓存
         // post word count cache / 文章字数缓存
         postWordCountService.warmUpAllCache();
-    }
-    
-    /**
-     * Setup Javet library loading listener to suppress "already loaded" errors.
-     * 设置 Javet 库加载监听器以抑制"已加载"错误。
-     * 
-     * This is necessary because after unloadLibrary() is called, the actual unloading
-     * depends on GC. If the plugin is reinstalled before GC completes, the library
-     * may still be in memory, causing an "already loaded" error.
-     * 
-     * 这是必要的，因为调用 unloadLibrary() 后，实际的卸载依赖于 GC。
-     * 如果在 GC 完成之前重新安装插件，库可能仍在内存中，导致"已加载"错误。
-     */
-    private void setupLibLoadingListener() {
-        try {
-            Class<?> javetLibLoaderClass = Class.forName("com.caoccao.javet.interop.loader.JavetLibLoader");
-            Class<?> listenerInterface = Class.forName("com.caoccao.javet.interop.loader.IJavetLibLoadingListener");
-            
-            // Create a listener that suppresses "already loaded" errors
-            // 创建一个抑制"已加载"错误的监听器
-            Object listener = java.lang.reflect.Proxy.newProxyInstance(
-                listenerInterface.getClassLoader(),
-                new Class<?>[] { listenerInterface },
-                (proxy, method, args) -> {
-                    if ("isSuppressingError".equals(method.getName())) {
-                        // Suppress the "already loaded" error
-                        // 抑制"已加载"错误
-                        return true;
-                    }
-                    // Use default behavior for other methods
-                    // 其他方法使用默认行为
-                    return null;
-                }
-            );
-            
-            // Set the listener - must be called before V8Host is called
-            // 设置监听器 - 必须在 V8Host 被调用之前
-            Method setListenerMethod = javetLibLoaderClass.getMethod("setLibLoadingListener", listenerInterface);
-            setListenerMethod.invoke(null, listener);
-            
-            log.info("Javet 库加载监听器设置成功，已启用 'already loaded' 错误抑制");
-            
-        } catch (ClassNotFoundException e) {
-            // Javet not available - expected in lite version
-            // Javet 不可用 - lite 版本中的预期行为
-            log.debug("Javet 类未找到，跳过库加载监听器设置（可能是 lite 版本）");
-        } catch (Exception e) {
-            log.warn("设置 Javet 库加载监听器时出错: {}", e.getMessage(), e);
-        }
     }
 
     /**
