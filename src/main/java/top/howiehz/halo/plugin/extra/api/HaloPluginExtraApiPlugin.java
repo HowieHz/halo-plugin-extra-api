@@ -52,16 +52,57 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
     public void stop() {
         log.info("插件停止！");
         
-        // Unload V8 JNI library if Javet is available
-        // 如果 Javet 可用，卸载 V8 JNI 库
+        // Close engine pool and unload V8 JNI library if Javet is available
+        // 关闭引擎池并卸载 V8 JNI 库（如果 Javet 可用）
         if (v8EnginePoolService != null) {
-            unloadV8Library();
+            closeEnginePoolAndUnloadV8();
         }
     }
     
     /**
-     * Unload V8 JNI library using reflection to support both full and lite versions.
-     * 使用反射卸载 V8 JNI 库，以支持完整版和精简版（lite 版本不包含 Javet）。
+     * Close engine pool and unload V8 library following Javet official documentation.
+     * 按照 Javet 官方文档关闭引擎池并卸载 V8 库。
+     * 
+     * Steps according to documentation:
+     * 1. Close all V8 values and V8 runtimes (close engine pool)
+     * 2. Set library reloadable to true
+     * 3. Get V8Host instance
+     * 4. Call unloadLibrary()
+     * 5. Restore library reloadable to false
+     */
+    private void closeEnginePoolAndUnloadV8() {
+        try {
+            // Step 1: Close engine pool first to release all V8 values and runtimes
+            // 步骤 1: 首先关闭引擎池以释放所有 V8 values 和 runtimes
+            if (v8EnginePoolService != null) {
+                log.info("正在关闭 V8 引擎池...");
+                try {
+                    Method destroyMethod = v8EnginePoolService.getClass().getMethod("destroy");
+                    destroyMethod.invoke(v8EnginePoolService);
+                    log.info("V8 引擎池已关闭");
+                } catch (Exception e) {
+                    log.warn("关闭引擎池时出错: {}", e.getMessage(), e);
+                }
+            }
+            
+            // Step 2-5: Unload V8 library
+            // 步骤 2-5: 卸载 V8 库
+            unloadV8Library();
+            
+        } catch (Exception e) {
+            log.warn("关闭引擎池和卸载 V8 库时出错: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Unload V8 JNI library using reflection following Javet documentation steps.
+     * 使用反射按照 Javet 文档步骤卸载 V8 JNI 库。
+     * 
+     * Official unload steps:
+     * Step 1: Set library reloadable to true
+     * Step 2: Get V8Host per JS runtime type
+     * Step 3: Unload the library
+     * Step 4: Restore the switch to false
      */
     private void unloadV8Library() {
         try {
@@ -72,36 +113,39 @@ public class HaloPluginExtraApiPlugin extends BasePlugin {
             
             log.info("开始卸载 V8 JNI 库...");
             
-            // Set library reloadable to true
-            // 设置库为可重新加载
+            // Step 1: Set library reloadable to true
+            // 步骤 1: 设置库为可重新加载
             Method setLibraryReloadableMethod = v8HostClass.getMethod("setLibraryReloadable", boolean.class);
             setLibraryReloadableMethod.invoke(null, true);
-            log.debug("V8Host.setLibraryReloadable(true) 调用成功");
+            log.debug("Step 1: V8Host.setLibraryReloadable(true) 完成");
             
-            // Get V8Host instance for V8 runtime type
-            // 获取 V8 运行时类型的 V8Host 实例
-            // Use V8 mode (not Node mode)
+            // Step 2: Get V8Host instance for V8 runtime type
+            // 步骤 2: 获取 V8 运行时类型的 V8Host 实例
             Object jsRuntimeType = jsRuntimeTypeClass.getField("V8").get(null);
             Method getInstanceMethod = v8HostClass.getMethod("getInstance", jsRuntimeTypeClass);
             Object v8Host = getInstanceMethod.invoke(null, jsRuntimeType);
-            log.debug("V8Host 实例获取成功");
+            log.debug("Step 2: V8Host 实例获取完成");
             
-            // Unload the library
-            // 卸载库
+            // Step 3: Unload the library
+            // 步骤 3: 卸载库
             Method unloadLibraryMethod = v8HostClass.getMethod("unloadLibrary");
             unloadLibraryMethod.invoke(v8Host);
-            log.info("V8 JNI 库卸载调用成功");
-
-            // Restore the library reloadable switch
-            // 恢复库重新加载开关
-            setLibraryReloadableMethod.invoke(null, false);
-            log.debug("V8Host.setLibraryReloadable(false) 恢复成功");
+            log.debug("Step 3: unloadLibrary() 调用完成");
             
-            log.info("V8 JNI 库卸载完成！");
+            // Step 4: Restore the switch to false
+            // 步骤 4: 恢复开关为 false
+            setLibraryReloadableMethod.invoke(null, false);
+            log.debug("Step 4: V8Host.setLibraryReloadable(false) 完成");
+            
+            // Trigger GC to help release resources
+            // 触发 GC 帮助释放资源
+            System.gc();
+            
+            log.info("V8 JNI 库卸载完成（实际卸载将在 GC 回收所有引用后生效）");
             
         } catch (ClassNotFoundException e) {
-            // Javet classes not found - this is expected in lite version
-            // Javet 类未找到 - 这在精简版中是预期的
+            // Javet classes not found - expected in lite version
+            // Javet 类未找到 - lite 版本中的预期行为
             log.debug("Javet 类未找到，跳过 V8 库卸载（可能是 lite 版本）");
         } catch (Exception e) {
             // Log error but don't throw - allow plugin to stop gracefully
