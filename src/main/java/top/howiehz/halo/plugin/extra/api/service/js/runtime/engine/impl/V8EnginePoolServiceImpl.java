@@ -37,6 +37,9 @@ public class V8EnginePoolServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
+            // 注意: Javet 库加载配置已在 HaloPluginExtraApiPlugin 静态初始化块中设置
+            // 参考: https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html
+            
             JavetEngineConfig config = new JavetEngineConfig();
             config.setPoolMinSize(2);
             config.setPoolMaxSize(Runtime.getRuntime().availableProcessors());
@@ -47,7 +50,7 @@ public class V8EnginePoolServiceImpl
             initialized = true;
             log.info("Custom V8 engine pool with preloaded modules initialized successfully");
         } catch (Exception e) {
-            log.info("Failed to initialize custom engine pool: {}", e.getMessage());
+            log.error("Failed to initialize custom engine pool: {}", e.getMessage(), e);
             throw e;
         }
     }
