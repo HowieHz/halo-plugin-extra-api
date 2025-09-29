@@ -4,6 +4,8 @@
 
 一个为 Halo CMS 提供额外 API 的轻量级插件。
 
+快捷跳转：[版本说明](#版本说明)/[全量版使用须知](#全量版使用须知)
+
 ## 核心理念
 
 > CMS 的价值就是在服务端管理和处理内容，为什么要把简单的数据处理推到前端去增加复杂度呢？
@@ -61,9 +63,14 @@
 
 ### 全量版使用须知
 
-1. 全量版依赖原生库组件，请勿直接覆盖更新（如使用应用商店的快捷更新操作）
+1. 全量版依赖原生库组件，**请勿直接覆盖更新**（如使用应用商店的快捷更新操作）
 2. 全量版更新流程：先停止插件——卸载插件——重启 Halo CMS——安装新版本插件——启动插件。
 3. 推荐在卸载全量版后重启 Halo CMS 确保资源完全释放。
+<!-- 4. 这是 JVM 和 JNI 的根本限制，在以下场景中，问题无法避免：
+   - Eclipse/IDE 热重载项目
+   - Halo 插件重新加载
+   - 任何使用隔离 classloader 的插件系统
+5. 相关文档[Javet doc](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html)、[Javet#124](https://github.com/caoccao/Javet/issues/124) -->
 
 ## TODO
 
