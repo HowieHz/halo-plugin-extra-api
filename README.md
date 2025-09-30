@@ -219,7 +219,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
     - [渲染 API](#渲染-api)
       - [代码高亮 API](#代码高亮-api)
   - [下载和安装](#下载和安装)
-    - [稳定版（推荐）](#稳定版推荐)
+    - [稳定版](#稳定版)
     - [开发版](#开发版)
       - [下载步骤](#下载步骤)
   - [开发指南/贡献指南](#开发指南贡献指南)
@@ -517,7 +517,7 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 
 ## 下载和安装
 
-### 稳定版（推荐）
+### 稳定版
 
 稳定版通过 GitHub Releases 发布，建议生产环境使用。
 
@@ -545,12 +545,12 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 2. 在 "Artifacts" 部分，下载 `extra-api` 压缩包。
 3. 解压后，您将找到以下 JAR 文件：
     - `extra-api-lite-版本号-SNAPSHOT.jar`：轻量版（适用于所有平台）
-    - `extra-api-all-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
-    - `extra-api-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
-    - `extra-api-linux-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux x86_64 平台）
-    - `extra-api-macos-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS ARM64 平台）
-    - `extra-api-macos-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS x86_64 平台）
-    - `extra-api-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
+    - `extra-api-full-all-platforms-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
+    - `extra-api-full-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
+    - `extra-api-full-linux-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux x86_64 平台）
+    - `extra-api-full-macos-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS ARM64 平台）
+    - `extra-api-full-macos-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS x86_64 平台）
+    - `extra-api-full-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
 
 选择适合您系统的 JAR 文件安装到 Halo。
 
