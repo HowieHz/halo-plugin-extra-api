@@ -75,13 +75,13 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
      * @throws JavetException when JS execution fails / JS 执行失败时抛出
      */
     @Override
-    public Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests) 
+    public Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests)
         throws JavetException {
-        
+
         return enginePoolService.withEngine(runtime -> {
             try (V8ValueObject global = runtime.getGlobalObject();
                  var value = global.get("highlightCodeBatch")) {
-                
+
                 if (!(value instanceof V8ValueFunction batchFunc)) {
                     throw new IllegalStateException("highlightCodeBatch function not found");
                 }

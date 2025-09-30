@@ -30,15 +30,8 @@ public interface ShikiHighlightService {
      * @return map of id -> highlighted result / id 到高亮结果的映射
      * @throws JavetException when JS execution fails / JS 执行失败时抛出
      */
-    Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests) 
+    Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests)
         throws JavetException;
-
-    /**
-     * Request record for batch highlighting.
-     * 批量高亮请求记录结构。
-     */
-    record CodeHighlightRequest(String code, String language, String theme) {
-    }
 
     /**
      * Get supported languages.
@@ -57,5 +50,12 @@ public interface ShikiHighlightService {
      * @throws JavetException when JS call fails / JS 调用失败时抛出
      */
     Set<String> getSupportedThemes() throws JavetException;
+
+    /**
+     * Request record for batch highlighting.
+     * 批量高亮请求记录结构。
+     */
+    record CodeHighlightRequest(String code, String language, String theme) {
+    }
 
 }

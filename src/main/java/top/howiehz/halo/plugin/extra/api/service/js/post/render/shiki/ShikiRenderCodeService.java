@@ -1,5 +1,11 @@
 package top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -9,13 +15,6 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfig;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Service for rendering code blocks using intelligent batch distribution strategy.
@@ -29,11 +28,10 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ShikiRenderCodeService {
-    private final ShikiHighlightService shikiHighlightService;
-    private final ShikiRenderCache renderCache;
-    
     // 引擎池大小 = CPU 核心数(由 V8EnginePoolServiceImpl 自动配置)
     private static final int ENGINE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+    private final ShikiHighlightService shikiHighlightService;
+    private final ShikiRenderCache renderCache;
 
     /**
      * Render code blocks with intelligent batch distribution.
@@ -64,12 +62,12 @@ public class ShikiRenderCodeService {
         for (int i = 0; i < codeElements.size(); i++) {
             Element codeElement = codeElements.get(i);
             Element preElement = codeElement.parent();
-            
+
             if (preElement != null && "pre".equals(preElement.tagName())) {
                 try {
                     String code = codeElement.text();
                     String language = extractLanguage(codeElement, preElement);
-                    
+
                     if (language.isEmpty() || !shikiHighlightService.getSupportedLanguages()
                         .contains(language)) {
                         continue;
@@ -83,11 +81,15 @@ public class ShikiRenderCodeService {
                         String theme = normalizeTheme(shikiConfig.getTheme());
                         allRequests.add(new HighlightRequest("block-" + i, code, language, theme));
                     } else {
-                        String lightTheme = normalizeTheme(shikiConfig.getLightTheme(), "min-light");
+                        String lightTheme =
+                            normalizeTheme(shikiConfig.getLightTheme(), "min-light");
                         String darkTheme = normalizeTheme(shikiConfig.getDarkTheme(), "nord");
-                        
-                        allRequests.add(new HighlightRequest("block-" + i + "-light", code, language, lightTheme));
-                        allRequests.add(new HighlightRequest("block-" + i + "-dark", code, language, darkTheme));
+
+                        allRequests.add(
+                            new HighlightRequest("block-" + i + "-light", code, language,
+                                lightTheme));
+                        allRequests.add(new HighlightRequest("block-" + i + "-dark", code, language,
+                            darkTheme));
                     }
                 } catch (Exception e) {
                     log.warn("Failed to prepare code block {}: {}", i, e.getMessage());
@@ -108,7 +110,7 @@ public class ShikiRenderCodeService {
                 if (!shikiConfig.isEnabledDoubleRenderMode()) {
                     String key = "block-" + blockInfo.index;
                     String highlightedHtml = results.get(key);
-                    
+
                     if (highlightedHtml != null && !highlightedHtml.startsWith("Error:")) {
                         Element highlightedDiv = doc.createElement("div");
                         highlightedDiv.append(highlightedHtml);
@@ -120,9 +122,9 @@ public class ShikiRenderCodeService {
                     String lightHtml = results.get(lightKey);
                     String darkHtml = results.get(darkKey);
 
-                    if (lightHtml != null && !lightHtml.startsWith("Error:") 
+                    if (lightHtml != null && !lightHtml.startsWith("Error:")
                         && darkHtml != null && !darkHtml.startsWith("Error:")) {
-                        
+
                         Element lightDiv = doc.createElement("div")
                             .attr("class", shikiConfig.getLightCodeClass());
                         Element darkDiv = doc.createElement("div")
@@ -137,7 +139,7 @@ public class ShikiRenderCodeService {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Failed to apply highlight result for block {}: {}", 
+                log.warn("Failed to apply highlight result for block {}: {}",
                     blockInfo.index, e.getMessage());
             }
         }
@@ -163,11 +165,11 @@ public class ShikiRenderCodeService {
     private Map<String, String> processRequestsIntelligently(List<HighlightRequest> allRequests) {
         int totalRequests = allRequests.size();
         Map<String, String> allResults = new ConcurrentHashMap<>();
-        
+
         // 第一步:检查缓存,分离出需要实际渲染的请求
         List<HighlightRequest> requestsToRender = new ArrayList<>();
         int cacheHits = 0;
-        
+
         for (HighlightRequest req : allRequests) {
             String cached = renderCache.get(req.code, req.language, req.theme);
             if (cached != null) {
@@ -179,57 +181,58 @@ public class ShikiRenderCodeService {
                 requestsToRender.add(req);
             }
         }
-        
-        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={:.1f}%", 
+
+        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={:.1f}%",
             totalRequests, cacheHits, requestsToRender.size(),
             totalRequests > 0 ? (cacheHits * 100.0 / totalRequests) : 0);
-        
+
         // 如果全部命中缓存,直接返回
         if (requestsToRender.isEmpty()) {
             log.debug("所有请求均命中缓存,跳过渲染");
             return allResults;
         }
-        
+
         // 第二步:对未命中的请求进行批量渲染
         // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
         int numGroups = Math.min(requestsToRender.size(), ENGINE_POOL_SIZE);
-        
-        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})", 
+
+        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
             requestsToRender.size(), numGroups, ENGINE_POOL_SIZE);
 
         // 将需要渲染的请求分组
         List<List<HighlightRequest>> groups = partitionRequests(requestsToRender, numGroups);
-        
+
         // 为每组创建异步批量处理任务
         List<CompletableFuture<Map<String, String>>> futures = new ArrayList<>();
-        
+
         for (int i = 0; i < groups.size(); i++) {
             List<HighlightRequest> group = groups.get(i);
             int groupIndex = i;
-            
+
             futures.add(CompletableFuture.supplyAsync(() -> {
                 try {
                     log.debug("组 {} 开始处理 {} 个请求", groupIndex, group.size());
-                    
+
                     // 转换为批量请求格式
-                    Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests 
+                    Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests
                         = new java.util.LinkedHashMap<>();
-                    
+
                     for (HighlightRequest req : group) {
-                        batchRequests.put(req.id, 
+                        batchRequests.put(req.id,
                             new ShikiHighlightService.CodeHighlightRequest(
                                 req.code, req.language, req.theme));
                     }
-                    
+
                     // 在单个引擎中批量处理
-                    Map<String, String> results = shikiHighlightService.highlightCodeBatch(batchRequests);
-                    
+                    Map<String, String> results =
+                        shikiHighlightService.highlightCodeBatch(batchRequests);
+
                     log.debug("组 {} 完成处理", groupIndex);
                     return results;
-                    
+
                 } catch (Exception e) {
                     log.error("组 {} 处理失败: {}", groupIndex, e.getMessage());
-                    
+
                     // 返回错误结果
                     Map<String, String> errorResults = new java.util.HashMap<>();
                     for (HighlightRequest req : group) {
@@ -256,7 +259,7 @@ public class ShikiRenderCodeService {
         } catch (Exception e) {
             log.error("智能批量处理失败: {}", e.getMessage());
         }
-        
+
         // 第三步:将新渲染的结果写入缓存
         for (HighlightRequest req : requestsToRender) {
             String html = renderResults.get(req.id);
@@ -265,10 +268,10 @@ public class ShikiRenderCodeService {
                 renderCache.put(req.code, req.language, req.theme, html);
             }
         }
-        
+
         // 合并缓存结果和新渲染结果
         allResults.putAll(renderResults);
-        
+
         log.debug("渲染完成: 总结果={}, 缓存大小={}", allResults.size(), renderCache.size());
 
         return allResults;
@@ -284,23 +287,16 @@ public class ShikiRenderCodeService {
      */
     private List<List<HighlightRequest>> partitionRequests(
         List<HighlightRequest> requests, int numGroups) {
-        
+
         List<List<HighlightRequest>> groups = new ArrayList<>();
         int groupSize = (int) Math.ceil((double) requests.size() / numGroups);
-        
+
         for (int i = 0; i < requests.size(); i += groupSize) {
             int end = Math.min(i + groupSize, requests.size());
             groups.add(new ArrayList<>(requests.subList(i, end)));
         }
-        
-        return groups;
-    }
 
-    /**
-     * Internal record for highlight request.
-     * 高亮请求的内部记录类。
-     */
-    private record HighlightRequest(String id, String code, String language, String theme) {
+        return groups;
     }
 
     /**
@@ -327,20 +323,6 @@ public class ShikiRenderCodeService {
         }
     }
 
-    /**
-     * Internal record to store code block information during parallel processing.
-     * 并行处理期间存储代码块信息的内部记录类。
-     */
-    private record CodeBlockInfo(int index, Element preElement, String code, String language) {
-    }
-
-    /**
-     * Internal record to store highlight result.
-     * 存储高亮结果的内部记录类。
-     */
-    private record HighlightResult(String key, String html) {
-    }
-
     private String extractLanguage(Element codeElement, Element preElement) {
         // 尝试从 class 属性提取语言
         String codeClass = codeElement.attr("class");
@@ -362,5 +344,26 @@ public class ShikiRenderCodeService {
 
         // 默认语言
         return "text";
+    }
+
+    /**
+     * Internal record for highlight request.
+     * 高亮请求的内部记录类。
+     */
+    private record HighlightRequest(String id, String code, String language, String theme) {
+    }
+
+    /**
+     * Internal record to store code block information during parallel processing.
+     * 并行处理期间存储代码块信息的内部记录类。
+     */
+    private record CodeBlockInfo(int index, Element preElement, String code, String language) {
+    }
+
+    /**
+     * Internal record to store highlight result.
+     * 存储高亮结果的内部记录类。
+     */
+    private record HighlightResult(String key, String html) {
     }
 }
