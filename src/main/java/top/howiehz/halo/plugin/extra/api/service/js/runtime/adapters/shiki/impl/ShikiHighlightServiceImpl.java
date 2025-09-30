@@ -67,6 +67,59 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
     }
 
     /**
+     * Batch highlight multiple code requests in a single engine.
+     * 在单个引擎中批量高亮多个代码块,利用 Javet 的对象转换器自动处理 Java Map 和 JS Object 的转换。
+     *
+     * @param requests map of id -> request / id 到请求的映射
+     * @return map of id -> highlighted result / id 到高亮结果的映射
+     * @throws JavetException when JS execution fails / JS 执行失败时抛出
+     */
+    @Override
+    public Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests) 
+        throws JavetException {
+        
+        return enginePoolService.withEngine(runtime -> {
+            try (V8ValueObject global = runtime.getGlobalObject();
+                 var value = global.get("highlightCodeBatch")) {
+                
+                if (!(value instanceof V8ValueFunction batchFunc)) {
+                    throw new IllegalStateException("highlightCodeBatch function not found");
+                }
+
+                // 将 Java Map<String, CodeHighlightRequest> 转换为 JS 可接受的格式
+                // Javet 的对象转换器会自动处理 Map -> JS Object 的转换
+                Map<String, Map<String, String>> jsRequests = new java.util.LinkedHashMap<>();
+                for (Map.Entry<String, CodeHighlightRequest> entry : requests.entrySet()) {
+                    CodeHighlightRequest req = entry.getValue();
+                    Map<String, String> reqMap = Map.of(
+                        "code", req.code(),
+                        "lang", req.language(),
+                        "theme", req.theme()
+                    );
+                    jsRequests.put(entry.getKey(), reqMap);
+                }
+
+                // 调用 JS 批量处理函数,Javet 会自动转换参数和返回值
+                try (V8ValuePromise promise = batchFunc.call(null, jsRequests)) {
+                    while (promise.isPending()) {
+                        runtime.await();
+                    }
+
+                    if (promise.isFulfilled()) {
+                        // Javet 会自动将 JS Object 转换为 Java Map<String, String>
+                        return promise.getResult();
+                    } else if (promise.isRejected()) {
+                        throw new RuntimeException(
+                            "Batch highlight failed: " + promise.getResultString());
+                    }
+
+                    throw new RuntimeException("Unknown promise state");
+                }
+            }
+        });
+    }
+
+    /**
      * Get supported languages from the preloaded Shiki module.
      * 从预加载的 Shiki 模块中获取支持的语言列表。
      *

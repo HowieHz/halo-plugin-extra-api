@@ -18,23 +18,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service for rendering code blocks in HTML content using Shiki with parallel processing.
- * 使用 Shiki 并行渲染 HTML 内容中代码块的服务。
+ * Service for rendering code blocks using intelligent batch distribution strategy.
+ * 使用智能批量分配策略渲染代码块的服务。
  *
- * <p>This service uses Java's CompletableFuture to dispatch multiple highlight requests
- * concurrently to different V8 engines in the pool, achieving true parallelism.</p>
- * <p>此服务使用 Java 的 CompletableFuture 将多个高亮请求并发分发到引擎池中的不同 V8 引擎,
- * 实现真正的并行处理。</p>
+ * <p>This service intelligently groups highlight requests based on available engine pool size,
+ * using batch processing within each engine to minimize overhead while maximizing parallelism.</p>
+ * <p>此服务根据可用引擎池大小智能分组高亮请求,在每个引擎中使用批量处理以最小化开销并最大化并行度。</p>
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ShikiRenderCodeService {
     private final ShikiHighlightService shikiHighlightService;
+    
+    // 引擎池大小 = CPU 核心数(由 V8EnginePoolServiceImpl 自动配置)
+    private static final int ENGINE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
     /**
-     * Render code blocks in HTML content using Shiki with parallel processing.
-     * 使用 Shiki 并行渲染 HTML 内容中的代码块,利用引擎池实现真正的并发。
+     * Render code blocks with intelligent batch distribution.
+     * 使用智能批量分配策略渲染代码块。
+     *
+     * <p><b>策略:</b> 根据引擎池大小动态分组任务,例如:
+     * <ul>
+     *   <li>14 个任务 + 5 个引擎 → 5 组(每组 2-3 个任务)</li>
+     *   <li>每组任务在同一个引擎中批量处理,避免任务过度分散</li>
+     * </ul></p>
      *
      * @param content the HTML content to process / 要处理的 HTML 内容
      * @param shikiConfig the Shiki configuration / Shiki 配置
@@ -48,9 +56,9 @@ public class ShikiRenderCodeService {
             return doc.body().html();
         }
 
-        // 收集所有需要高亮的代码块
+        // 收集所有需要高亮的请求
         List<CodeBlockInfo> codeBlocks = new ArrayList<>();
-        List<CompletableFuture<HighlightResult>> futures = new ArrayList<>();
+        List<HighlightRequest> allRequests = new ArrayList<>();
 
         for (int i = 0; i < codeElements.size(); i++) {
             Element codeElement = codeElements.get(i);
@@ -63,23 +71,22 @@ public class ShikiRenderCodeService {
                     
                     if (language.isEmpty() || !shikiHighlightService.getSupportedLanguages()
                         .contains(language)) {
-                        // 跳过渲染
                         continue;
                     }
 
                     CodeBlockInfo blockInfo = new CodeBlockInfo(i, preElement, code, language);
                     codeBlocks.add(blockInfo);
 
-                    // 为每个代码块创建异步任务,分发到不同的 V8 引擎
+                    // 创建高亮请求
                     if (!shikiConfig.isEnabledDoubleRenderMode()) {
                         String theme = normalizeTheme(shikiConfig.getTheme());
-                        futures.add(highlightAsync(i, code, language, theme, null));
+                        allRequests.add(new HighlightRequest("block-" + i, code, language, theme));
                     } else {
                         String lightTheme = normalizeTheme(shikiConfig.getLightTheme(), "min-light");
                         String darkTheme = normalizeTheme(shikiConfig.getDarkTheme(), "nord");
                         
-                        futures.add(highlightAsync(i, code, language, lightTheme, "light"));
-                        futures.add(highlightAsync(i, code, language, darkTheme, "dark"));
+                        allRequests.add(new HighlightRequest("block-" + i + "-light", code, language, lightTheme));
+                        allRequests.add(new HighlightRequest("block-" + i + "-dark", code, language, darkTheme));
                     }
                 } catch (Exception e) {
                     log.warn("Failed to prepare code block {}: {}", i, e.getMessage());
@@ -87,27 +94,12 @@ public class ShikiRenderCodeService {
             }
         }
 
-        if (futures.isEmpty()) {
+        if (allRequests.isEmpty()) {
             return doc.body().html();
         }
 
-        // 等待所有高亮任务完成
-        Map<String, String> results = new ConcurrentHashMap<>();
-        try {
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream()
-                    .map(CompletableFuture::join)
-                    .collect(Collectors.toList()))
-                .thenAccept(resultList -> {
-                    for (HighlightResult result : resultList) {
-                        results.put(result.key, result.html);
-                    }
-                })
-                .join();
-        } catch (Exception e) {
-            log.error("Parallel highlight failed: {}", e.getMessage());
-            return doc.body().html();
-        }
+        // 智能分组并并行处理
+        Map<String, String> results = processRequestsIntelligently(allRequests);
 
         // 应用高亮结果
         for (CodeBlockInfo blockInfo : codeBlocks) {
@@ -153,34 +145,119 @@ public class ShikiRenderCodeService {
     }
 
     /**
-     * Highlight code asynchronously using CompletableFuture.
-     * 使用 CompletableFuture 异步高亮代码,每个任务会被分发到引擎池中的不同引擎。
+     * Process requests intelligently by grouping them based on engine pool size.
+     * 根据引擎池大小智能分组并处理请求。
      *
-     * @param index block index / 代码块索引
-     * @param code source code / 源码
-     * @param language language id / 语言标识
-     * @param theme theme name / 主题名
-     * @param mode "light", "dark", or null for single mode / 渲染模式标识
-     * @return CompletableFuture with highlight result / 包含高亮结果的 CompletableFuture
+     * <p><b>算法:</b>
+     * <ol>
+     *   <li>计算最优分组数 = min(请求数, 引擎池大小)</li>
+     *   <li>将请求均匀分配到各组</li>
+     *   <li>每组在一个引擎中批量处理</li>
+     *   <li>多个组并行执行</li>
+     * </ol></p>
+     *
+     * @param allRequests all highlight requests / 所有高亮请求
+     * @return map of id -> highlighted result / id 到高亮结果的映射
      */
-    private CompletableFuture<HighlightResult> highlightAsync(
-        int index, String code, String language, String theme, String mode) {
+    private Map<String, String> processRequestsIntelligently(List<HighlightRequest> allRequests) {
+        int totalRequests = allRequests.size();
         
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                String html = shikiHighlightService.highlightCode(code, language, theme);
-                String key = mode == null 
-                    ? "block-" + index 
-                    : "block-" + index + "-" + mode;
-                return new HighlightResult(key, html);
-            } catch (Exception e) {
-                log.warn("Failed to highlight block {}: {}", index, e.getMessage());
-                String key = mode == null 
-                    ? "block-" + index 
-                    : "block-" + index + "-" + mode;
-                return new HighlightResult(key, "Error: " + e.getMessage());
-            }
-        });
+        // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
+        int numGroups = Math.min(totalRequests, ENGINE_POOL_SIZE);
+        
+        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})", 
+            totalRequests, numGroups, ENGINE_POOL_SIZE);
+
+        // 将请求分组
+        List<List<HighlightRequest>> groups = partitionRequests(allRequests, numGroups);
+        
+        // 为每组创建异步批量处理任务
+        List<CompletableFuture<Map<String, String>>> futures = new ArrayList<>();
+        
+        for (int i = 0; i < groups.size(); i++) {
+            List<HighlightRequest> group = groups.get(i);
+            int groupIndex = i;
+            
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                try {
+                    log.debug("组 {} 开始处理 {} 个请求", groupIndex, group.size());
+                    
+                    // 转换为批量请求格式
+                    Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests 
+                        = new java.util.LinkedHashMap<>();
+                    
+                    for (HighlightRequest req : group) {
+                        batchRequests.put(req.id, 
+                            new ShikiHighlightService.CodeHighlightRequest(
+                                req.code, req.language, req.theme));
+                    }
+                    
+                    // 在单个引擎中批量处理
+                    Map<String, String> results = shikiHighlightService.highlightCodeBatch(batchRequests);
+                    
+                    log.debug("组 {} 完成处理", groupIndex);
+                    return results;
+                    
+                } catch (Exception e) {
+                    log.error("组 {} 处理失败: {}", groupIndex, e.getMessage());
+                    
+                    // 返回错误结果
+                    Map<String, String> errorResults = new java.util.HashMap<>();
+                    for (HighlightRequest req : group) {
+                        errorResults.put(req.id, "Error: " + e.getMessage());
+                    }
+                    return errorResults;
+                }
+            }));
+        }
+
+        // 等待所有组完成并合并结果
+        Map<String, String> allResults = new ConcurrentHashMap<>();
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream()
+                    .map(CompletableFuture::join)
+                    .collect(Collectors.toList()))
+                .thenAccept(resultsList -> {
+                    for (Map<String, String> results : resultsList) {
+                        allResults.putAll(results);
+                    }
+                })
+                .join();
+        } catch (Exception e) {
+            log.error("智能批量处理失败: {}", e.getMessage());
+        }
+
+        return allResults;
+    }
+
+    /**
+     * Partition requests into groups evenly.
+     * 将请求均匀分配到各组。
+     *
+     * @param requests all requests / 所有请求
+     * @param numGroups number of groups / 分组数
+     * @return list of request groups / 请求分组列表
+     */
+    private List<List<HighlightRequest>> partitionRequests(
+        List<HighlightRequest> requests, int numGroups) {
+        
+        List<List<HighlightRequest>> groups = new ArrayList<>();
+        int groupSize = (int) Math.ceil((double) requests.size() / numGroups);
+        
+        for (int i = 0; i < requests.size(); i += groupSize) {
+            int end = Math.min(i + groupSize, requests.size());
+            groups.add(new ArrayList<>(requests.subList(i, end)));
+        }
+        
+        return groups;
+    }
+
+    /**
+     * Internal record for highlight request.
+     * 高亮请求的内部记录类。
+     */
+    private record HighlightRequest(String id, String code, String language, String theme) {
     }
 
     /**
