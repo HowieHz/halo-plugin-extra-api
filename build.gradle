@@ -194,7 +194,7 @@ afterEvaluate {
     tasks.register('jarLite', Jar) {
         group = 'build'
         description = 'Assembles lite version without JS features'
-        archiveFileName = 'extra-api-lite-1.0.0-SNAPSHOT.jar'
+        archiveFileName = "extra-api-lite-${project.version}.jar"
         
         // 排除 JS 相关类 - 减少包大小，避免未使用的依赖
         from(sourceSets.main.output.classesDirs) {
@@ -227,7 +227,7 @@ afterEvaluate {
     tasks.register('jarFullAllPlatforms', Jar) {
         group = 'build'
         description = 'Assembles full version with all platforms'
-        archiveFileName = 'extra-api-full-all-platforms-1.0.0-SNAPSHOT.jar'
+        archiveFileName = "extra-api-full-all-platforms-${project.version}.jar"
         
         from sourceSets.main.output // 包含所有编译输出
         from configurations.javetAllPlatforms.collect {
@@ -247,7 +247,7 @@ afterEvaluate {
     platforms.each { variant, platformList ->
         def taskName = "jarFull${variant}"
         def configName = "javet${variant}"
-        def archiveName = "extra-api-full-${variant.toLowerCase()}-1.0.0-SNAPSHOT.jar"
+        def archiveName = "extra-api-full-${variant.toLowerCase()}-${project.version}.jar"
         def indexTaskName = "generatePluginComponentsIdx${taskName.capitalize()}"
         
         tasks.register(taskName, Jar) {
