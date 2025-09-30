@@ -1,6 +1,6 @@
 import { codeToHtml, bundledLanguages, bundledThemes } from 'shiki/bundle/full'
 
-// 创建一个包装函数给 Javet 调用
+// 单个代码高亮 - 简单包装
 async function highlightCode(code, options = {}) {
   try {
     const html = await codeToHtml(code, options)

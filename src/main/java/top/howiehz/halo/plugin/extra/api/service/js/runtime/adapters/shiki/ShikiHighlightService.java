@@ -1,9 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki;
 
 import com.caoccao.javet.exceptions.JavetException;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Shiki code highlight service interface.
@@ -24,26 +22,6 @@ public interface ShikiHighlightService {
     String highlightCode(String code, String language, String theme) throws JavetException;
 
     /**
-     * Asynchronously highlight code.
-     * 异步高亮代码。
-     *
-     * @param code source code / 源码
-     * @param language language id / 语言标识
-     * @param theme theme name / 主题名
-     * @return CompletableFuture with highlighted result / 包含高亮结果的 CompletableFuture
-     */
-    CompletableFuture<String> highlightCodeAsync(String code, String language, String theme);
-
-    /**
-     * Batch highlight multiple code requests.
-     * 批量高亮多个请求。
-     *
-     * @param requests map of id -> request / id 到请求的映射
-     * @return map of id -> highlighted result / id 到高亮结果的映射
-     */
-    Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests);
-
-    /**
      * Get supported languages.
      * 获取支持的语言列表。
      *
@@ -61,10 +39,4 @@ public interface ShikiHighlightService {
      */
     Set<String> getSupportedThemes() throws JavetException;
 
-    /**
-     * Request record for batch highlighting.
-     * 批量高亮请求记录结构。
-     */
-    record CodeHighlightRequest(String code, String language, String theme) {
-    }
 }

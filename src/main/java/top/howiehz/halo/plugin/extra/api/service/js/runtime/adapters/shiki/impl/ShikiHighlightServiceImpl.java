@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
@@ -65,47 +64,6 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
                 }
             }
         });
-    }
-
-    /**
-     * Highlight code asynchronously.
-     * 异步高亮，返回 CompletableFuture。
-     *
-     * @param code source code / 源码
-     * @param language language id / 语言标识
-     * @param theme theme name / 主题名
-     * @return CompletableFuture with highlighted result / 包含高亮结果的 CompletableFuture
-     */
-    @Override
-    public CompletableFuture<String> highlightCodeAsync(String code, String language,
-        String theme) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return highlightCode(code, language, theme);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    /**
-     * Batch highlight multiple requests in parallel.
-     * 并行批量高亮多个请求，返回 key->result 的映射。
-     *
-     * @param requests map of id -> request / id 到请求的映射
-     * @return map of id -> highlighted result / id 到高亮结果的映射
-     */
-    @Override
-    public Map<String, String> highlightCodeBatch(Map<String, CodeHighlightRequest> requests) {
-        return requests.entrySet().parallelStream()
-            .collect(java.util.stream.Collectors.toConcurrentMap(Map.Entry::getKey, entry -> {
-                try {
-                    CodeHighlightRequest req = entry.getValue();
-                    return highlightCode(req.code(), req.language(), req.theme());
-                } catch (Exception e) {
-                    return "Error: " + e.getMessage();
-                }
-            }));
     }
 
     /**
