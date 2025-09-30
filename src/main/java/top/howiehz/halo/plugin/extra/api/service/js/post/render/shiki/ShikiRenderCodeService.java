@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ShikiRenderCodeService {
     private final ShikiHighlightService shikiHighlightService;
+    private final ShikiRenderCache renderCache;
     
     // 引擎池大小 = CPU 核心数(由 V8EnginePoolServiceImpl 自动配置)
     private static final int ENGINE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
@@ -161,15 +162,43 @@ public class ShikiRenderCodeService {
      */
     private Map<String, String> processRequestsIntelligently(List<HighlightRequest> allRequests) {
         int totalRequests = allRequests.size();
+        Map<String, String> allResults = new ConcurrentHashMap<>();
         
+        // 第一步:检查缓存,分离出需要实际渲染的请求
+        List<HighlightRequest> requestsToRender = new ArrayList<>();
+        int cacheHits = 0;
+        
+        for (HighlightRequest req : allRequests) {
+            String cached = renderCache.get(req.code, req.language, req.theme);
+            if (cached != null) {
+                // 缓存命中
+                allResults.put(req.id, cached);
+                cacheHits++;
+            } else {
+                // 缓存未命中,需要渲染
+                requestsToRender.add(req);
+            }
+        }
+        
+        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={:.1f}%", 
+            totalRequests, cacheHits, requestsToRender.size(),
+            totalRequests > 0 ? (cacheHits * 100.0 / totalRequests) : 0);
+        
+        // 如果全部命中缓存,直接返回
+        if (requestsToRender.isEmpty()) {
+            log.debug("所有请求均命中缓存,跳过渲染");
+            return allResults;
+        }
+        
+        // 第二步:对未命中的请求进行批量渲染
         // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
-        int numGroups = Math.min(totalRequests, ENGINE_POOL_SIZE);
+        int numGroups = Math.min(requestsToRender.size(), ENGINE_POOL_SIZE);
         
         log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})", 
-            totalRequests, numGroups, ENGINE_POOL_SIZE);
+            requestsToRender.size(), numGroups, ENGINE_POOL_SIZE);
 
-        // 将请求分组
-        List<List<HighlightRequest>> groups = partitionRequests(allRequests, numGroups);
+        // 将需要渲染的请求分组
+        List<List<HighlightRequest>> groups = partitionRequests(requestsToRender, numGroups);
         
         // 为每组创建异步批量处理任务
         List<CompletableFuture<Map<String, String>>> futures = new ArrayList<>();
@@ -211,8 +240,8 @@ public class ShikiRenderCodeService {
             }));
         }
 
-        // 等待所有组完成并合并结果
-        Map<String, String> allResults = new ConcurrentHashMap<>();
+        // 等待所有组完成并合并渲染结果
+        Map<String, String> renderResults = new ConcurrentHashMap<>();
         try {
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApply(v -> futures.stream()
@@ -220,13 +249,27 @@ public class ShikiRenderCodeService {
                     .collect(Collectors.toList()))
                 .thenAccept(resultsList -> {
                     for (Map<String, String> results : resultsList) {
-                        allResults.putAll(results);
+                        renderResults.putAll(results);
                     }
                 })
                 .join();
         } catch (Exception e) {
             log.error("智能批量处理失败: {}", e.getMessage());
         }
+        
+        // 第三步:将新渲染的结果写入缓存
+        for (HighlightRequest req : requestsToRender) {
+            String html = renderResults.get(req.id);
+            if (html != null && !html.startsWith("Error:")) {
+                // 只缓存成功的结果,错误结果不缓存
+                renderCache.put(req.code, req.language, req.theme, html);
+            }
+        }
+        
+        // 合并缓存结果和新渲染结果
+        allResults.putAll(renderResults);
+        
+        log.debug("渲染完成: 总结果={}, 缓存大小={}", allResults.size(), renderCache.size());
 
         return allResults;
     }
