@@ -5,7 +5,7 @@ metadata:
 spec:
   forms:
     - group: jsEnginePool
-      label: JS 引擎池配置（仅全量版可用）
+      label: JS 引擎池配置（重启生效）（仅全量版可用）
       formSchema:
         - $formkit: number
           name: poolMinSize
@@ -24,7 +24,7 @@ spec:
           value: 2
           min: 1
           validation: required|min:1
-          help: JS 引擎池的最大大小。设置过大可能导致内存溢出。
+          help: JS 引擎池的最大大小。设置过大可能导致内存溢出。每个引擎会预加载所需的 JS 模块。
     - group: shiki
       label: 代码高亮（仅全量版可用）
       formSchema:
