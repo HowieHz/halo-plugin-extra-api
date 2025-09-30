@@ -99,15 +99,31 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
                     jsRequests.put(entry.getKey(), reqMap);
                 }
 
-                // 调用 JS 批量处理函数,Javet 会自动转换参数和返回值
+                // 调用 JS 批量处理函数,Javet 会自动转换参数
                 try (V8ValuePromise promise = batchFunc.call(null, jsRequests)) {
                     while (promise.isPending()) {
                         runtime.await();
                     }
 
                     if (promise.isFulfilled()) {
-                        // Javet 会自动将 JS Object 转换为 Java Map<String, String>
-                        return promise.getResult();
+                        // 手动将 V8ValueObject 转换为 Java Map
+                        // 参考 Javet 文档中的做法
+                        try (V8ValueObject resultObj = promise.getResult()) {
+                            Map<String, String> results = new java.util.HashMap<>();
+                            
+                            // 遍历 JS Object 的所有键
+                            try (var keysArray = resultObj.getOwnPropertyNames()) {
+                                int length = keysArray.getLength();
+                                for (int i = 0; i < length; i++) {
+                                    String key = keysArray.getString(i);
+                                    // 直接使用 getString 获取值
+                                    String htmlValue = resultObj.getString(key);
+                                    results.put(key, htmlValue);
+                                }
+                            }
+                            
+                            return results;
+                        }
                     } else if (promise.isRejected()) {
                         throw new RuntimeException(
                             "Batch highlight failed: " + promise.getResultString());
