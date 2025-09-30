@@ -352,7 +352,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
 **描述**
 
 提供插件版本类型检测功能，让主题或其他代码能够检测当前运行的是轻量版还是全量版插件，以便有条件地使用高级功能。
-（注：以下四个 API 本质上是同一个 API，您可以选择使用其中任何一个进行主题编写。）
+（注：以下四个 API 本质上是**同一个 API**，您可以选择使用其中**任何一个**进行主题编写。）
 
 **API 方法**
 
@@ -524,13 +524,13 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 1. 访问 [Releases 页面](https://github.com/HowieHz/halo-plugin-extra-api/releases)
 2. 下载最新版本的 JAR 文件：
     - `extra-api-lite-版本号.jar`：轻量版（适用于所有平台）
-    - `extra-api-all-版本号.jar`：全量版（包含所有平台依赖，体积较大，不推荐下载）
+    - `extra-api-full-all-platforms-版本号.jar`：全量版（包含所有平台依赖，体积较大，不推荐下载）
     - 如需使用全量版，推荐下载平台特定版本：
-        - `extra-api-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
-        - `extra-api-linux-x86_64-版本号.jar`：适用于 Linux x86_64 平台的版本
-        - `extra-api-macos-arm64-版本号.jar`：适用于 macOS ARM64 平台的版本
-        - `extra-api-macos-x86_64-版本号.jar`：适用于 macOS x86_64 平台的版本
-        - `extra-api-windows-x86_64-版本号.jar`：适用于 Windows x86_64 平台的版本
+        - `extra-api-full-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
+        - `extra-api-full-linux-x86_64-版本号.jar`：适用于 Linux x86_64 平台的版本
+        - `extra-api-full-macos-arm64-版本号.jar`：适用于 macOS ARM64 平台的版本
+        - `extra-api-full-macos-x86_64-版本号.jar`：适用于 macOS x86_64 平台的版本
+        - `extra-api-full-windows-x86_64-版本号.jar`：适用于 Windows x86_64 平台的版本
 3. 将下载的 JAR 文件上传到 Halo 的插件管理页面安装
 
 ### 开发版
