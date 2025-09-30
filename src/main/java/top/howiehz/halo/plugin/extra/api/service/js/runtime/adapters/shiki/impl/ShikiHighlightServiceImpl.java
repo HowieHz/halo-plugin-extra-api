@@ -106,23 +106,10 @@ public class ShikiHighlightServiceImpl implements ShikiHighlightService {
                     }
 
                     if (promise.isFulfilled()) {
-                        // 手动将 V8ValueObject 转换为 Java Map
-                        // 参考 Javet 文档中的做法
+                        // 使用 runtime.toObject() 将 V8Value 转换为 Java Map
+                        // 必须通过 runtime 的转换器来转换,因为 promise.getResult() 返回的是 V8Value
                         try (V8ValueObject resultObj = promise.getResult()) {
-                            Map<String, String> results = new java.util.HashMap<>();
-                            
-                            // 遍历 JS Object 的所有键
-                            try (var keysArray = resultObj.getOwnPropertyNames()) {
-                                int length = keysArray.getLength();
-                                for (int i = 0; i < length; i++) {
-                                    String key = keysArray.getString(i);
-                                    // 直接使用 getString 获取值
-                                    String htmlValue = resultObj.getString(key);
-                                    results.put(key, htmlValue);
-                                }
-                            }
-                            
-                            return results;
+                            return runtime.toObject(resultObj);
                         }
                     } else if (promise.isRejected()) {
                         throw new RuntimeException(
