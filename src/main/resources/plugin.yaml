@@ -5,6 +5,8 @@ kind: Plugin
 metadata:
   # The name defines how the plugin is invoked, A unique name
   name: extra-api
+  annotations:
+    store.halo.run/app-id: app-di1jh8gd
 spec:
   enabled: true
   requires: ">=2.21.0"

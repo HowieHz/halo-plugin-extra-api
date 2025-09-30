@@ -107,7 +107,7 @@ jobs:
       - name: Download extra-api jar
         uses: actions/download-artifact@v4
         with:
-          name: extra-api
+          name: extra-api-archive
           path: build/libs
       - name: Get Name of Artifacts
         id: get_artifacts
