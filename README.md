@@ -476,12 +476,12 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 extraApiStatsFinder.getPostWordCount({
   name: 'post-metadata-name',  // 可选，未传入则统计全部文章字数总和
   version: 'release' | 'draft'  // 可选，默认 'release'
-});
+})
 ```
 
 ```javascript
 // 统计全部文章已发布版本的总字数
-extraApiStatsFinder.getPostWordCount();
+extraApiStatsFinder.getPostWordCount()
 ```
 
 **参数**
@@ -541,7 +541,7 @@ extraApiStatsFinder.getPostWordCount();
 // 传入映射形式参数
 extraApiStatsFinder.getContentWordCount({
   htmlContent: '<p>HTML 内容</p>'  // 必需，要统计字数的 HTML 内容
-});
+})
 ```
 
 **参数**
@@ -560,7 +560,7 @@ extraApiStatsFinder.getContentWordCount({
 
 ```javascript
 // 直接传入 HTML 内容字符串进行统计
-extraApiStatsFinder.getContentWordCount(htmlContent);
+extraApiStatsFinder.getContentWordCount(htmlContent)
 ```
 
 **参数**
