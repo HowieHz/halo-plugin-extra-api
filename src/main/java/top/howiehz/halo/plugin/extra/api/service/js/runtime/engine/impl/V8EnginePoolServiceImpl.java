@@ -51,7 +51,7 @@ public class V8EnginePoolServiceImpl
                     defaultConfig.setPoolMinSize(1);
                     defaultConfig.setPoolMaxSize(2);
                     log.warn(
-                        "V8 engine pool configuration not found, using default values: minSize=1,"
+                        "JS engine pool configuration not found, using default values: minSize=1,"
                             + " maxSize=2");
                     return defaultConfig;
                 });
@@ -133,9 +133,7 @@ public class V8EnginePoolServiceImpl
                             return returnType.cast(java.util.Collections.emptySet());
                         }
                         java.util.Set<String> set = new java.util.LinkedHashSet<>();
-                        v8ValueSet.forEach((V8ValueString value) -> {
-                            set.add(value.getValue());
-                        });
+                        v8ValueSet.forEach((V8ValueString value) -> set.add(value.getValue()));
                         return returnType.cast(set);
                     }
                 } else if (returnType == java.util.Map.class) {
@@ -179,7 +177,7 @@ public class V8EnginePoolServiceImpl
 
         // Diagnostic logging: record pool stats before/after acquisition and after release
         String threadInfo =
-            Thread.currentThread().getName() + "[" + Thread.currentThread().getId() + "]";
+            Thread.currentThread().getName() + "[" + Thread.currentThread().threadId() + "]";
         if (enginePool instanceof JavetEnginePool<V8Runtime> poolBefore) {
             log.debug("[V8 POOL] {} requesting engine - before: active={}, idle={}", threadInfo,
                 poolBefore.getActiveEngineCount(), poolBefore.getIdleEngineCount());

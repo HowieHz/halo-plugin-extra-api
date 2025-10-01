@@ -182,13 +182,13 @@ public class ShikiRenderCodeService {
             }
         }
 
-        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={:.1f}%",
+        log.info("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={}%",
             totalRequests, cacheHits, requestsToRender.size(),
-            totalRequests > 0 ? (cacheHits * 100.0 / totalRequests) : 0);
+            totalRequests > 0 ? String.format("%.1f", (cacheHits * 100.0 / totalRequests)) : "0.0");
 
         // 如果全部命中缓存,直接返回
         if (requestsToRender.isEmpty()) {
-            log.debug("所有请求均命中缓存,跳过渲染");
+            log.info("所有请求均命中缓存,跳过渲染");
             return allResults;
         }
 
@@ -196,7 +196,7 @@ public class ShikiRenderCodeService {
         // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
         int numGroups = Math.min(requestsToRender.size(), ENGINE_POOL_SIZE);
 
-        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
+        log.info("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
             requestsToRender.size(), numGroups, ENGINE_POOL_SIZE);
 
         // 将需要渲染的请求分组
@@ -211,7 +211,7 @@ public class ShikiRenderCodeService {
 
             futures.add(CompletableFuture.supplyAsync(() -> {
                 try {
-                    log.debug("组 {} 开始处理 {} 个请求", groupIndex, group.size());
+                    log.info("组 {} 开始处理 {} 个请求", groupIndex, group.size());
 
                     // 转换为批量请求格式
                     Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests
@@ -227,7 +227,7 @@ public class ShikiRenderCodeService {
                     Map<String, String> results =
                         shikiHighlightService.highlightCodeBatch(batchRequests);
 
-                    log.debug("组 {} 完成处理", groupIndex);
+                    log.info("组 {} 完成处理", groupIndex);
                     return results;
 
                 } catch (Exception e) {
@@ -272,7 +272,7 @@ public class ShikiRenderCodeService {
         // 合并缓存结果和新渲染结果
         allResults.putAll(renderResults);
 
-        log.debug("渲染完成: 总结果={}, 缓存大小={}", allResults.size(), renderCache.size());
+        log.info("渲染完成: 总结果={}, 缓存大小={}", allResults.size(), renderCache.size());
 
         return allResults;
     }
