@@ -219,7 +219,7 @@ public class V8EnginePoolServiceImpl
     }
 
     @Override
-    public int getPoolMaxSize(){
+    public int getPoolMaxSize() {
         if (enginePool instanceof JavetEnginePool<V8Runtime> pool) {
             return pool.getConfig().getPoolMaxSize();
         }

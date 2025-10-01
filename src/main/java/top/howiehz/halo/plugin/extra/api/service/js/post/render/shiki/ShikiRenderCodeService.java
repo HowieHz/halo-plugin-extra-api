@@ -14,7 +14,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
-import top.howiehz.halo.plugin.extra.api.service.basic.config.JsEnginePoolConfigSupplier;
 import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfig;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
@@ -61,7 +60,7 @@ public class ShikiRenderCodeService {
         // 收集所有需要高亮的请求,同时进行去重
         List<CodeBlockInfo> codeBlocks = new ArrayList<>();
         List<HighlightRequest> allRequests = new ArrayList<>();
-        
+
         // 用于去重: key = code|language|theme, value = list of block indices
         Map<String, List<Integer>> deduplicationMap = new java.util.LinkedHashMap<>();
 
@@ -86,12 +85,13 @@ public class ShikiRenderCodeService {
                     if (!shikiConfig.isEnabledDoubleRenderMode()) {
                         String theme = normalizeTheme(shikiConfig.getTheme());
                         String dedupKey = code + "|" + language + "|" + theme;
-                        
+
                         deduplicationMap.computeIfAbsent(dedupKey, k -> new ArrayList<>()).add(i);
-                        
+
                         // 只为第一次出现的代码块创建请求
                         if (deduplicationMap.get(dedupKey).size() == 1) {
-                            allRequests.add(new HighlightRequest("block-" + i, code, language, theme));
+                            allRequests.add(
+                                new HighlightRequest("block-" + i, code, language, theme));
                         }
                     } else {
                         String lightTheme =
@@ -100,10 +100,12 @@ public class ShikiRenderCodeService {
 
                         String lightDedupKey = code + "|" + language + "|" + lightTheme;
                         String darkDedupKey = code + "|" + language + "|" + darkTheme;
-                        
-                        deduplicationMap.computeIfAbsent(lightDedupKey, k -> new ArrayList<>()).add(i);
-                        deduplicationMap.computeIfAbsent(darkDedupKey, k -> new ArrayList<>()).add(i);
-                        
+
+                        deduplicationMap.computeIfAbsent(lightDedupKey, k -> new ArrayList<>())
+                            .add(i);
+                        deduplicationMap.computeIfAbsent(darkDedupKey, k -> new ArrayList<>())
+                            .add(i);
+
                         // 只为第一次出现的代码块创建请求
                         if (deduplicationMap.get(lightDedupKey).size() == 1) {
                             allRequests.add(
@@ -111,8 +113,9 @@ public class ShikiRenderCodeService {
                                     lightTheme));
                         }
                         if (deduplicationMap.get(darkDedupKey).size() == 1) {
-                            allRequests.add(new HighlightRequest("block-" + i + "-dark", code, language,
-                                darkTheme));
+                            allRequests.add(
+                                new HighlightRequest("block-" + i + "-dark", code, language,
+                                    darkTheme));
                         }
                     }
                 } catch (Exception e) {
@@ -128,10 +131,11 @@ public class ShikiRenderCodeService {
         // 统计去重效果
         int totalBlocks = codeBlocks.size();
         int uniqueRequests = allRequests.size();
-        int duplicates = (shikiConfig.isEnabledDoubleRenderMode() ? totalBlocks * 2 : totalBlocks) - uniqueRequests;
+        int duplicates = (shikiConfig.isEnabledDoubleRenderMode() ? totalBlocks * 2 : totalBlocks)
+            - uniqueRequests;
         if (duplicates > 0) {
             metrics.recordDeduplication(duplicates);
-            log.info("代码块去重: 总块数={}, 唯一请求={}, 去重节省={}",
+            log.debug("代码块去重: 总块数={}, 唯一请求={}, 去重节省={}",
                 totalBlocks, uniqueRequests, duplicates);
         }
 
@@ -141,12 +145,14 @@ public class ShikiRenderCodeService {
         metrics.recordRenderTime(startTime);
 
         // 输出统计信息
-        ShikiCacheMetrics.MetricsSnapshot snapshot = metrics.getSnapshot();
-        log.info("Shiki 渲染统计: 缓存命中率={}%, 去重节省={}, 平均耗时={}ms, 缓存大小={}",
-            String.format("%.1f", snapshot.getHitRatePercent()), 
-            snapshot.getDeduplicatedRequests(),
-            String.format("%.1f", snapshot.getAvgRenderTimeMs()), 
-            renderCache.size());
+        if (log.isDebugEnabled()) {
+            ShikiCacheMetrics.MetricsSnapshot snapshot = metrics.getSnapshot();
+            log.debug("Shiki 渲染统计: 缓存命中率={}%, 去重节省={}, 平均耗时={}ms, 缓存大小={}",
+                String.format("%.1f", snapshot.getHitRatePercent()),
+                snapshot.getDeduplicatedRequests(),
+                String.format("%.1f", snapshot.getAvgRenderTimeMs()),
+                renderCache.size());
+        }
 
         // 批量应用高亮结果 - 使用两阶段 DOM 操作减少性能开销
         // 阶段1: 收集所有新节点和需要删除的旧节点
@@ -159,16 +165,16 @@ public class ShikiRenderCodeService {
                     String theme = normalizeTheme(shikiConfig.getTheme());
                     String dedupKey = blockInfo.code + "|" + blockInfo.language + "|" + theme;
                     List<Integer> sameBlocks = deduplicationMap.get(dedupKey);
-                    
+
                     // 找到第一个代码块的渲染结果
-                    int firstIndex = sameBlocks.get(0);
+                    int firstIndex = sameBlocks.getFirst();
                     String key = "block-" + firstIndex;
                     String highlightedHtml = results.get(key);
 
                     if (highlightedHtml != null && !highlightedHtml.startsWith("Error:")) {
                         Element highlightedDiv = doc.createElement("div");
                         highlightedDiv.html(highlightedHtml);
-                        
+
                         // 收集替换操作
                         replacementMap.put(blockInfo.preElement, List.of(highlightedDiv));
                         toRemove.add(blockInfo.preElement);
@@ -176,13 +182,15 @@ public class ShikiRenderCodeService {
                 } else {
                     String lightTheme = normalizeTheme(shikiConfig.getLightTheme(), "min-light");
                     String darkTheme = normalizeTheme(shikiConfig.getDarkTheme(), "nord");
-                    String lightDedupKey = blockInfo.code + "|" + blockInfo.language + "|" + lightTheme;
-                    String darkDedupKey = blockInfo.code + "|" + blockInfo.language + "|" + darkTheme;
-                    
+                    String lightDedupKey =
+                        blockInfo.code + "|" + blockInfo.language + "|" + lightTheme;
+                    String darkDedupKey =
+                        blockInfo.code + "|" + blockInfo.language + "|" + darkTheme;
+
                     // 找到第一个代码块的渲染结果
-                    int firstLightIndex = deduplicationMap.get(lightDedupKey).get(0);
-                    int firstDarkIndex = deduplicationMap.get(darkDedupKey).get(0);
-                    
+                    int firstLightIndex = deduplicationMap.get(lightDedupKey).getFirst();
+                    int firstDarkIndex = deduplicationMap.get(darkDedupKey).getFirst();
+
                     String lightKey = "block-" + firstLightIndex + "-light";
                     String darkKey = "block-" + firstDarkIndex + "-dark";
                     String lightHtml = results.get(lightKey);
@@ -215,7 +223,7 @@ public class ShikiRenderCodeService {
         for (Map.Entry<Element, List<Element>> entry : replacementMap.entrySet()) {
             Element oldElement = entry.getKey();
             List<Element> newElements = entry.getValue();
-            
+
             for (Element newElement : newElements) {
                 oldElement.before(newElement);
             }
@@ -226,7 +234,7 @@ public class ShikiRenderCodeService {
             element.remove();
         }
 
-        log.info("DOM 批量操作完成: 替换了 {} 个代码块", toRemove.size());
+        log.debug("DOM 批量操作完成: 替换了 {} 个代码块", toRemove.size());
 
         return doc.body().html();
     }
@@ -266,13 +274,13 @@ public class ShikiRenderCodeService {
             }
         }
 
-        log.info("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={}%",
+        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={}%",
             totalRequests, cacheHits, requestsToRender.size(),
             totalRequests > 0 ? String.format("%.1f", (cacheHits * 100.0 / totalRequests)) : "0.0");
 
         // 如果全部命中缓存,直接返回
         if (requestsToRender.isEmpty()) {
-            log.info("所有请求均命中缓存,跳过渲染");
+            log.debug("所有请求均命中缓存,跳过渲染");
             return allResults;
         }
 
@@ -280,7 +288,7 @@ public class ShikiRenderCodeService {
         // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
         int numGroups = Math.min(requestsToRender.size(), v8EnginePoolService.getPoolMaxSize());
 
-        log.info("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
+        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
             requestsToRender.size(), numGroups, v8EnginePoolService.getPoolMaxSize());
 
         // 将需要渲染的请求分组
@@ -295,7 +303,7 @@ public class ShikiRenderCodeService {
 
             futures.add(CompletableFuture.supplyAsync(() -> {
                 try {
-                    log.info("组 {} 开始处理 {} 个请求", groupIndex, group.size());
+                    log.debug("组 {} 开始处理 {} 个请求", groupIndex, group.size());
 
                     // 转换为批量请求格式
                     Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests
@@ -311,7 +319,7 @@ public class ShikiRenderCodeService {
                     Map<String, String> results =
                         shikiHighlightService.highlightCodeBatch(batchRequests);
 
-                    log.info("组 {} 完成处理", groupIndex);
+                    log.debug("组 {} 完成处理", groupIndex);
                     return results;
 
                 } catch (Exception e) {
@@ -356,7 +364,7 @@ public class ShikiRenderCodeService {
         // 合并缓存结果和新渲染结果
         allResults.putAll(renderResults);
 
-        log.info("渲染完成: 总结果={}, 缓存大小={}", allResults.size(), renderCache.size());
+        log.debug("渲染完成: 总结果={}, 缓存大小={}", allResults.size(), renderCache.size());
 
         return allResults;
     }

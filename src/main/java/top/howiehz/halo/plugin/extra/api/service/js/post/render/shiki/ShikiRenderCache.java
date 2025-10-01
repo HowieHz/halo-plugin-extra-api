@@ -38,8 +38,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ShikiRenderCache {
 
-    private final ShikiCacheMetrics metrics;
-
     /**
      * Maximum number of cache entries.
      * 最大缓存条目数。
@@ -50,7 +48,6 @@ public class ShikiRenderCache {
      * - 可通过配置调整
      */
     private static final int MAX_CACHE_SIZE = 10_000;
-
     /**
      * Default TTL for cache entries.
      * 缓存条目的默认过期时间。
@@ -61,7 +58,7 @@ public class ShikiRenderCache {
      * - 用户修改主题配置后最多等待 24 小时生效
      */
     private static final Duration DEFAULT_TTL = Duration.ofHours(24);
-
+    private final ShikiCacheMetrics metrics;
     /**
      * LRU map for maintaining access order.
      * 维护访问顺序的 LRU 映射。
@@ -109,7 +106,7 @@ public class ShikiRenderCache {
 
     public ShikiRenderCache(ShikiCacheMetrics metrics) {
         this.metrics = metrics;
-        
+
         // 初始化 LRU map,设置为访问顺序模式
         this.lruMap = new LinkedHashMap<>(16, 0.75f, true) {
             @Override
