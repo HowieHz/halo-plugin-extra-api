@@ -217,4 +217,12 @@ public class V8EnginePoolServiceImpl
         }
         return new PoolStats(0, 0, 0, 0);
     }
+
+    @Override
+    public int getPoolMaxSize(){
+        if (enginePool instanceof JavetEnginePool<V8Runtime> pool) {
+            return pool.getConfig().getPoolMaxSize();
+        }
+        return 0;
+    }
 }

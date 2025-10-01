@@ -13,8 +13,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.JsEnginePoolConfigSupplier;
 import top.howiehz.halo.plugin.extra.api.service.basic.config.ShikiConfig;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.ShikiHighlightService;
+import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
 
 /**
  * Service for rendering code blocks using intelligent batch distribution strategy.
@@ -28,10 +30,9 @@ import top.howiehz.halo.plugin.extra.api.service.js.runtime.adapters.shiki.Shiki
 @Component
 @RequiredArgsConstructor
 public class ShikiRenderCodeService {
-    // 引擎池大小 = CPU 核心数(由 V8EnginePoolServiceImpl 自动配置)
-    private static final int ENGINE_POOL_SIZE = Runtime.getRuntime().availableProcessors();
     private final ShikiHighlightService shikiHighlightService;
     private final ShikiRenderCache renderCache;
+    private final V8EnginePoolService v8EnginePoolService;
 
     /**
      * Render code blocks with intelligent batch distribution.
@@ -194,10 +195,10 @@ public class ShikiRenderCodeService {
 
         // 第二步:对未命中的请求进行批量渲染
         // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
-        int numGroups = Math.min(requestsToRender.size(), ENGINE_POOL_SIZE);
+        int numGroups = Math.min(requestsToRender.size(), v8EnginePoolService.getPoolMaxSize());
 
         log.info("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
-            requestsToRender.size(), numGroups, ENGINE_POOL_SIZE);
+            requestsToRender.size(), numGroups, v8EnginePoolService.getPoolMaxSize());
 
         // 将需要渲染的请求分组
         List<List<HighlightRequest>> groups = partitionRequests(requestsToRender, numGroups);
