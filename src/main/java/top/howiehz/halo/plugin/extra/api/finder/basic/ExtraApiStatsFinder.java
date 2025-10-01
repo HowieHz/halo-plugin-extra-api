@@ -35,4 +35,30 @@ public interface ExtraApiStatsFinder {
     default Mono<BigInteger> getPostWordCount() {
         return getPostWordCount(Collections.emptyMap());
     }
+
+    /**
+     * Count words in the provided HTML content.
+     * 统计提供的 HTML 内容的字数。
+     * <p>
+     * This method accepts raw HTML content and returns the word count.
+     * CJK characters are counted individually, ASCII letters/digits are grouped as words.
+     * 此方法接收原始 HTML 内容并返回字数统计。
+     * 中日韩字符单独计数，ASCII 字母/数字按单词分组计数。
+     * </p>
+     *
+     * @param params parameter map containing 'htmlContent' key / 包含 'htmlContent' 键的参数映射
+     * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
+     */
+    Mono<BigInteger> getContentWordCount(java.util.Map<String, Object> params);
+
+    /**
+     * Count words in the provided HTML content.
+     * 统计提供的 HTML 内容的字数。
+     *
+     * @param htmlContent the HTML content to count / 要统计的 HTML 内容
+     * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
+     */
+    default Mono<BigInteger> getContentWordCount(String htmlContent) {
+        return getContentWordCount(Collections.singletonMap("htmlContent", htmlContent));
+    }
 }

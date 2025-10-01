@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import run.halo.app.theme.finders.Finder;
 import top.howiehz.halo.plugin.extra.api.finder.basic.ExtraApiStatsFinder;
 import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.utils.PostWordCountUtil;
 
 /**
  * Implementation of ExtraApiStatsFinder.
@@ -43,5 +44,30 @@ public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
         }
 
         return postWordCountService.getPostWordCount(postName, isDraft);
+    }
+
+    /**
+     * Count words in the provided HTML content.
+     * 统计提供的 HTML 内容的字数。
+     *
+     * @param params parameter map containing 'htmlContent' key / 包含 'htmlContent' 键的参数映射
+     * @return word count as Mono (non-negative) / 返回字数（非负）的 Mono
+     */
+    @Override
+    public Mono<BigInteger> getContentWordCount(Map<String, Object> params) {
+        Map<String, Object> map = params == null ? java.util.Collections.emptyMap() : params;
+        Object htmlContentObj = map.get("htmlContent");
+        
+        if (htmlContentObj == null) {
+            return Mono.just(BigInteger.ZERO);
+        }
+        
+        String htmlContent = String.valueOf(htmlContentObj);
+        if ("null".equals(htmlContent) || htmlContent.isBlank()) {
+            return Mono.just(BigInteger.ZERO);
+        }
+        
+        return Mono.fromCallable(() -> PostWordCountUtil.countHTMLWords(htmlContent))
+            .onErrorReturn(BigInteger.ZERO);
     }
 }

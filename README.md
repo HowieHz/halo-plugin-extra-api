@@ -45,6 +45,7 @@
     - [代码高亮处理器](#代码高亮处理器)（仅全量版可用）
 - 需要主题适配的 Finder API：
     - [文章字数统计 API](#文章字数统计-api)
+    - [HTML 内容字数统计 API](#html-内容字数统计-api)
     - [代码高亮 API](#代码高亮-api)（仅全量版可用）
 
 未来将实现的功能：[TODO](#todo)
@@ -199,38 +200,40 @@ ERROR - JavetException: Javet library is not loaded because <null>
 ## 文档目录
 
 - [halo-plugin-extra-api](#halo-plugin-extra-api)
-    - [简介](#简介)
-    - [核心理念](#核心理念)
-    - [功能介绍](#功能介绍)
-    - [版本说明](#版本说明)
-        - [轻量版的优势](#轻量版的优势)
-        - [轻量版本缺少的功能](#轻量版本缺少的功能)
-    - [全量版使用须知](#全量版使用须知)
-        - [基本使用要求](#基本使用要求)
-        - [全量版已知问题](#全量版已知问题)
-            - [问题一解决方案](#问题一解决方案)
-    - [TODO](#todo)
-    - [文档目录](#文档目录)
-    - [处理器文档](#处理器文档)
-        - [代码高亮处理器](#代码高亮处理器)
-            - [特点](#特点)
-            - [配置选项](#配置选项)
-            - [支持的主题](#支持的主题)
-            - [补充说明](#补充说明)
-    - [Finder API 文档](#finder-api-文档)
-        - [插件本体信息相关 API](#插件本体信息相关-api)
-            - [检测本插件是否启用](#检测本插件是否启用)
-            - [插件版本检测 API](#插件版本检测-api)
-        - [统计信息 API](#统计信息-api)
-            - [文章字数统计 API](#文章字数统计-api)
-        - [渲染 API](#渲染-api)
-            - [代码高亮 API](#代码高亮-api)
-    - [下载和安装](#下载和安装)
-        - [稳定版](#稳定版)
-        - [开发版](#开发版)
-            - [下载步骤](#下载步骤)
-    - [开发指南/贡献指南](#开发指南贡献指南)
-    - [许可证](#许可证)
+  - [简介](#简介)
+  - [核心理念](#核心理念)
+  - [功能介绍](#功能介绍)
+  - [版本说明](#版本说明)
+    - [轻量版的优势](#轻量版的优势)
+    - [轻量版本缺少的功能](#轻量版本缺少的功能)
+  - [全量版使用须知](#全量版使用须知)
+    - [基本使用要求](#基本使用要求)
+    - [全量版已知问题](#全量版已知问题)
+      - [问题一解决方案](#问题一解决方案)
+  - [TODO](#todo)
+  - [文档目录](#文档目录)
+  - [处理器文档](#处理器文档)
+    - [代码高亮处理器](#代码高亮处理器)
+      - [特点](#特点)
+      - [配置选项](#配置选项)
+      - [支持的主题](#支持的主题)
+      - [补充说明](#补充说明)
+  - [Finder API 文档](#finder-api-文档)
+    - [文档类型定义](#文档类型定义)
+    - [插件本体信息相关 API](#插件本体信息相关-api)
+      - [检测本插件是否启用](#检测本插件是否启用)
+      - [插件版本检测 API](#插件版本检测-api)
+    - [统计信息 API](#统计信息-api)
+      - [文章字数统计 API](#文章字数统计-api)
+      - [HTML 内容字数统计 API](#html-内容字数统计-api)
+    - [渲染 API](#渲染-api)
+      - [代码高亮 API](#代码高亮-api)
+  - [下载和安装](#下载和安装)
+    - [稳定版](#稳定版)
+    - [开发版](#开发版)
+      - [下载步骤](#下载步骤)
+  - [开发指南/贡献指南](#开发指南贡献指南)
+  - [许可证](#许可证)
 
 ## 处理器文档
 
@@ -319,6 +322,13 @@ ERROR - JavetException: Javet library is not loaded because <null>
 
 ## Finder API 文档
 
+### 文档类型定义
+
+- `string`： 字符串类型
+- `int`：整数类型（实现为 BigInteger 即无限精度整数）
+- `boolean`：布尔类型（true/false）
+- `map`：映射类型（键值对）
+
 ### 插件本体信息相关 API
 
 #### 检测本插件是否启用
@@ -330,15 +340,18 @@ ERROR - JavetException: Javet library is not loaded because <null>
 
 **参数**
 
-- `extra-api` - 本插件的标识符（`metadata.name`）
+- `extra-api`
+- 解释：本插件的标识符（`metadata.name`）
 
 **返回值**
 
-- `boolean` - 插件可用时返回 true，否则返回 false
+- 类型：`boolean`
+- 解释：插件可用时返回 true，否则返回 false
 
 **说明**
 
-使用 `pluginFinder.available('extra-api')` 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。
+使用 `pluginFinder.available('extra-api')`
+可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。   
 注：在此基础上可以使用 `pluginFinder.available('extra-api', '2.*')` 锁定大版本号，避免 API 破坏性更新时导致主题渲染报错。
 
 **示例**
@@ -392,12 +405,20 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 
 **返回值**
 
-- `isFullVersion()` → `boolean` - 全量版时返回 true，轻量版时返回 false
-- `isLiteVersion()` → `boolean` - 轻量版时返回 true，全量版时返回 false
-- `getVersionType()` → `string` - 返回 "full" 或 "lite"
-- `isJavaScriptAvailable()` → `boolean` - JavaScript 功能可用时返回 true
+- `isFullVersion()`
+    - 类型：`boolean`
+    - 解释：全量版时返回 true，轻量版时返回 false
+- `isLiteVersion()`
+    - 类型：`boolean`
+    - 解释：轻量版时返回 true，全量版时返回 false
+- `getVersionType()`
+    - 类型：`string`
+    - 解释：返回 "full" 或 "lite"
+- `isJavaScriptAvailable()`
+    - 类型：`boolean`
+    - 解释：JavaScript 功能可用时返回 true
 
-**描述**
+**补充说明**
 
 - 检测原理
     - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
@@ -407,6 +428,9 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
     - 主题兼容性：主题可以根据插件版本提供不同的功能体验
     - 用户提示：向用户说明当前版本的功能限制
     - 条件渲染：仅在支持的版本中启用特定功能（主题请求不存在的 Finder API 会报错并阻止页面渲染）
+- 性能说明
+    - 这些方法单次调用开销极小，适合在模板中频繁使用
+    - 首次调用性能开销比后续调用稍高，但仍在毫秒级别（首次通过反射检查，后续直接读取缓存）
 
 **使用示例**
 
@@ -441,7 +465,14 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 
 #### 文章字数统计 API
 
+**描述**
+
+提供文章字数统计功能，支持统计单篇文章或全站文章的字数总和。可选择统计已发布版本或最新版本（含草稿）。适用于显示文章字数、阅读时间估算等场景。
+
+**API 方法**
+
 ```javascript
+// 传入映射形式参数
 extraApiStatsFinder.getPostWordCount({
   name: 'post-metadata-name',  // 可选，未传入则统计全部文章字数总和
   version: 'release' | 'draft'  // 可选，默认 'release'
@@ -449,23 +480,27 @@ extraApiStatsFinder.getPostWordCount({
 ```
 
 ```javascript
+// 统计全部文章已发布版本的总字数
 extraApiStatsFinder.getPostWordCount();
 ```
 
 **参数**
 
-- `name:string` – 文章 `metadata.name`（可选，不传则统计全站）
-- `version:string` – 统计版本，可选 `release`（默认）或 `draft`
+- 映射形式参数：
+    - `name`
+        - 类型：`string`
+        - 解释：文章的 `metadata.name`，可选参数。未传入时统计全部文章字数总和。
+    - `version`
+        - 类型：`string`
+        - 解释：统计版本，可选参数。`release`（未传入时默认值）或 `draft`。
 
 **返回值**
 
-- `int` – 字数统计结果（非负），不存在或参数缺失时返回 0
+- 类型：`int` 
+- 解释：字数统计结果（非负），不存在或参数缺失时返回 0
 
-**描述**
+**补充说明**
 
-- 参数说明：
-    - `name`：文章的 `metadata.name`，可选参数。未传入时统计全部文章字数总和。
-    - `version`：统计版本，可选 `release`（默认）或 `draft`。
 - 计数规则：
     - 中文、日文、韩文等 CJK 字符按每个字符计 1。
     - ASCII 连续字母/数字按 1 个单词计数。
@@ -494,6 +529,85 @@ extraApiStatsFinder.getPostWordCount();
 <span th:text="${extraApiStatsFinder.getPostWordCount({version: 'draft'})}"></span>
 ```
 
+#### HTML 内容字数统计 API
+
+**描述**
+
+提供 HTML 内容字数统计功能，支持统计任意 HTML 字符串的字数。适用于统计文章内容、瞬间内容或自定义 HTML 片段的字数。
+
+**API 方法**
+
+```javascript
+// 传入映射形式参数
+extraApiStatsFinder.getContentWordCount({
+  htmlContent: '<p>HTML 内容</p>'  // 必需，要统计字数的 HTML 内容
+});
+```
+
+**参数**
+
+- 映射形式参数：
+    - `htmlContent`
+        - 类型：`string`
+        - 解释：HTML 内容字符串（必需）
+
+**返回值**
+
+- 类型：`int`
+- 解释：字数统计结果（非负），输入为空时返回 0
+
+**API 方法**
+
+```javascript
+// 直接传入 HTML 内容字符串进行统计
+extraApiStatsFinder.getContentWordCount(htmlContent);
+```
+
+**参数**
+
+- `htmlContent`
+    - 类型：`string`
+    - 解释：HTML 内容字符串（必需）。即要统计字数的 HTML 内容，支持标准 HTML 格式。
+
+**返回值**
+
+- 类型：`int` 
+- 解释：字数统计结果（非负），输入为空时返回 0
+
+**描述**
+
+- 计数规则：
+    - 自动移除 HTML 标签（包括 `<script>` 和 `<style>` 标签）
+    - 中文、日文、韩文等 CJK 字符按每个字符计 1
+    - ASCII 连续字母/数字按 1 个单词计数
+    - 标点符号和空格不计入统计
+- 错误处理：
+    - 输入为空或 null 时返回 0，不会抛出异常
+- 性能说明：
+    - 单次调用开销较小，适合在模板中直接使用
+    - 纯计算操作，不涉及缓存和数据库查询
+
+**使用示例**
+
+```html
+<!--/* 统计任意 HTML 内容的字数 */-->
+<!--/* 传入映射形式参数的写法 */-->
+<span th:text="${extraApiStatsFinder.getContentWordCount({htmlContent: '<p>这是一段测试文本</p>'})}"></span>
+<!--/* 传入 HTML 内容字符串的写法 */-->
+<span th:text="${extraApiStatsFinder.getContentWordCount('<p>这是一段测试文本</p>')}"></span>
+
+<!--/* 统计文章内容的字数，下面这段代码可直接用于 /templates/post.html */-->
+<span th:text="${extraApiStatsFinder.getContentWordCount(post.content?.content)}"></span>
+
+<!--/* 统计瞬间内容的字数，下面这段代码可直接用于 /templates/moment.html */-->
+<span th:text="${extraApiStatsFinder.getContentWordCount(moment.spec.content?.html)}"></span>
+
+<!--/* 在变量中使用 */-->
+<div th:with="wordCount=${extraApiStatsFinder.getContentWordCount(customContent)}">
+    <span>字数：[[${wordCount}]]</span>
+</div>
+```
+
 ### 渲染 API
 
 **Finder 名称：** `extraApiRenderFinder`
@@ -506,16 +620,17 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 
 **参数**
 
-- `htmlContent:string` – HTML 内容
+- `htmlContent`
+    - 类型：`string`
+    - 解释：包含代码块的 HTML 内容，通常是文章或页面的内容字段。
 
 **返回值**
 
-- `string` – 渲染后的 HTML 内容，渲染样式已内联，渲染失败时返回原始内容
+- 类型：`string`
+- 解释：渲染后的 HTML 内容，渲染样式已内联，渲染失败时返回原始内容
 
 **描述**
 
-- 参数说明：
-    - `htmlContent`：包含代码块的 HTML 内容，通常是文章或页面的内容字段。
 - 功能特性：
     - 同 [处理器文档 - 代码高亮（通过 Shiki.js 渲染）](#代码高亮通过-shikijs-渲染) 中描述的功能特性一致。也受同样的配置项影响。
 
