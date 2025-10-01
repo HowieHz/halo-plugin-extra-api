@@ -40,13 +40,14 @@
 ## 功能介绍
 
 本插件现版本已提供以下功能：
-- 无需主题适配即可使用的功能：
-  - [代码高亮处理器](#代码高亮处理器)（仅全量版可用）
-- 需要主题适配的 Finder API：
-  - [文章字数统计 API](#文章字数统计-api)
-  - [代码高亮 API](#代码高亮-api)（仅全量版可用）
 
-未来将实现的功能：[TODO](#TODO)
+- 无需主题适配即可使用的功能：
+    - [代码高亮处理器](#代码高亮处理器)（仅全量版可用）
+- 需要主题适配的 Finder API：
+    - [文章字数统计 API](#文章字数统计-api)
+    - [代码高亮 API](#代码高亮-api)（仅全量版可用）
+
+未来将实现的功能：[TODO](#todo)
 
 欢迎为此插件提 [Issue](https://github.com/HowieHz/halo-plugin-extra-api/issues/new)，任何你需要的功能都可以在此处提出，我将在能力范围内尽力实现。
 
@@ -72,8 +73,10 @@
 ### 轻量版本缺少的功能
 
 - 代码高亮（Shiki.js 渲染）
+
 <!-- - 图表渲染（Mermaid）
 - 公式渲染（KaTeX） -->
+
 - 其他 JS 运行时相关功能
 
 如果您需要上述功能，请使用全量版。
@@ -87,18 +90,18 @@
 ### 基本使用要求
 
 1. **请勿热重载更新**: 请勿直接覆盖更新（如使用应用商店/插件列表的快捷更新操作）
-2. **正确的更新流程**: 
-   - 方法一：停止插件 → 卸载插件 → **重启 Halo** → 安装新版本 → 启动插件
-   - 方法二：停止插件 → 卸载插件 → 安装新版本 → **重启 Halo** → 启动插件
+2. **正确的更新流程**:
+    - 方法一：停止插件 → 卸载插件 → **重启 Halo** → 安装新版本 → 启动插件
+    - 方法二：停止插件 → 卸载插件 → 安装新版本 → **重启 Halo** → 启动插件
 3. **卸载推荐做法**: 在卸载全量版后**重启 Halo** 确保原生库资源完全释放。
 
 ### 全量版已知问题
 
 - 问题一：卸载后重新安装全量版插件，不重启就启用。调用 JS 相关 API 时会出现错误：
-  - **首次安装并启动**: 正常工作
-  - **禁用后重新启用**: 正常工作
-  - **卸载后重新安装**: ❌ 会出现 `JavetException: Javet library is not loaded` 错误
-  - **重启 Halo 后**: 恢复正常工作
+    - **首次安装并启动**: 正常工作
+    - **禁用后重新启用**: 正常工作
+    - **卸载后重新安装**: ❌ 会出现 `JavetException: Javet library is not loaded` 错误
+    - **重启 Halo 后**: 恢复正常工作
 
 #### 问题一解决方案
 
@@ -114,24 +117,25 @@
 
 **问题根源**:
 
-1. **Halo 插件架构**: 根据 [Halo 开发文档 - 插件架构](https://docs.halo.run/developer-guide/core/framework), Halo 使用 Spring Plugin Framework 实现插件隔离
-   - 每个插件拥有独立的 Spring ApplicationContext
-   - 每个插件使用独立的 classloader 加载资源
-   - 插件间通过 ExtensionPoint 机制通信
-   - classloader 完全隔离,无法跨插件共享类或资源
+1. **Halo 插件架构**: 根据 [Halo 开发文档 - 插件架构](https://docs.halo.run/developer-guide/core/framework), Halo 使用
+   Spring Plugin Framework 实现插件隔离
+    - 每个插件拥有独立的 Spring ApplicationContext
+    - 每个插件使用独立的 classloader 加载资源
+    - 插件间通过 ExtensionPoint 机制通信
+    - classloader 完全隔离,无法跨插件共享类或资源
 
 2. **Javet 原生库加载机制**:
-   - Javet 需要从 JAR 中提取原生库文件(`.dll`/`.so`/`.dylib`)到临时目录
-   - JVM 通过 JNI 加载这些原生库文件
-   - 原生库文件一旦加载,会被 JVM 锁定
+    - Javet 需要从 JAR 中提取原生库文件(`.dll`/`.so`/`.dylib`)到临时目录
+    - JVM 通过 JNI 加载这些原生库文件
+    - 原生库文件一旦加载,会被 JVM 锁定
 
 3. **冲突发生过程**:
-   - 安装插件时,Javet 提取原生库文件到 `C:\Users\用户名\AppData\Local\Temp\javet\进程ID\`（以 Windows 举例）
-   - JVM 加载这些文件并锁定
-   - 卸载插件时,虽然 classloader 被销毁,但原生库文件仍被 JVM 锁定,无法删除
-   - 重新安装时,Javet 尝试提取新文件到同一位置
-   - 因为文件被锁定,提取失败
-   - Javet 初始化失败,报错 `Javet library is not loaded because <null>`
+    - 安装插件时,Javet 提取原生库文件到 `C:\Users\用户名\AppData\Local\Temp\javet\进程ID\`（以 Windows 举例）
+    - JVM 加载这些文件并锁定
+    - 卸载插件时,虽然 classloader 被销毁,但原生库文件仍被 JVM 锁定,无法删除
+    - 重新安装时,Javet 尝试提取新文件到同一位置
+    - 因为文件被锁定,提取失败
+    - Javet 初始化失败,报错 `Javet library is not loaded because <null>`
 
 **典型错误日志解读**:
 
@@ -142,6 +146,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
 ```
 
 这三条日志清晰地展示了整个失败过程:
+
 1. 尝试写入文件失败(文件被锁定)
 2. 检测到库已在其他 classloader 中加载
 3. 初始化失败，因为无法提取必要的库文件
@@ -156,6 +161,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
 **为什么 Javet 文档中提到的 JVM 参数无效**:
 
 `-Djavet.lib.loading.suppress.error=true` 这个参数的作用是:
+
 - 抑制 Javet 在检测到"already loaded in another classloader"时的错误日志
 - **但无法解决文件锁定问题**
 - 当库文件无法提取时，Javet 根本无法完成初始化
@@ -164,12 +170,14 @@ ERROR - JavetException: Javet library is not loaded because <null>
 **架构层面的限制**:
 
 这个问题是 JVM/JNI + 插件 classloader 隔离的固有矛盾:
+
 - Halo 的插件隔离设计保证了安全性和稳定性
 - 但也导致原生库这类 JVM 级别资源难以管理
 - 类似问题在所有使用 classloader 隔离的插件系统中都存在
 - 这不是 Javet 或本插件的 bug，而是架构层面的限制
 
 **相关技术文档**:
+
 - [Javet - Load and Unload](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html)
 - [Javet Issue #124 - Classloader Reload](https://github.com/caoccao/Javet/issues/124)
 - [Halo - Plugin Framework](https://docs.halo.run/developer-guide/core/framework)
@@ -192,38 +200,38 @@ ERROR - JavetException: Javet library is not loaded because <null>
 ## 文档目录
 
 - [halo-plugin-extra-api](#halo-plugin-extra-api)
-  - [简介](#简介)
-  - [核心理念](#核心理念)
-  - [功能介绍](#功能介绍)
-  - [版本说明](#版本说明)
-    - [轻量版的优势](#轻量版的优势)
-    - [轻量版本缺少的功能](#轻量版本缺少的功能)
-  - [全量版使用须知](#全量版使用须知)
-    - [基本使用要求](#基本使用要求)
-    - [全量版已知问题](#全量版已知问题)
-      - [问题一解决方案](#问题一解决方案)
-  - [TODO](#todo)
-  - [文档目录](#文档目录)
-  - [处理器文档](#处理器文档)
-    - [代码高亮处理器](#代码高亮处理器)
-      - [特点](#特点)
-      - [配置选项](#配置选项)
-      - [支持的主题](#支持的主题)
-      - [补充说明](#补充说明)
-  - [Finder API 文档](#finder-api-文档)
-    - [插件本体信息相关 API](#插件本体信息相关-api)
-      - [检测本插件是否启用](#检测本插件是否启用)
-      - [插件版本检测 API](#插件版本检测-api)
-    - [统计信息 API](#统计信息-api)
-      - [文章字数统计 API](#文章字数统计-api)
-    - [渲染 API](#渲染-api)
-      - [代码高亮 API](#代码高亮-api)
-  - [下载和安装](#下载和安装)
-    - [稳定版](#稳定版)
-    - [开发版](#开发版)
-      - [下载步骤](#下载步骤)
-  - [开发指南/贡献指南](#开发指南贡献指南)
-  - [许可证](#许可证)
+    - [简介](#简介)
+    - [核心理念](#核心理念)
+    - [功能介绍](#功能介绍)
+    - [版本说明](#版本说明)
+        - [轻量版的优势](#轻量版的优势)
+        - [轻量版本缺少的功能](#轻量版本缺少的功能)
+    - [全量版使用须知](#全量版使用须知)
+        - [基本使用要求](#基本使用要求)
+        - [全量版已知问题](#全量版已知问题)
+            - [问题一解决方案](#问题一解决方案)
+    - [TODO](#todo)
+    - [文档目录](#文档目录)
+    - [处理器文档](#处理器文档)
+        - [代码高亮处理器](#代码高亮处理器)
+            - [特点](#特点)
+            - [配置选项](#配置选项)
+            - [支持的主题](#支持的主题)
+            - [补充说明](#补充说明)
+    - [Finder API 文档](#finder-api-文档)
+        - [插件本体信息相关 API](#插件本体信息相关-api)
+            - [检测本插件是否启用](#检测本插件是否启用)
+            - [插件版本检测 API](#插件版本检测-api)
+        - [统计信息 API](#统计信息-api)
+            - [文章字数统计 API](#文章字数统计-api)
+        - [渲染 API](#渲染-api)
+            - [代码高亮 API](#代码高亮-api)
+    - [下载和安装](#下载和安装)
+        - [稳定版](#稳定版)
+        - [开发版](#开发版)
+            - [下载步骤](#下载步骤)
+    - [开发指南/贡献指南](#开发指南贡献指南)
+    - [许可证](#许可证)
 
 ## 处理器文档
 
@@ -241,12 +249,21 @@ ERROR - JavetException: Javet library is not loaded because <null>
     - 从 `class` 属性中提取语言标识（如 `language-java`、`lang-python`）
 - 容错处理：
     - 渲染失败时保持原始代码块不变
-- 性能说明：
-    - 使用 V8 引擎池和异步处理，提升渲染效率
 - 默认自动渲染范围：
     - 处理器会自动处理以下页面内容并在页面 `head` 注入自定义 CSS 样式：
         - 文章内容 (`post`)
         - 页面内容 (`page`)
+- 性能说明：
+    - 命中缓存时响应速度极快（微秒级），首次渲染需要 1-3 秒初始化 JS 环境
+    - 批量处理策略：
+        - 智能分组：根据 V8 引擎池大小动态分配任务（例如 14 个任务 + 5 个引擎 → 5 组，每组 2-3 个任务）
+        - 并行执行：多个任务组并行处理，充分利用多核性能
+        - 批量渲染：同一组内的任务在单个引擎中通过一次 JS 通信批量处理，减少引擎切换开销
+        - 优先缓存：先检查缓存，只对未命中的请求进行实际渲染
+    - 缓存策略：
+        - LRU + TTL 双重策略：最多缓存 10,000 个代码块，每个条目 24 小时自动过期
+        - 智能去重：相同代码内容+语言+主题的重复渲染会自动去重，避免重复计算
+        - 缓存键：基于代码内容的 SHA-256 哈希值，避免长代码占用过多内存
 
 #### 配置选项
 

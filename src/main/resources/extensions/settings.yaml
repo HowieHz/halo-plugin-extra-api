@@ -34,7 +34,7 @@ spec:
           key: enabledShikiRender
           label: 自动渲染
           help: 启用之后会自动渲染文章和单页中的代码块。注：Finder API 渲染不受此配置项影响。
-          value: true
+          value: false
         - $formkit: code
           label: 自定义注入 CSS 样式
           if: $get(enabledShikiRender).value
