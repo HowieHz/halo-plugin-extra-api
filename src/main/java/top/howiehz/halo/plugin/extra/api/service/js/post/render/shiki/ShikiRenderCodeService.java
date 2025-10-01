@@ -148,7 +148,11 @@ public class ShikiRenderCodeService {
             String.format("%.1f", snapshot.getAvgRenderTimeMs()), 
             renderCache.size());
 
-        // 应用高亮结果(支持去重复用)
+        // 批量应用高亮结果 - 使用两阶段 DOM 操作减少性能开销
+        // 阶段1: 收集所有新节点和需要删除的旧节点
+        Map<Element, List<Element>> replacementMap = new java.util.LinkedHashMap<>();
+        List<Element> toRemove = new ArrayList<>();
+
         for (CodeBlockInfo blockInfo : codeBlocks) {
             try {
                 if (!shikiConfig.isEnabledDoubleRenderMode()) {
@@ -163,8 +167,11 @@ public class ShikiRenderCodeService {
 
                     if (highlightedHtml != null && !highlightedHtml.startsWith("Error:")) {
                         Element highlightedDiv = doc.createElement("div");
-                        highlightedDiv.append(highlightedHtml);
-                        blockInfo.preElement.replaceWith(highlightedDiv);
+                        highlightedDiv.html(highlightedHtml);
+                        
+                        // 收集替换操作
+                        replacementMap.put(blockInfo.preElement, List.of(highlightedDiv));
+                        toRemove.add(blockInfo.preElement);
                     }
                 } else {
                     String lightTheme = normalizeTheme(shikiConfig.getLightTheme(), "min-light");
@@ -189,19 +196,37 @@ public class ShikiRenderCodeService {
                         Element darkDiv = doc.createElement("div")
                             .attr("class", shikiConfig.getDarkCodeClass());
 
-                        lightDiv.append(lightHtml);
-                        darkDiv.append(darkHtml);
+                        lightDiv.html(lightHtml);
+                        darkDiv.html(darkHtml);
 
-                        blockInfo.preElement.before(lightDiv);
-                        blockInfo.preElement.before(darkDiv);
-                        blockInfo.preElement.remove();
+                        // 收集替换操作(双主题需要插入两个元素)
+                        replacementMap.put(blockInfo.preElement, List.of(lightDiv, darkDiv));
+                        toRemove.add(blockInfo.preElement);
                     }
                 }
             } catch (Exception e) {
-                log.warn("Failed to apply highlight result for block {}: {}",
+                log.warn("Failed to prepare replacement for block {}: {}",
                     blockInfo.index, e.getMessage());
             }
         }
+
+        // 阶段2: 批量执行 DOM 操作
+        // 2.1 批量插入所有新节点
+        for (Map.Entry<Element, List<Element>> entry : replacementMap.entrySet()) {
+            Element oldElement = entry.getKey();
+            List<Element> newElements = entry.getValue();
+            
+            for (Element newElement : newElements) {
+                oldElement.before(newElement);
+            }
+        }
+
+        // 2.2 批量删除所有旧节点
+        for (Element element : toRemove) {
+            element.remove();
+        }
+
+        log.info("DOM 批量操作完成: 替换了 {} 个代码块", toRemove.size());
 
         return doc.body().html();
     }
