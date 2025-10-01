@@ -469,7 +469,23 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 
 提供文章字数统计功能，支持统计单篇文章或全站文章的字数总和。可选择统计已发布版本或最新版本（含草稿）。适用于显示文章字数、阅读时间估算等场景。
 
-**API 方法**
+**API 方法（无参数）**
+
+```javascript
+// 统计全部文章已发布版本的总字数
+extraApiStatsFinder.getPostWordCount()
+```
+
+**参数**
+
+- 无
+
+**返回值**
+
+- 类型：`int` 
+- 解释：字数统计结果（非负），不存在或参数缺失时返回 0
+
+**API 方法（传入映射形式参数）**
 
 ```javascript
 // 传入映射形式参数
@@ -477,11 +493,6 @@ extraApiStatsFinder.getPostWordCount({
   name: 'post-metadata-name',  // 可选，未传入则统计全部文章字数总和
   version: 'release' | 'draft'  // 可选，默认 'release'
 })
-```
-
-```javascript
-// 统计全部文章已发布版本的总字数
-extraApiStatsFinder.getPostWordCount()
 ```
 
 **参数**
@@ -535,7 +546,25 @@ extraApiStatsFinder.getPostWordCount()
 
 提供 HTML 内容字数统计功能，支持统计任意 HTML 字符串的字数。适用于统计文章内容、瞬间内容或自定义 HTML 片段的字数。
 
-**API 方法**
+**API 方法（传入字符串形式参数）**
+
+```javascript
+// 直接传入 HTML 内容字符串进行统计
+extraApiStatsFinder.getContentWordCount(htmlContent)
+```
+
+**参数**
+
+- `htmlContent`
+    - 类型：`string`
+    - 解释：HTML 内容字符串（必需）。即要统计字数的 HTML 内容，支持标准 HTML 格式。
+
+**返回值**
+
+- 类型：`int` 
+- 解释：字数统计结果（非负），输入为空时返回 0
+
+**API 方法（传入映射形式参数）**
 
 ```javascript
 // 传入映射形式参数
@@ -554,24 +583,6 @@ extraApiStatsFinder.getContentWordCount({
 **返回值**
 
 - 类型：`int`
-- 解释：字数统计结果（非负），输入为空时返回 0
-
-**API 方法**
-
-```javascript
-// 直接传入 HTML 内容字符串进行统计
-extraApiStatsFinder.getContentWordCount(htmlContent)
-```
-
-**参数**
-
-- `htmlContent`
-    - 类型：`string`
-    - 解释：HTML 内容字符串（必需）。即要统计字数的 HTML 内容，支持标准 HTML 格式。
-
-**返回值**
-
-- 类型：`int` 
 - 解释：字数统计结果（非负），输入为空时返回 0
 
 **描述**
