@@ -188,7 +188,6 @@ ERROR - JavetException: Javet library is not loaded because <null>
 
 <details><summary>展开折叠内容</summary>
 
-- [ ] 优化代码高亮 API，减少调用次数，降低调用开销
 - [ ] 提供随机文章 API
 - [ ] 提供预计阅读时间 API，及相关配置项
 - [ ] 提供图表渲染 API
