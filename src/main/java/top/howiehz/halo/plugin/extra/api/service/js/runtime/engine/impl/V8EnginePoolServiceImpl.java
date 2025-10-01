@@ -9,10 +9,13 @@ import com.caoccao.javet.interop.engine.JavetEnginePool;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.primitive.V8ValueString;
 import com.google.common.base.Throwables;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.JsEnginePoolConfig;
+import top.howiehz.halo.plugin.extra.api.service.basic.config.JsEnginePoolConfigSupplier;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.CustomJavetEnginePool;
 import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolService;
 
@@ -22,8 +25,11 @@ import top.howiehz.halo.plugin.extra.api.service.js.runtime.engine.V8EnginePoolS
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class V8EnginePoolServiceImpl
     implements V8EnginePoolService, InitializingBean, DisposableBean {
+
+    private final JsEnginePoolConfigSupplier jsEnginePoolConfigSupplier;
 
     private IJavetEnginePool<V8Runtime> enginePool;
     private volatile boolean initialized = false;
@@ -37,15 +43,33 @@ public class V8EnginePoolServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
+            // 从配置中读取引擎池大小,如果配置不存在则使用默认值
+            JsEnginePoolConfig poolConfig = jsEnginePoolConfigSupplier.get()
+                .blockOptional()
+                .orElseGet(() -> {
+                    JsEnginePoolConfig defaultConfig = new JsEnginePoolConfig();
+                    defaultConfig.setPoolMinSize(1);
+                    defaultConfig.setPoolMaxSize(2);
+                    log.warn(
+                        "JS engine pool configuration not found, using default values: minSize=1,"
+                            + " maxSize=2");
+                    return defaultConfig;
+                });
+
             JavetEngineConfig config = new JavetEngineConfig();
-            config.setPoolMinSize(2);
-            config.setPoolMaxSize(Runtime.getRuntime().availableProcessors());
+            config.setPoolMinSize(poolConfig.getPoolMinSize());
+            config.setPoolMaxSize(poolConfig.getPoolMaxSize());
+
+            log.info("Initializing V8 engine pool with minSize={}, maxSize={}",
+                poolConfig.getPoolMinSize(), poolConfig.getPoolMaxSize());
 
             // 使用自定义引擎池，预加载模块
             enginePool = new CustomJavetEnginePool(config);
 
             initialized = true;
-            log.info("Custom V8 engine pool with preloaded modules initialized successfully");
+            log.info("Custom V8 engine pool with preloaded modules initialized successfully. " +
+                    "Pool size: min={}, max={}", poolConfig.getPoolMinSize(),
+                poolConfig.getPoolMaxSize());
         } catch (Exception e) {
             log.error("Failed to initialize custom engine pool: {}", e.getMessage(), e);
             throw e;
@@ -109,9 +133,7 @@ public class V8EnginePoolServiceImpl
                             return returnType.cast(java.util.Collections.emptySet());
                         }
                         java.util.Set<String> set = new java.util.LinkedHashSet<>();
-                        v8ValueSet.forEach((V8ValueString value) -> {
-                            set.add(value.getValue());
-                        });
+                        v8ValueSet.forEach((V8ValueString value) -> set.add(value.getValue()));
                         return returnType.cast(set);
                     }
                 } else if (returnType == java.util.Map.class) {
@@ -155,7 +177,7 @@ public class V8EnginePoolServiceImpl
 
         // Diagnostic logging: record pool stats before/after acquisition and after release
         String threadInfo =
-            Thread.currentThread().getName() + "[" + Thread.currentThread().getId() + "]";
+            Thread.currentThread().getName() + "[" + Thread.currentThread().threadId() + "]";
         if (enginePool instanceof JavetEnginePool<V8Runtime> poolBefore) {
             log.debug("[V8 POOL] {} requesting engine - before: active={}, idle={}", threadInfo,
                 poolBefore.getActiveEngineCount(), poolBefore.getIdleEngineCount());
@@ -194,5 +216,13 @@ public class V8EnginePoolServiceImpl
             );
         }
         return new PoolStats(0, 0, 0, 0);
+    }
+
+    @Override
+    public int getPoolMaxSize() {
+        if (enginePool instanceof JavetEnginePool<V8Runtime> pool) {
+            return pool.getConfig().getPoolMaxSize();
+        }
+        return 0;
     }
 }

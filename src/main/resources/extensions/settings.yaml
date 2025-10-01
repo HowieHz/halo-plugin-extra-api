@@ -4,6 +4,27 @@ metadata:
   name: plugin-extra-api-settings
 spec:
   forms:
+    - group: jsEnginePool
+      label: JS 引擎池配置（重启生效）（仅全量版可用）
+      formSchema:
+        - $formkit: number
+          name: poolMinSize
+          id: poolMinSize
+          key: poolMinSize
+          label: 最小池大小
+          value: 1
+          min: 1
+          validation: required
+          help: JS 引擎池的最小大小。每个引擎会预加载所需的 JS 模块。
+        - $formkit: number
+          name: poolMaxSize
+          id: poolMaxSize
+          key: poolMaxSize
+          label: 最大池大小
+          value: 2
+          min: 1
+          validation: required
+          help: JS 引擎池的最大大小。设置过大可能导致内存溢出。每个引擎会预加载所需的 JS 模块。
     - group: shiki
       label: 代码高亮（仅全量版可用）
       formSchema:

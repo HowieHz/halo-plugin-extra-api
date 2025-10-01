@@ -40,6 +40,8 @@ public interface V8EnginePoolService {
      */
     PoolStats getPoolStats();
 
+    int getPoolMaxSize();
+
     /**
      * Functional interface for engine operations.
      * 引擎操作的函数式接口，接受 V8Runtime 并返回结果。

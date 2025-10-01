@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -28,6 +29,7 @@ import top.howiehz.gradle.utils.Assert;
  * 支持多个 JAR 任务的插件组件索引生成任务
  * 解决 Halo 官方插件开发工具硬编码 "jar" 任务的限制
  */
+@Getter
 @Slf4j
 @DisableCachingByDefault(because = "Not worth caching")
 public class MultiJarPluginComponentsIndexTask extends DefaultTask {
@@ -122,22 +124,6 @@ public class MultiJarPluginComponentsIndexTask extends DefaultTask {
         log.info("Generated plugin components index with {} components ({} excluded) for jar task: {}", 
             componentCount, excludedCount, taskName);
         log.info("Component index file: {}", outputPath.getAbsolutePath());
-    }
-
-    public ConfigurableFileCollection getClassesDirs() {
-        return classesDirs;
-    }
-
-    public Property<String> getJarTaskName() {
-        return jarTaskName;
-    }
-
-    public ListProperty<String> getExcludePackages() {
-        return excludePackages;
-    }
-
-    public RegularFileProperty getOutputFile() {
-        return outputFile;
     }
 
     /**
