@@ -1,5 +1,6 @@
 package top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ public class ShikiRenderCodeService {
     private final ShikiHighlightService shikiHighlightService;
     private final ShikiRenderCache renderCache;
     private final V8EnginePoolService v8EnginePoolService;
+    private final ShikiCacheMetrics metrics;
 
     /**
      * Render code blocks with intelligent batch distribution.
@@ -56,9 +58,12 @@ public class ShikiRenderCodeService {
             return doc.body().html();
         }
 
-        // 收集所有需要高亮的请求
+        // 收集所有需要高亮的请求,同时进行去重
         List<CodeBlockInfo> codeBlocks = new ArrayList<>();
         List<HighlightRequest> allRequests = new ArrayList<>();
+        
+        // 用于去重: key = code|language|theme, value = list of block indices
+        Map<String, List<Integer>> deduplicationMap = new java.util.LinkedHashMap<>();
 
         for (int i = 0; i < codeElements.size(); i++) {
             Element codeElement = codeElements.get(i);
@@ -77,20 +82,38 @@ public class ShikiRenderCodeService {
                     CodeBlockInfo blockInfo = new CodeBlockInfo(i, preElement, code, language);
                     codeBlocks.add(blockInfo);
 
-                    // 创建高亮请求
+                    // 创建高亮请求并记录去重信息
                     if (!shikiConfig.isEnabledDoubleRenderMode()) {
                         String theme = normalizeTheme(shikiConfig.getTheme());
-                        allRequests.add(new HighlightRequest("block-" + i, code, language, theme));
+                        String dedupKey = code + "|" + language + "|" + theme;
+                        
+                        deduplicationMap.computeIfAbsent(dedupKey, k -> new ArrayList<>()).add(i);
+                        
+                        // 只为第一次出现的代码块创建请求
+                        if (deduplicationMap.get(dedupKey).size() == 1) {
+                            allRequests.add(new HighlightRequest("block-" + i, code, language, theme));
+                        }
                     } else {
                         String lightTheme =
                             normalizeTheme(shikiConfig.getLightTheme(), "min-light");
                         String darkTheme = normalizeTheme(shikiConfig.getDarkTheme(), "nord");
 
-                        allRequests.add(
-                            new HighlightRequest("block-" + i + "-light", code, language,
-                                lightTheme));
-                        allRequests.add(new HighlightRequest("block-" + i + "-dark", code, language,
-                            darkTheme));
+                        String lightDedupKey = code + "|" + language + "|" + lightTheme;
+                        String darkDedupKey = code + "|" + language + "|" + darkTheme;
+                        
+                        deduplicationMap.computeIfAbsent(lightDedupKey, k -> new ArrayList<>()).add(i);
+                        deduplicationMap.computeIfAbsent(darkDedupKey, k -> new ArrayList<>()).add(i);
+                        
+                        // 只为第一次出现的代码块创建请求
+                        if (deduplicationMap.get(lightDedupKey).size() == 1) {
+                            allRequests.add(
+                                new HighlightRequest("block-" + i + "-light", code, language,
+                                    lightTheme));
+                        }
+                        if (deduplicationMap.get(darkDedupKey).size() == 1) {
+                            allRequests.add(new HighlightRequest("block-" + i + "-dark", code, language,
+                                darkTheme));
+                        }
                     }
                 } catch (Exception e) {
                     log.warn("Failed to prepare code block {}: {}", i, e.getMessage());
@@ -102,14 +125,40 @@ public class ShikiRenderCodeService {
             return doc.body().html();
         }
 
-        // 智能分组并并行处理
-        Map<String, String> results = processRequestsIntelligently(allRequests);
+        // 统计去重效果
+        int totalBlocks = codeBlocks.size();
+        int uniqueRequests = allRequests.size();
+        int duplicates = (shikiConfig.isEnabledDoubleRenderMode() ? totalBlocks * 2 : totalBlocks) - uniqueRequests;
+        if (duplicates > 0) {
+            metrics.recordDeduplication(duplicates);
+            log.info("代码块去重: 总块数={}, 唯一请求={}, 去重节省={}",
+                totalBlocks, uniqueRequests, duplicates);
+        }
 
-        // 应用高亮结果
+        // 智能分组并并行处理
+        Instant startTime = Instant.now();
+        Map<String, String> results = processRequestsIntelligently(allRequests);
+        metrics.recordRenderTime(startTime);
+
+        // 输出统计信息
+        ShikiCacheMetrics.MetricsSnapshot snapshot = metrics.getSnapshot();
+        log.info("Shiki 渲染统计: 缓存命中率={}%, 去重节省={}, 平均耗时={}ms, 缓存大小={}",
+            String.format("%.1f", snapshot.getHitRatePercent()), 
+            snapshot.getDeduplicatedRequests(),
+            String.format("%.1f", snapshot.getAvgRenderTimeMs()), 
+            renderCache.size());
+
+        // 应用高亮结果(支持去重复用)
         for (CodeBlockInfo blockInfo : codeBlocks) {
             try {
                 if (!shikiConfig.isEnabledDoubleRenderMode()) {
-                    String key = "block-" + blockInfo.index;
+                    String theme = normalizeTheme(shikiConfig.getTheme());
+                    String dedupKey = blockInfo.code + "|" + blockInfo.language + "|" + theme;
+                    List<Integer> sameBlocks = deduplicationMap.get(dedupKey);
+                    
+                    // 找到第一个代码块的渲染结果
+                    int firstIndex = sameBlocks.get(0);
+                    String key = "block-" + firstIndex;
                     String highlightedHtml = results.get(key);
 
                     if (highlightedHtml != null && !highlightedHtml.startsWith("Error:")) {
@@ -118,8 +167,17 @@ public class ShikiRenderCodeService {
                         blockInfo.preElement.replaceWith(highlightedDiv);
                     }
                 } else {
-                    String lightKey = "block-" + blockInfo.index + "-light";
-                    String darkKey = "block-" + blockInfo.index + "-dark";
+                    String lightTheme = normalizeTheme(shikiConfig.getLightTheme(), "min-light");
+                    String darkTheme = normalizeTheme(shikiConfig.getDarkTheme(), "nord");
+                    String lightDedupKey = blockInfo.code + "|" + blockInfo.language + "|" + lightTheme;
+                    String darkDedupKey = blockInfo.code + "|" + blockInfo.language + "|" + darkTheme;
+                    
+                    // 找到第一个代码块的渲染结果
+                    int firstLightIndex = deduplicationMap.get(lightDedupKey).get(0);
+                    int firstDarkIndex = deduplicationMap.get(darkDedupKey).get(0);
+                    
+                    String lightKey = "block-" + firstLightIndex + "-light";
+                    String darkKey = "block-" + firstDarkIndex + "-dark";
                     String lightHtml = results.get(lightKey);
                     String darkHtml = results.get(darkKey);
 

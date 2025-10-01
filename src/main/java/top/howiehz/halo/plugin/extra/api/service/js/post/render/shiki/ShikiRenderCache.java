@@ -38,6 +38,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ShikiRenderCache {
 
+    private final ShikiCacheMetrics metrics;
+
     /**
      * Maximum number of cache entries.
      * 最大缓存条目数。
@@ -105,7 +107,9 @@ public class ShikiRenderCache {
         }
     });
 
-    public ShikiRenderCache() {
+    public ShikiRenderCache(ShikiCacheMetrics metrics) {
+        this.metrics = metrics;
+        
         // 初始化 LRU map,设置为访问顺序模式
         this.lruMap = new LinkedHashMap<>(16, 0.75f, true) {
             @Override
@@ -136,6 +140,7 @@ public class ShikiRenderCache {
         CacheEntry entry = fastLookup.get(key);
 
         if (entry == null) {
+            metrics.recordCacheMiss();
             return null;
         }
 
@@ -143,6 +148,7 @@ public class ShikiRenderCache {
         if (entry.isExpired()) {
             // 过期则删除
             invalidate(code, language, theme);
+            metrics.recordCacheMiss();
             return null;
         }
 
@@ -155,6 +161,7 @@ public class ShikiRenderCache {
             lock.writeLock().unlock();
         }
 
+        metrics.recordCacheHit();
         return entry.html;
     }
 
