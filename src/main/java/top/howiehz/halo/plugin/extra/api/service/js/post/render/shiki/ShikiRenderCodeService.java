@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -53,8 +54,9 @@ public class ShikiRenderCodeService {
         Document doc = Jsoup.parse(content);
         Elements codeElements = doc.select("pre > code");
 
+        // 如果没有代码块,直接返回原内容
         if (codeElements.isEmpty()) {
-            return doc.body().html();
+            return content;
         }
 
         // 收集所有需要高亮的请求,同时进行去重
@@ -124,8 +126,9 @@ public class ShikiRenderCodeService {
             }
         }
 
+        // 如果没有高亮请求,直接返回原内容
         if (allRequests.isEmpty()) {
-            return doc.body().html();
+            return content;
         }
 
         // 统计去重效果
@@ -135,8 +138,8 @@ public class ShikiRenderCodeService {
             - uniqueRequests;
         if (duplicates > 0) {
             metrics.recordDeduplication(duplicates);
-            log.debug("代码块去重: 总块数={}, 唯一请求={}, 去重节省={}",
-                totalBlocks, uniqueRequests, duplicates);
+            log.debug("代码块去重: 总块数={}, 唯一请求={}, 去重节省={}", totalBlocks,
+                uniqueRequests, duplicates);
         }
 
         // 智能分组并并行处理
@@ -150,8 +153,7 @@ public class ShikiRenderCodeService {
             log.debug("Shiki 渲染统计: 缓存命中率={}%, 去重节省={}, 平均耗时={}ms, 缓存大小={}",
                 String.format("%.1f", snapshot.getHitRatePercent()),
                 snapshot.getDeduplicatedRequests(),
-                String.format("%.1f", snapshot.getAvgRenderTimeMs()),
-                renderCache.size());
+                String.format("%.1f", snapshot.getAvgRenderTimeMs()), renderCache.size());
         }
 
         // 批量应用高亮结果 - 使用两阶段 DOM 操作减少性能开销
@@ -196,13 +198,13 @@ public class ShikiRenderCodeService {
                     String lightHtml = results.get(lightKey);
                     String darkHtml = results.get(darkKey);
 
-                    if (lightHtml != null && !lightHtml.startsWith("Error:")
-                        && darkHtml != null && !darkHtml.startsWith("Error:")) {
+                    if (lightHtml != null && !lightHtml.startsWith("Error:") && darkHtml != null
+                        && !darkHtml.startsWith("Error:")) {
 
-                        Element lightDiv = doc.createElement("div")
-                            .attr("class", shikiConfig.getLightCodeClass());
-                        Element darkDiv = doc.createElement("div")
-                            .attr("class", shikiConfig.getDarkCodeClass());
+                        Element lightDiv =
+                            doc.createElement("div").attr("class", shikiConfig.getLightCodeClass());
+                        Element darkDiv =
+                            doc.createElement("div").attr("class", shikiConfig.getDarkCodeClass());
 
                         lightDiv.html(lightHtml);
                         darkDiv.html(darkHtml);
@@ -213,8 +215,8 @@ public class ShikiRenderCodeService {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Failed to prepare replacement for block {}: {}",
-                    blockInfo.index, e.getMessage());
+                log.warn("Failed to prepare replacement for block {}: {}", blockInfo.index,
+                    e.getMessage());
             }
         }
 
@@ -236,6 +238,9 @@ public class ShikiRenderCodeService {
 
         log.debug("DOM 批量操作完成: 替换了 {} 个代码块", toRemove.size());
 
+        // 返回最终 HTML 内容，避免 Jsoup 自动格式化破坏原始结构（如多行 mermaid 代码无分号结尾时）
+        doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
+        
         return doc.body().html();
     }
 
@@ -274,8 +279,8 @@ public class ShikiRenderCodeService {
             }
         }
 
-        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={}%",
-            totalRequests, cacheHits, requestsToRender.size(),
+        log.debug("缓存检查: 总请求={}, 缓存命中={}, 需要渲染={}, 命中率={}%", totalRequests,
+            cacheHits, requestsToRender.size(),
             totalRequests > 0 ? String.format("%.1f", (cacheHits * 100.0 / totalRequests)) : "0.0");
 
         // 如果全部命中缓存,直接返回
@@ -288,8 +293,8 @@ public class ShikiRenderCodeService {
         // 计算最优分组数:如果请求少于引擎数,就按请求数分组;否则充分利用引擎池
         int numGroups = Math.min(requestsToRender.size(), v8EnginePoolService.getPoolMaxSize());
 
-        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})",
-            requestsToRender.size(), numGroups, v8EnginePoolService.getPoolMaxSize());
+        log.debug("智能分组: {} 个请求分配到 {} 个引擎(池大小: {})", requestsToRender.size(),
+            numGroups, v8EnginePoolService.getPoolMaxSize());
 
         // 将需要渲染的请求分组
         List<List<HighlightRequest>> groups = partitionRequests(requestsToRender, numGroups);
@@ -306,13 +311,13 @@ public class ShikiRenderCodeService {
                     log.debug("组 {} 开始处理 {} 个请求", groupIndex, group.size());
 
                     // 转换为批量请求格式
-                    Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests
-                        = new java.util.LinkedHashMap<>();
+                    Map<String, ShikiHighlightService.CodeHighlightRequest> batchRequests =
+                        new java.util.LinkedHashMap<>();
 
                     for (HighlightRequest req : group) {
                         batchRequests.put(req.id,
-                            new ShikiHighlightService.CodeHighlightRequest(
-                                req.code, req.language, req.theme));
+                            new ShikiHighlightService.CodeHighlightRequest(req.code, req.language,
+                                req.theme));
                     }
 
                     // 在单个引擎中批量处理
@@ -338,16 +343,13 @@ public class ShikiRenderCodeService {
         // 等待所有组完成并合并渲染结果
         Map<String, String> renderResults = new ConcurrentHashMap<>();
         try {
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream()
-                    .map(CompletableFuture::join)
-                    .collect(Collectors.toList()))
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(
+                    v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()))
                 .thenAccept(resultsList -> {
                     for (Map<String, String> results : resultsList) {
                         renderResults.putAll(results);
                     }
-                })
-                .join();
+                }).join();
         } catch (Exception e) {
             log.error("智能批量处理失败: {}", e.getMessage());
         }
@@ -377,8 +379,8 @@ public class ShikiRenderCodeService {
      * @param numGroups number of groups / 分组数
      * @return list of request groups / 请求分组列表
      */
-    private List<List<HighlightRequest>> partitionRequests(
-        List<HighlightRequest> requests, int numGroups) {
+    private List<List<HighlightRequest>> partitionRequests(List<HighlightRequest> requests,
+        int numGroups) {
 
         List<List<HighlightRequest>> groups = new ArrayList<>();
         int groupSize = (int) Math.ceil((double) requests.size() / numGroups);
