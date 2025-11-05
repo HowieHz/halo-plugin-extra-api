@@ -43,10 +43,12 @@
 
 - 无需主题适配即可使用的功能：
     - [代码高亮处理器](#代码高亮处理器)（仅全量版可用）
+    - [中英文混排格式化处理器](#中英文混排格式化处理器)
 - 需要主题适配的 Finder API：
     - [文章字数统计 API（单篇/全站）](#文章字数统计-api)
     - [HTML 内容字数统计 API](#html-内容字数统计-api)
     - [代码高亮 API](#代码高亮-api)（仅全量版可用）
+    - [中英文混排格式化 API](#中英文混排格式化-api)
 
 未来将实现的功能：[TODO](#todo)
 
@@ -73,12 +75,17 @@
       - [HTML 内容字数统计 API](#html-内容字数统计-api)
     - [渲染 API](#渲染-api)
       - [代码高亮 API](#代码高亮-api)
+      - [中英文混排格式化 API](#中英文混排格式化-api)
   - [处理器文档](#处理器文档)
     - [代码高亮处理器](#代码高亮处理器)
       - [特点](#特点)
       - [配置选项](#配置选项)
       - [支持的主题](#支持的主题)
       - [补充说明](#补充说明)
+    - [中英文混排格式化处理器](#中英文混排格式化处理器)
+      - [功能说明](#功能说明)
+      - [使用说明](#使用说明)
+      - [补充说明](#补充说明-1)
   - [版本说明](#版本说明)
     - [轻量版的优势](#轻量版的优势)
     - [轻量版本缺少的功能](#轻量版本缺少的功能)
@@ -431,6 +438,110 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 </div>
 ```
 
+#### 中英文混排格式化 API
+
+**Finder 名称：** `extraApiPanguFinder`
+
+**描述**
+
+提供中英文混排自动空格功能，自动在中日韩（CJK）字符与英文字母、数字、符号之间插入空格，提升内容可读性。此功能在轻量版和全量版中均可用。
+
+**API 方法**
+
+```javascript
+// 对 HTML 内容中的指定标签应用 Pangu 空格处理
+extraApiPanguFinder.spacingElementByTagName(htmlContent, tagName)
+
+// 对 HTML 内容中具有指定 ID 的元素应用 Pangu 空格处理
+extraApiPanguFinder.spacingElementById(htmlContent, id)
+
+// 对 HTML 内容中具有指定 class 的元素应用 Pangu 空格处理
+extraApiPanguFinder.spacingElementByClassName(htmlContent, className)
+
+// 对纯文本应用 Pangu 空格处理
+extraApiPanguFinder.spacingText(text)
+```
+
+**参数**
+
+- `spacingElementByTagName(htmlContent, tagName)`
+    - `htmlContent`
+        - 类型：`string`
+        - 解释：包含 HTML 标签的内容
+    - `tagName`
+        - 类型：`string`
+        - 解释：要处理的 HTML 标签名称（如 "p"、"div"、"span" 等）
+
+- `spacingElementById(htmlContent, id)`
+    - `htmlContent`
+        - 类型：`string`
+        - 解释：包含 HTML 标签的内容
+    - `id`
+        - 类型：`string`
+        - 解释：要处理的元素 ID（如 "main"、"content" 等）
+
+- `spacingElementByClassName(htmlContent, className)`
+    - `htmlContent`
+        - 类型：`string`
+        - 解释：包含 HTML 标签的内容
+    - `className`
+        - 类型：`string`
+        - 解释：要处理的 class 名称（如 "comment"、"article" 等）
+
+- `spacingText(text)`
+    - `text`
+        - 类型：`string`
+        - 解释：要处理的纯文本内容
+
+**返回值**
+
+- 类型：`Mono<String>`
+- 解释：处理后的内容，失败时返回原始内容
+
+**处理规则**
+
+- 在中日韩字符和英文字母之间添加空格
+- 在中日韩字符和数字之间添加空格
+- 在中日韩字符和常见符号之间添加空格
+- 自动跳过 `<code>`、`<pre>`、`<script>`、`<style>`、`<textarea>` 等标签，保留其原始格式
+
+**使用示例**
+
+```html
+<!--/* 对文章内容中的段落标签应用 Pangu 处理，下面这段代码可直接用于 /templates/post.html */-->
+<div th:utext="${extraApiPanguFinder.spacingElementByTagName(post.content?.content, 'p')}"></div>
+
+<!--/* 对整个 HTML 内容的所有 div 标签应用 Pangu 处理 */-->
+<div th:utext="${extraApiPanguFinder.spacingElementByTagName(content, 'div')}"></div>
+
+<!--/* 对指定 ID 的元素应用 Pangu 处理 */-->
+<div th:utext="${extraApiPanguFinder.spacingElementById(content, 'main')}"></div>
+
+<!--/* 对指定 class 的元素应用 Pangu 处理 */-->
+<div th:utext="${extraApiPanguFinder.spacingElementByClassName(content, 'comment')}"></div>
+
+<!--/* 对纯文本应用 Pangu 处理 */-->
+<span th:text="${extraApiPanguFinder.spacingText('请问Jackie的鼻子有几个？123个！')}"></span>
+<!--/* 输出：请问 Jackie 的鼻子有几个？123 个！ */-->
+
+<!--/* 在变量中使用 */-->
+<div th:with="processedContent=${extraApiPanguFinder.spacingElementByTagName(moment.spec.content?.html, 'p')}">
+    <div th:utext="${processedContent}"></div>
+</div>
+```
+
+**性能说明**
+
+- 纯 Java 实现，无需 JavaScript 运行时
+- 处理速度快，适合在模板中直接使用
+- 不涉及缓存，每次调用都会重新处理
+
+**错误处理**
+
+- 输入为空或 null 时返回原始内容
+- HTML 解析失败时返回原始内容
+- 不会抛出异常，保证页面渲染稳定性
+
 ## 处理器文档
 
 ### 代码高亮处理器
@@ -515,6 +626,48 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
     - 使用 V8 引擎池和异步处理，提升渲染效率
 - 补充说明：
     - 双主题模式会生成两个并列的 div 元素
+
+### 中英文混排格式化处理器
+
+插件提供了自动化的中英文混排格式化处理器，无需在模板中手动调用，即可对文章和页面内容自动应用 Pangu 空格处理。
+
+此功能在轻量版和全量版中均可用。
+
+#### 功能说明
+
+- **自动处理范围**：
+    - 处理器会自动处理文章（post）和页面（page）内容中的段落标签（`<p>`）
+    - 在中日韩字符与英文、数字、符号之间自动插入空格
+
+- **处理规则**：
+    - 自动在 CJK 字符和英文字母之间添加空格
+    - 自动在 CJK 字符和数字之间添加空格
+    - 自动在 CJK 字符和常见符号之间添加空格
+    - 智能跳过 `<code>`、`<pre>`、`<script>`、`<style>`、`<textarea>` 等标签
+
+- **性能特点**：
+    - 纯 Java 实现，无需 JavaScript 运行时
+    - 处理速度快，对页面加载影响极小
+    - 不涉及缓存，每次渲染时实时处理
+
+- **错误处理**：
+    - 处理失败时保持原始内容不变
+    - 不会因格式化问题影响页面正常渲染
+
+#### 使用说明
+
+处理器默认启用，无需额外配置。如果您希望禁用自动处理，可以通过以下方式：
+
+1. 在 Halo 管理后台进入插件设置页面
+2. 找到"中英文混排格式化"相关选项（如果提供）
+3. 或者仅使用 [Finder API](#中英文混排格式化-api) 在需要的地方手动调用
+
+#### 补充说明
+
+- 此功能使用 [Pangu.java](https://github.com/vinta/pangu.java) 库实现
+- 仅处理可见文本内容，不影响 HTML 结构
+- 递归处理嵌套元素，确保完整覆盖
+- 与代码高亮处理器兼容，互不影响
 
 ## 版本说明
 

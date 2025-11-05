@@ -81,6 +81,9 @@ dependencies {
     // JavaScript 引擎 - 为什么选择 Javet：支持 Node.js 模块，性能好，维护活跃
     implementation 'com.caoccao.javet:javet:4.1.7'
     
+    // Pangu - 自动在中日韩字符和英文、数字、符号之间添加空格，提升可读性
+    implementation 'ws.vinta:pangu:1.1.0'
+    
     // Spring 依赖 - compileOnly：Halo 已内置，避免版本冲突和包体积增加
     compileOnly 'org.springframework:spring-context'
     compileOnly 'org.springframework:spring-core' 

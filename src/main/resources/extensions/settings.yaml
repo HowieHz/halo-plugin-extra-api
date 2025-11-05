@@ -4,6 +4,16 @@ metadata:
   name: plugin-extra-api-settings
 spec:
   forms:
+    - group: pangu
+      label: 中英文混排格式化
+      formSchema:
+        - $formkit: checkbox
+          name: enabledPanguRender
+          id: enabledPanguRender
+          key: enabledPanguRender
+          label: 自动渲染
+          help: 启用之后会自动处理文章和单页中段落标签的中英文混排格式，在中日韩字符与英文、数字、符号之间自动插入空格。注：Finder API 渲染不受此配置项影响。
+          value: true
     - group: jsEnginePool
       label: JS 引擎池配置（重启生效）（仅全量版可用）
       formSchema:
