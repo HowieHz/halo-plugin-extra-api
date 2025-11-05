@@ -18,7 +18,7 @@ public interface PanguSpacingService {
      * 对 HTML 内容中的指定标签元素应用 Pangu 空格。
      *
      * @param htmlContent the HTML content to process / 要处理的 HTML 内容
-     * @param tagName     the tag name to process (e.g., "p", "div") / 要处理的标签名称（例如 "p"、"div"）
+     * @param tagName the tag name to process (e.g., "p", "div") / 要处理的标签名称（例如 "p"、"div"）
      * @return processed HTML content / 处理后的 HTML 内容
      */
     String spacingElementByTagName(String htmlContent, String tagName);
@@ -28,7 +28,7 @@ public interface PanguSpacingService {
      * 对 HTML 内容中具有指定 ID 的元素应用 Pangu 空格。
      *
      * @param htmlContent the HTML content to process / 要处理的 HTML 内容
-     * @param id          the element ID to process / 要处理的元素 ID
+     * @param id the element ID to process / 要处理的元素 ID
      * @return processed HTML content / 处理后的 HTML 内容
      */
     String spacingElementById(String htmlContent, String id);
@@ -38,7 +38,7 @@ public interface PanguSpacingService {
      * 对 HTML 内容中具有指定 class 的元素应用 Pangu 空格。
      *
      * @param htmlContent the HTML content to process / 要处理的 HTML 内容
-     * @param className   the class name to process / 要处理的 class 名称
+     * @param className the class name to process / 要处理的 class 名称
      * @return processed HTML content / 处理后的 HTML 内容
      */
     String spacingElementByClassName(String htmlContent, String className);

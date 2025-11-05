@@ -57,16 +57,16 @@ public class ExtraApiStatsFinderImpl implements ExtraApiStatsFinder {
     public Mono<BigInteger> getContentWordCount(Map<String, Object> params) {
         Map<String, Object> map = params == null ? java.util.Collections.emptyMap() : params;
         Object htmlContentObj = map.get("htmlContent");
-        
+
         if (htmlContentObj == null) {
             return Mono.just(BigInteger.ZERO);
         }
-        
+
         String htmlContent = String.valueOf(htmlContentObj);
         if ("null".equals(htmlContent) || htmlContent.isBlank()) {
             return Mono.just(BigInteger.ZERO);
         }
-        
+
         return Mono.fromCallable(() -> PostWordCountUtil.countHTMLWords(htmlContent))
             .onErrorReturn(BigInteger.ZERO);
     }

@@ -22,24 +22,24 @@ import top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu.PanguSp
 @RequiredArgsConstructor
 @Finder("extraApiPanguFinder")
 public class ExtraApiPanguFinderImpl implements ExtraApiPanguFinder {
-    
+
     private final PanguSpacingService panguSpacingService;
 
     @Override
     public Mono<String> spacingElementByTagName(String htmlContent, String tagName) {
-        return Mono.fromCallable(() -> 
+        return Mono.fromCallable(() ->
             panguSpacingService.spacingElementByTagName(htmlContent, tagName));
     }
 
     @Override
     public Mono<String> spacingElementById(String htmlContent, String id) {
-        return Mono.fromCallable(() -> 
+        return Mono.fromCallable(() ->
             panguSpacingService.spacingElementById(htmlContent, id));
     }
 
     @Override
     public Mono<String> spacingElementByClassName(String htmlContent, String className) {
-        return Mono.fromCallable(() -> 
+        return Mono.fromCallable(() ->
             panguSpacingService.spacingElementByClassName(htmlContent, className));
     }
 

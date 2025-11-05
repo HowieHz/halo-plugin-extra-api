@@ -27,7 +27,7 @@ import top.howiehz.halo.plugin.extra.api.service.basic.config.PanguConfig;
 @Component
 @RequiredArgsConstructor
 public class PanguSinglePageContentRenderHandler implements ReactiveSinglePageContentHandler {
-    
+
     private final PanguSpacingService panguSpacingService;
     private final Supplier<Mono<PanguConfig>> panguConfigSupplier;
 
@@ -47,20 +47,20 @@ public class PanguSinglePageContentRenderHandler implements ReactiveSinglePageCo
                     log.debug("Pangu auto-render is disabled, skipping processing");
                     return Mono.just(contentContext);
                 }
-                
+
                 return Mono.fromCallable(() -> {
                     try {
                         String originalContent = contentContext.getContent();
-                        
+
                         // 对 <p> 标签应用 Pangu 空格处理
                         String processedContent = panguSpacingService.spacingElementByTagName(
                             originalContent, "p");
-                        
+
                         contentContext.setContent(processedContent);
-                        
+
                         log.debug("Successfully applied Pangu spacing to single page content");
                         return contentContext;
-                        
+
                     } catch (Exception e) {
                         log.error("Error occurred while applying Pangu spacing: {}",
                             Throwables.getStackTraceAsString(e));

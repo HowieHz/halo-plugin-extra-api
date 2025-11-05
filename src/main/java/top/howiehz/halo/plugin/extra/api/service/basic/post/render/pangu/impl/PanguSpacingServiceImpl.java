@@ -26,7 +26,7 @@ import ws.vinta.pangu.Pangu;
 @Slf4j
 @Component
 public class PanguSpacingServiceImpl implements PanguSpacingService {
-    
+
     private final Pangu pangu;
 
     public PanguSpacingServiceImpl() {
@@ -47,15 +47,17 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
         try {
             // 解析 HTML
             Document doc = Jsoup.parse(htmlContent);
-            
+
             // 选择指定标签的所有元素
             Elements elements = doc.select(tagName);
-            
+
+            // 如果没有找到匹配的元素，直接返回原始内容
             if (elements.isEmpty()) {
                 log.debug("No elements found with tag name: {}", tagName);
                 return htmlContent;
             }
 
+            // 记录找到的元素数量
             log.debug("Processing {} <{}> elements with Pangu spacing", elements.size(), tagName);
 
             // 处理每个元素中的文本节点
@@ -78,15 +80,19 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
         if (htmlContent == null || htmlContent.isEmpty() || id == null || id.isEmpty()) {
             return htmlContent;
         }
-        
+
         try {
             Document doc = Jsoup.parse(htmlContent);
             Element element = doc.getElementById(id);
-            
+
             if (element != null) {
                 processElement(element);
+            } else {  // 如果没有找到匹配的元素，直接返回原始内容
+                log.debug("No element found with ID: {}", id);
+                return htmlContent;
             }
-            
+            // 返回处理后的 HTML，保持原始格式
+            doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
             return doc.body().html();
         } catch (Exception e) {
             log.error("Error processing HTML by ID with Pangu", e);
@@ -96,18 +102,29 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
 
     @Override
     public String spacingElementByClassName(String htmlContent, String className) {
-        if (htmlContent == null || htmlContent.isEmpty() || className == null || className.isEmpty()) {
+        if (htmlContent == null || htmlContent.isEmpty() || className == null
+            || className.isEmpty()) {
             return htmlContent;
         }
-        
+
         try {
             Document doc = Jsoup.parse(htmlContent);
             Elements elements = doc.getElementsByClass(className);
-            
+
+            // 如果没有找到匹配的元素，直接返回原始内容
+            if (elements.isEmpty()) {
+                return htmlContent;
+            }
+
+            // 记录找到的元素数量
+            log.debug("Processing {} elements with class name: {}", elements.size(), className);
+
+            // 处理每个匹配的元素
             for (Element element : elements) {
                 processElement(element);
             }
-            
+            // 返回处理后的 HTML，保持原始格式
+            doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
             return doc.body().html();
         } catch (Exception e) {
             log.error("Error processing HTML by class name with Pangu", e);
@@ -148,7 +165,7 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
         // 递归处理所有子节点
         for (int i = 0; i < element.childNodeSize(); i++) {
             var node = element.childNode(i);
-            
+
             if (node instanceof TextNode textNode) {
                 // 对文本节点应用 Pangu 处理
                 String originalText = textNode.text();
@@ -178,11 +195,11 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
      */
     private boolean shouldSkipElement(Element element) {
         String tagName = element.tagName().toLowerCase();
-        
+
         // 跳过代码、预格式化文本等应保留原始格式的标签
-        return tagName.equals("code") 
-            || tagName.equals("pre") 
-            || tagName.equals("script") 
+        return tagName.equals("code")
+            || tagName.equals("pre")
+            || tagName.equals("script")
             || tagName.equals("style")
             || tagName.equals("textarea");
     }
