@@ -134,7 +134,7 @@
 
 使用 `pluginFinder.available('extra-api')`
 可以优雅地处理插件依赖，避免在插件未安装时出现模板错误，提升主题的兼容性和用户体验。   
-注：在此基础上可以使用 `pluginFinder.available('extra-api', '2.*')` 锁定大版本号，避免 API 破坏性更新时导致主题渲染报错。
+注：在此基础上可以使用 `pluginFinder.available('extra-api', '3.*')` 锁定大版本号，避免 API 破坏性更新时导致主题渲染报错。
 
 **示例**
 
@@ -860,7 +860,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
 - [ ] 提供预计阅读时间 API，及相关配置项
 - [ ] 提供图表渲染 API
 - [ ] 提供公式渲染 API
-- [ ] 分离 Node.js 环境支持为可选前置插件（预计 3.0 版本实现）
+- [ ] 分离 Node.js 环境支持为可选前置插件（预计 4.0 版本实现）
 
 </details>
 
