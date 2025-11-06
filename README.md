@@ -217,11 +217,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 **使用示例**
 
 ```html
-<!--/* 根据插件版本条件性显示功能 */-->
-<th:block th:if="${extraApiPluginInfoFinder.isFullVersion()}">
-    <div th:utext="${extraApiRenderFinder.renderCodeHtml(post.content?.content)}"></div>
-</th:block>
-
+<!--/* 根据插件版本条件性显示 */-->
 <th:block th:unless="${extraApiPluginInfoFinder.isFullVersion()}">
     <p>当前使用轻量版插件，代码高亮功能不可用</p>
 </th:block>
@@ -234,10 +230,10 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
     <p>JavaScript 功能可用，支持高级渲染功能</p>
 </div>
 
-<!--/* 结合其他条件使用 */-->
+<!--/* 结合其他条件使用，下面这段代码可直接用于 /templates/post.html */-->
 <th:block th:if="${pluginFinder.available('extra-api') and extraApiPluginInfoFinder.isFullVersion()}">
     <!-- 只有在插件可用且为全量版时才显示 -->
-    <div th:utext="${extraApiRenderFinder.renderCodeHtml(content)}"></div>
+    <div th:utext="${extraApiRenderFinder.highlightCodeInHtml(post.content?.content)}"></div>
 </th:block>
 ```
 
