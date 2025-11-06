@@ -399,70 +399,86 @@ extraApiStatsFinder.getContentWordCount({
 
 ### 渲染 API
 
-此功能在轻量版和全量版中均可用。
-
 **Finder 名称：** `extraApiRenderFinder`
 
 #### 中英文混排格式化 API
 
 **描述**
 
-提供中英文混排自动空格功能，自动在中日韩（CJK）字符与英文字母、数字、符号之间插入空格，提升内容可读性。此功能在轻量版和全量版中均可用。
+提供中英文混排自动空格功能，自动在中日韩（CJK）字符与英文字母、数字、符号之间插入空格，提升内容可读性。
 
-**API 方法**
+**处理纯文本内容的 API 方法**
 
 ```javascript
-// 对整个 HTML 内容应用 Pangu 空格处理
-extraApiRenderFinder.applySpacingInHtml(htmlContent)
-
-// 使用灵活参数对 HTML 内容应用 Pangu 空格处理
-extraApiRenderFinder.applySpacingInHtml({
-  htmlContent: '<p>HTML 内容</p>',  // 必需
-  selector: 'p'  // 可选，CSS 选择器
-})
-
 // 对纯文本应用 Pangu 空格处理
 extraApiRenderFinder.applySpacingInText(text)
 ```
 
 **参数**
 
-- `applySpacingInHtml(htmlContent)`
-    - `htmlContent`
-        - 类型：`string`
-        - 解释：包含 HTML 标签的内容
-- `applySpacingInHtml(params)`
-    - `params` - 映射形式参数
-        - `htmlContent`
-            - 类型：`string`
-            - 解释：包含 HTML 标签的内容（必需）
-        - `selector`
-            - 类型：`string`
-            - 解释：CSS 选择器，用于定位特定元素（可选）
-            - 支持所有 JSoup CSS 选择器，包括：
-                - 标签选择器：`p`, `div`, `span`
-                - ID 选择器：`#main`, `#content`
-                - Class 选择器：`.article`, `.comment`
-                - 属性选择器：`[attr]`, `[attr=value]`
-                - 后代选择器：`div p`, `.article .content`
-                - 子选择器：`div > p`
-                - 伪类选择器：`:first-child`, `:nth-child(n)`
-- `applySpacingInText(text)`
-    - `text`
-        - 类型：`string`
-        - 解释：要处理的纯文本内容
+- `text`
+    - 类型：`string`
+    - 解释：要处理的纯文本内容
 
 **返回值**
 
-- 类型：`Mono<String>`
+- 类型：`string`
 - 解释：处理后的内容，失败时返回原始内容
 
-**处理规则**
+**描述**
 
-- 在中日韩字符和英文字母之间添加空格
-- 在中日韩字符和数字之间添加空格
-- 在中日韩字符和常见符号之间添加空格
-- 自动跳过 `<code>`、`<pre>`、`<script>`、`<style>`、`<textarea>` 等标签，保留其原始格式
+- 处理规则
+  - 在中日韩字符和英文字母之间添加空格
+  - 在中日韩字符和数字之间添加空格
+  - 在中日韩字符和常见符号之间添加空格
+- 性能说明
+  - 纯 Java 实现，处理速度快，适合在模板中直接使用
+  - 不涉及缓存，每次调用都会重新处理
+- 错误处理
+  - 输入为空或 null 时返回空字符串
+  - HTML 解析失败时返回原始内容
+  - 不会抛出异常，保证页面渲染稳定性
+
+**使用示例**
+
+```html
+<!--/* 对纯文本应用 Pangu 处理 */-->
+<span th:text="${extraApiRenderFinder.applySpacingInText('请问Jackie的鼻子有几个？123个！')}"></span>
+<!--/* 输出：请问 Jackie 的鼻子有几个？123 个！ */-->
+```
+
+**处理 HTML 内容的 API 方法（传入字符串形式参数）**
+
+```javascript
+// 对整个 HTML 内容应用 Pangu 空格处理
+extraApiRenderFinder.applySpacingInHtml(htmlContent)
+```
+
+**参数**
+
+- `htmlContent`
+    - 类型：`string`
+    - 解释：包含 HTML 标签的内容
+
+**返回值**
+
+- 类型：`string`
+- 解释：处理后的内容，失败时返回原始内容
+
+**描述**
+
+- 处理规则
+  - 在中日韩字符和英文字母之间添加空格
+  - 在中日韩字符和数字之间添加空格
+  - 在中日韩字符和常见符号之间添加空格
+  - 跳过规则：自动跳过 `<code>`、`<pre>`、`<script>`、`<style>`、`<textarea>` 等标签，保留其原始格式
+- 性能说明
+  - 纯 Java 实现，处理速度快，适合在模板中直接使用
+  - 不涉及缓存，每次调用都会重新处理
+- 错误处理
+  - 输入为空或 null 时返回空字符串
+  - HTML 解析失败时返回原始内容
+  - 不会抛出异常，保证页面渲染稳定性
 
 **使用示例**
 
@@ -470,6 +486,64 @@ extraApiRenderFinder.applySpacingInText(text)
 <!--/* 处理整个 HTML 内容（自动跳过 code、pre 等标签） */-->
 <div th:utext="${extraApiRenderFinder.applySpacingInHtml(post.content?.content)}"></div>
 
+<!--/* 在变量中使用 */-->
+<div th:with="processedContent=${extraApiRenderFinder.applySpacingInHtml(moment.spec.content?.html)}">
+    <div th:utext="${processedContent}"></div>
+</div>
+```
+
+**处理 HTML 内容的 API 方法（传入映射形式参数）**
+
+```javascript
+// 使用灵活参数对 HTML 内容应用 Pangu 空格处理
+extraApiRenderFinder.applySpacingInHtml({
+  htmlContent: '<p>HTML 内容</p>',  // 必需
+  selector: 'p'  // 可选，CSS 选择器
+})
+```
+
+**参数**
+
+- `htmlContent`
+    - 类型：`string`
+    - 解释：包含 HTML 标签的内容（必需）
+- `selector`
+    - 类型：`string`
+    - 解释：CSS 选择器，用于定位特定元素（可选）
+    - 支持所有 JSoup CSS 选择器，包括：
+        - 标签选择器：`p`, `div`, `span`
+        - ID 选择器：`#main`, `#content`
+        - Class 选择器：`.article`, `.comment`
+        - 属性选择器：`[attr]`, `[attr=value]`
+        - 后代选择器：`div p`, `.article .content`
+        - 子选择器：`div > p`
+        - 伪类选择器：`:first-child`, `:nth-child(n)`
+
+**返回值**
+
+- 类型：`string`
+- 解释：处理后的内容，失败时返回原始内容
+
+**描述**
+
+**描述**
+
+- 处理规则
+  - 在中日韩字符和英文字母之间添加空格
+  - 在中日韩字符和数字之间添加空格
+  - 在中日韩字符和常见符号之间添加空格
+  - 省略 `selector` 时应用跳过规则：自动跳过 `<code>`、`<pre>`、`<script>`、`<style>`、`<textarea>` 等标签，保留其原始格式
+- 性能说明
+  - 纯 Java 实现，处理速度快，适合在模板中直接使用
+  - 不涉及缓存，每次调用都会重新处理
+- 错误处理
+  - 输入为空或 null 时返回空字符串
+  - HTML 解析失败时返回原始内容
+  - 不会抛出异常，保证页面渲染稳定性
+
+**使用示例**
+
+```html
 <!--/* 使用 CSS 选择器仅处理段落标签 */-->
 <div th:utext="${extraApiRenderFinder.applySpacingInHtml({htmlContent: post.content?.content, selector: 'p'})}"></div>
 
@@ -482,32 +556,11 @@ extraApiRenderFinder.applySpacingInText(text)
 <!--/* 使用复合选择器处理 */-->
 <div th:utext="${extraApiRenderFinder.applySpacingInHtml({htmlContent: content, selector: 'div.article > p'})}"></div>
 
-<!--/* 对纯文本应用 Pangu 处理 */-->
-<span th:text="${extraApiRenderFinder.applySpacingInText('请问Jackie的鼻子有几个？123个！')}"></span>
-<!--/* 输出：请问 Jackie 的鼻子有几个？123 个！ */-->
-
-<!--/* 在变量中使用 */-->
-<div th:with="processedContent=${extraApiRenderFinder.applySpacingInHtml(moment.spec.content?.html)}">
-    <div th:utext="${processedContent}"></div>
-</div>
-
 <!--/* 处理瞬间内容中的特定元素 */-->
 <div th:with="processedContent=${extraApiRenderFinder.applySpacingInHtml({htmlContent: moment.spec.content?.html, selector: '.moment-text'})}">
     <div th:utext="${processedContent}"></div>
 </div>
 ```
-
-**性能说明**
-
-- 纯 Java 实现，无需 JavaScript 运行时
-- 处理速度快，适合在模板中直接使用
-- 不涉及缓存，每次调用都会重新处理
-
-**错误处理**
-
-- 输入为空或 null 时返回原始内容
-- HTML 解析失败时返回原始内容
-- 不会抛出异常，保证页面渲染稳定性
 
 ### 渲染 API（需要 JS 运行时）
 
@@ -554,8 +607,6 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 ### 中英文混排格式化处理器
 
 插件提供了自动化的中英文混排格式化处理器，无需在模板中手动调用，即可对文章和页面内容自动应用 Pangu 空格处理。
-
-此功能在轻量版和全量版中均可用。
 
 #### 功能说明
 

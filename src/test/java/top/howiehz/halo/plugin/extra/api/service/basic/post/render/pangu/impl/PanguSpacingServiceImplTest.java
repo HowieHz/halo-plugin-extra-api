@@ -46,7 +46,7 @@ class PanguSpacingServiceImplTest {
     @Test
     void testApplySpacingInText_withNull() {
         String result = panguSpacingService.applySpacingInText(null);
-        assertNull(result);
+        assertEquals("", result);
     }
 
     // ========== Tests for applySpacingInHtml(String) ==========
@@ -103,7 +103,7 @@ class PanguSpacingServiceImplTest {
     @Test
     void testApplySpacingInHtml_withNull() {
         String result = panguSpacingService.applySpacingInHtml((String) null);
-        assertNull(result);
+        assertEquals("", result);
     }
 
     // ========== Tests for applySpacingInHtml(Map) ==========
