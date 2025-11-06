@@ -1,6 +1,26 @@
 apiVersion: plugin.halo.run/v1alpha1
 kind: ExtensionDefinition
 metadata:
+  name: extra-api-pangu-post-content-handler
+spec:
+  className: top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu.PanguPostContentRenderHandler
+  extensionPointName: reactive-post-content-handler
+  displayName: "ExtraAPI Pangu 代码高亮处理器"
+  description: "为文章内容中的代码块提供 Pangu 语法高亮渲染"
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: extra-api-pangu-singlepage-content-handler
+spec:
+  className: top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu.PanguSinglePageContentRenderHandler
+  extensionPointName: reactive-singlepage-content-handler
+  displayName: "ExtraAPI Pangu 代码高亮处理器"
+  description: "为单页内容中的代码块提供 Pangu 语法高亮渲染"
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
   name: extra-api-shiki-post-content-handler
 spec:
   className: top.howiehz.halo.plugin.extra.api.service.js.post.render.shiki.ShikiPostContentRenderHandler
