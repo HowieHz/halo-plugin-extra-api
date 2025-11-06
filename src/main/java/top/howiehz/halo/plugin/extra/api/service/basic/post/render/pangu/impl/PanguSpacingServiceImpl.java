@@ -38,7 +38,7 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
     @Override
     public String applySpacingInHtml(String htmlContent) {
         if (htmlContent == null || htmlContent.isEmpty()) {
-            return htmlContent;
+            return "";
         }
 
         try {
@@ -72,7 +72,7 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
 
         String htmlContent = htmlContentObj.toString();
         if (htmlContent.isEmpty()) {
-            return htmlContent;
+            return "";
         }
 
         // Extract selector (optional)
@@ -115,7 +115,7 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
     @Override
     public String applySpacingInText(String text) {
         if (text == null || text.isEmpty()) {
-            return text;
+            return "";
         }
         try {
             return pangu.spacingText(text);

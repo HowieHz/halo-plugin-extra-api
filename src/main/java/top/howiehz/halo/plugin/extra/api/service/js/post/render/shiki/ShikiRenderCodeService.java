@@ -239,7 +239,6 @@ public class ShikiRenderCodeService {
 
         // 返回最终 HTML 内容，避免 Jsoup 自动格式化破坏原始结构（如多行 mermaid 代码无分号结尾时）
         doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
-
         return doc.body().html();
     }
 
