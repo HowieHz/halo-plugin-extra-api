@@ -75,6 +75,7 @@
       - [HTML 内容字数统计 API](#html-内容字数统计-api)
     - [渲染 API](#渲染-api)
       - [中英文混排格式化 API](#中英文混排格式化-api)
+    - [渲染 API（需要 JS 运行时）](#渲染-api需要-js-运行时)
       - [代码高亮 API](#代码高亮-api)
   - [处理器文档](#处理器文档)
     - [中英文混排格式化处理器](#中英文混排格式化处理器)
@@ -402,9 +403,11 @@ extraApiStatsFinder.getContentWordCount({
 
 ### 渲染 API
 
-#### 中英文混排格式化 API
+此功能在轻量版和全量版中均可用。
 
-**Finder 名称：** `extraApiPanguFinder`
+**Finder 名称：** `extraApiRenderFinder`
+
+#### 中英文混排格式化 API
 
 **描述**
 
@@ -413,46 +416,42 @@ extraApiStatsFinder.getContentWordCount({
 **API 方法**
 
 ```javascript
-// 对 HTML 内容中的指定标签应用 Pangu 空格处理
-extraApiPanguFinder.spacingElementByTagName(htmlContent, tagName)
+// 对整个 HTML 内容应用 Pangu 空格处理
+extraApiRenderFinder.applySpacingInHtml(htmlContent)
 
-// 对 HTML 内容中具有指定 ID 的元素应用 Pangu 空格处理
-extraApiPanguFinder.spacingElementById(htmlContent, id)
-
-// 对 HTML 内容中具有指定 class 的元素应用 Pangu 空格处理
-extraApiPanguFinder.spacingElementByClassName(htmlContent, className)
+// 使用灵活参数对 HTML 内容应用 Pangu 空格处理
+extraApiRenderFinder.applySpacingInHtml({
+  htmlContent: '<p>HTML 内容</p>',  // 必需
+  selector: 'p'  // 可选，CSS 选择器
+})
 
 // 对纯文本应用 Pangu 空格处理
-extraApiPanguFinder.spacingText(text)
+extraApiRenderFinder.applySpacingInText(text)
 ```
 
 **参数**
 
-- `spacingElementByTagName(htmlContent, tagName)`
+- `applySpacingInHtml(htmlContent)`
     - `htmlContent`
         - 类型：`string`
         - 解释：包含 HTML 标签的内容
-    - `tagName`
-        - 类型：`string`
-        - 解释：要处理的 HTML 标签名称（如 "p"、"div"、"span" 等）
-
-- `spacingElementById(htmlContent, id)`
-    - `htmlContent`
-        - 类型：`string`
-        - 解释：包含 HTML 标签的内容
-    - `id`
-        - 类型：`string`
-        - 解释：要处理的元素 ID（如 "main"、"content" 等）
-
-- `spacingElementByClassName(htmlContent, className)`
-    - `htmlContent`
-        - 类型：`string`
-        - 解释：包含 HTML 标签的内容
-    - `className`
-        - 类型：`string`
-        - 解释：要处理的 class 名称（如 "comment"、"article" 等）
-
-- `spacingText(text)`
+- `applySpacingInHtml(params)`
+    - `params` - 映射形式参数
+        - `htmlContent`
+            - 类型：`string`
+            - 解释：包含 HTML 标签的内容（必需）
+        - `selector`
+            - 类型：`string`
+            - 解释：CSS 选择器，用于定位特定元素（可选）
+            - 支持所有 JSoup CSS 选择器，包括：
+                - 标签选择器：`p`, `div`, `span`
+                - ID 选择器：`#main`, `#content`
+                - Class 选择器：`.article`, `.comment`
+                - 属性选择器：`[attr]`, `[attr=value]`
+                - 后代选择器：`div p`, `.article .content`
+                - 子选择器：`div > p`
+                - 伪类选择器：`:first-child`, `:nth-child(n)`
+- `applySpacingInText(text)`
     - `text`
         - 类型：`string`
         - 解释：要处理的纯文本内容
@@ -472,24 +471,32 @@ extraApiPanguFinder.spacingText(text)
 **使用示例**
 
 ```html
-<!--/* 对文章内容中的段落标签应用 Pangu 处理，下面这段代码可直接用于 /templates/post.html */-->
-<div th:utext="${extraApiPanguFinder.spacingElementByTagName(post.content?.content, 'p')}"></div>
+<!--/* 处理整个 HTML 内容（自动跳过 code、pre 等标签） */-->
+<div th:utext="${extraApiRenderFinder.applySpacingInHtml(post.content?.content)}"></div>
 
-<!--/* 对整个 HTML 内容的所有 div 标签应用 Pangu 处理 */-->
-<div th:utext="${extraApiPanguFinder.spacingElementByTagName(content, 'div')}"></div>
+<!--/* 使用 CSS 选择器仅处理段落标签 */-->
+<div th:utext="${extraApiRenderFinder.applySpacingInHtml({htmlContent: post.content?.content, selector: 'p'})}"></div>
 
-<!--/* 对指定 ID 的元素应用 Pangu 处理 */-->
-<div th:utext="${extraApiPanguFinder.spacingElementById(content, 'main')}"></div>
+<!--/* 使用 class 选择器处理指定 class 的元素 */-->
+<div th:utext="${extraApiRenderFinder.applySpacingInHtml({htmlContent: content, selector: '.article-content'})}"></div>
 
-<!--/* 对指定 class 的元素应用 Pangu 处理 */-->
-<div th:utext="${extraApiPanguFinder.spacingElementByClassName(content, 'comment')}"></div>
+<!--/* 使用 ID 选择器处理指定 ID 的元素 */-->
+<div th:utext="${extraApiRenderFinder.applySpacingInHtml({htmlContent: content, selector: '#main'})}"></div>
+
+<!--/* 使用复合选择器处理 */-->
+<div th:utext="${extraApiRenderFinder.applySpacingInHtml({htmlContent: content, selector: 'div.article > p'})}"></div>
 
 <!--/* 对纯文本应用 Pangu 处理 */-->
-<span th:text="${extraApiPanguFinder.spacingText('请问Jackie的鼻子有几个？123个！')}"></span>
+<span th:text="${extraApiRenderFinder.applySpacingInText('请问Jackie的鼻子有几个？123个！')}"></span>
 <!--/* 输出：请问 Jackie 的鼻子有几个？123 个！ */-->
 
 <!--/* 在变量中使用 */-->
-<div th:with="processedContent=${extraApiPanguFinder.spacingElementByTagName(moment.spec.content?.html, 'p')}">
+<div th:with="processedContent=${extraApiRenderFinder.applySpacingInHtml(moment.spec.content?.html)}">
+    <div th:utext="${processedContent}"></div>
+</div>
+
+<!--/* 处理瞬间内容中的特定元素 */-->
+<div th:with="processedContent=${extraApiRenderFinder.applySpacingInHtml({htmlContent: moment.spec.content?.html, selector: '.moment-text'})}">
     <div th:utext="${processedContent}"></div>
 </div>
 ```
@@ -506,12 +513,16 @@ extraApiPanguFinder.spacingText(text)
 - HTML 解析失败时返回原始内容
 - 不会抛出异常，保证页面渲染稳定性
 
+### 渲染 API（需要 JS 运行时）
+
+此功能仅在全量版中可用。
+
+**Finder 名称：** `extraApiJsRenderFinder`
+
 #### 代码高亮 API
 
-**Finder 名称：** `extraApiRenderFinder`
-
 ```javascript
-extraApiRenderFinder.renderCodeHtml(htmlContent)
+extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 ```
 
 **参数**
@@ -534,14 +545,13 @@ extraApiRenderFinder.renderCodeHtml(htmlContent)
 
 ```html
 <!--/* 渲染文章内容中的代码块，下面这段代码可直接用于 /templates/post.html */-->
-<div th:utext="${extraApiRenderFinder.renderCodeHtml(post.content?.content)}"></div>
+<div th:utext="${extraApiJsRenderFinder.highlightCodeInHtml(post.content?.content)}"></div>
 
 <!--/* 在模板中使用，下面这段代码可直接用于 /templates/moment.html */-->
-<div th:with="renderedContent=${extraApiRenderFinder.renderCodeHtml(moment.spec.content?.html)}">
+<div th:with="renderedContent=${extraApiJsRenderFinder.highlightCodeInHtml(moment.spec.content?.html)}">
     <div th:utext="${renderedContent}"></div>
 </div>
 ```
-
 
 ## 处理器文档
 

@@ -1,5 +1,6 @@
 package top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu.impl;
 
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -7,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu.PanguSpacingService;
 import ws.vinta.pangu.Pangu;
 
@@ -34,106 +36,84 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
     }
 
     @Override
-    public String spacingElementByTagName(String htmlContent, String tagName) {
+    public String applySpacingInHtml(String htmlContent) {
         if (htmlContent == null || htmlContent.isEmpty()) {
             return htmlContent;
         }
 
-        if (tagName == null || tagName.isEmpty()) {
-            log.warn("Tag name is null or empty, returning original content");
-            return htmlContent;
-        }
-
         try {
-            // 解析 HTML
             Document doc = Jsoup.parse(htmlContent);
 
-            // 选择指定标签的所有元素
-            Elements elements = doc.select(tagName);
+            // Process all text nodes in the body, skipping certain tags
+            processTextNodes(doc.body());
 
-            // 如果没有找到匹配的元素，直接返回原始内容
-            if (elements.isEmpty()) {
-                log.debug("No elements found with tag name: {}", tagName);
-                return htmlContent;
-            }
-
-            // 记录找到的元素数量
-            log.debug("Processing {} <{}> elements with Pangu spacing", elements.size(), tagName);
-
-            // 处理每个元素中的文本节点
-            for (Element element : elements) {
-                processTextNodes(element);
-            }
-
-            // 返回处理后的 HTML，保持原始格式
+            // Return processed HTML, preserving original format
             doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
             return doc.body().html();
-
         } catch (Exception e) {
             log.error("Error processing HTML content with Pangu: {}", e.getMessage(), e);
-            return htmlContent; // 出错时返回原内容
+            return htmlContent;
         }
     }
 
     @Override
-    public String spacingElementById(String htmlContent, String id) {
-        if (htmlContent == null || htmlContent.isEmpty() || id == null || id.isEmpty()) {
+    public String applySpacingInHtml(Map<String, Object> params) {
+        if (params == null || params.isEmpty()) {
+            log.warn("Empty parameters provided");
+            return "";
+        }
+
+        // Extract htmlContent (required)
+        Object htmlContentObj = params.get("htmlContent");
+        if (htmlContentObj == null) {
+            log.warn("Missing required parameter: htmlContent");
+            return "";
+        }
+
+        String htmlContent = htmlContentObj.toString();
+        if (htmlContent.isEmpty()) {
             return htmlContent;
         }
+
+        // Extract selector (optional)
+        Object selectorObj = params.get("selector");
+        String selector = selectorObj != null ? selectorObj.toString().trim() : null;
 
         try {
             Document doc = Jsoup.parse(htmlContent);
-            Element element = doc.getElementById(id);
 
-            if (element != null) {
-                processElement(element);
-            } else {  // 如果没有找到匹配的元素，直接返回原始内容
-                log.debug("No element found with ID: {}", id);
-                return htmlContent;
+            if (StringUtils.hasText(selector)) {
+                // Process only elements matching the selector
+                Elements elements = doc.select(selector);
+
+                if (elements.isEmpty()) {
+                    log.debug("No elements found matching selector: {}", selector);
+                    return htmlContent;
+                }
+
+                log.debug("Processing {} elements matching selector: {}", elements.size(),
+                    selector);
+
+                for (Element element : elements) {
+                    processTextNodes(element);
+                }
+            } else {
+                // No selector provided, process entire document
+                processTextNodes(doc.body());
             }
-            // 返回处理后的 HTML，保持原始格式
+
+            // Return processed HTML, preserving original format
             doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
             return doc.body().html();
         } catch (Exception e) {
-            log.error("Error processing HTML by ID with Pangu", e);
+            log.error("Error processing HTML content with Pangu using selector '{}': {}",
+                selector, e.getMessage(), e);
             return htmlContent;
         }
     }
 
     @Override
-    public String spacingElementByClassName(String htmlContent, String className) {
-        if (htmlContent == null || htmlContent.isEmpty() || className == null
-            || className.isEmpty()) {
-            return htmlContent;
-        }
-
-        try {
-            Document doc = Jsoup.parse(htmlContent);
-            Elements elements = doc.getElementsByClass(className);
-
-            // 如果没有找到匹配的元素，直接返回原始内容
-            if (elements.isEmpty()) {
-                return htmlContent;
-            }
-
-            // 记录找到的元素数量
-            log.debug("Processing {} elements with class name: {}", elements.size(), className);
-
-            // 处理每个匹配的元素
-            for (Element element : elements) {
-                processElement(element);
-            }
-            // 返回处理后的 HTML，保持原始格式
-            doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
-            return doc.body().html();
-        } catch (Exception e) {
-            log.error("Error processing HTML by class name with Pangu", e);
-            return htmlContent;
-        }
-    }
-
-    @Override
-    public String spacingText(String text) {
+    public String applySpacingInText(String text) {
         if (text == null || text.isEmpty()) {
             return text;
         }
@@ -146,35 +126,25 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
     }
 
     /**
-     * Process a single element with Pangu spacing.
-     * 使用 Pangu 空格处理单个元素。
-     *
-     * @param element the element to process / 要处理的元素
-     */
-    private void processElement(Element element) {
-        processTextNodes(element);
-    }
-
-    /**
      * Process all text nodes within an element, applying Pangu spacing.
      * 处理元素中的所有文本节点，应用 Pangu 空格规则。
      *
      * @param element the element to process / 要处理的元素
      */
     private void processTextNodes(Element element) {
-        // 递归处理所有子节点
+        // Recursively process all child nodes
         for (int i = 0; i < element.childNodeSize(); i++) {
             var node = element.childNode(i);
 
             if (node instanceof TextNode textNode) {
-                // 对文本节点应用 Pangu 处理
+                // Apply Pangu processing to text nodes
                 String originalText = textNode.text();
-                if (!originalText.isEmpty() && !originalText.isBlank()) {
+                if (!originalText.isBlank()) {
                     String spacedText = pangu.spacingText(originalText);
                     textNode.text(spacedText);
                 }
             } else if (node instanceof Element childElement) {
-                // 递归处理子元素（但不处理 code、pre 等应该保留原始格式的标签）
+                // Recursively process child elements (but skip certain tags)
                 if (!shouldSkipElement(childElement)) {
                     processTextNodes(childElement);
                 }
@@ -196,7 +166,7 @@ public class PanguSpacingServiceImpl implements PanguSpacingService {
     private boolean shouldSkipElement(Element element) {
         String tagName = element.tagName().toLowerCase();
 
-        // 跳过代码、预格式化文本等应保留原始格式的标签
+        // Skip tags that should preserve their original formatting
         return tagName.equals("code")
             || tagName.equals("pre")
             || tagName.equals("script")

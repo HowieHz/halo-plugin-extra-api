@@ -1,6 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu;
 
 import com.google.common.base.Throwables;
+import java.util.Map;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,8 +54,8 @@ public class PanguPostContentRenderHandler implements ReactivePostContentHandler
                         String originalContent = contentContext.getContent();
 
                         // 对 <p> 标签应用 Pangu 空格处理
-                        String processedContent = panguSpacingService.spacingElementByTagName(
-                            originalContent, "p");
+                        String processedContent = panguSpacingService.applySpacingInHtml(
+                            Map.of("htmlContent", originalContent, "selector", "p"));
 
                         contentContext.setContent(processedContent);
 

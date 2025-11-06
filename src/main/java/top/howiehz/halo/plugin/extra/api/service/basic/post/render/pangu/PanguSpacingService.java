@@ -1,5 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu;
 
+import java.util.Map;
+
 /**
  * Service for processing text with Pangu spacing.
  * 使用 Pangu 处理文本空格的服务。
@@ -14,34 +16,41 @@ package top.howiehz.halo.plugin.extra.api.service.basic.post.render.pangu;
 public interface PanguSpacingService {
 
     /**
-     * Apply Pangu spacing to HTML content for specified tag elements.
-     * 对 HTML 内容中的指定标签元素应用 Pangu 空格。
+     * Apply Pangu spacing to entire HTML content.
+     * 对整个 HTML 内容应用 Pangu 空格。
+     *
+     * <p>This method processes the entire HTML document, automatically skipping
+     * certain tags like code, pre, script, style, and textarea to preserve their
+     * original formatting.</p>
+     * <p>此方法处理整个 HTML 文档，自动跳过某些标签（如 code、pre、script、style 和 textarea），
+     * 以保留其原始格式。</p>
      *
      * @param htmlContent the HTML content to process / 要处理的 HTML 内容
-     * @param tagName the tag name to process (e.g., "p", "div") / 要处理的标签名称（例如 "p"、"div"）
      * @return processed HTML content / 处理后的 HTML 内容
      */
-    String spacingElementByTagName(String htmlContent, String tagName);
+    String applySpacingInHtml(String htmlContent);
 
     /**
-     * Apply Pangu spacing to HTML element with specified ID.
-     * 对 HTML 内容中具有指定 ID 的元素应用 Pangu 空格。
+     * Apply Pangu spacing to HTML content with flexible parameters.
+     * 使用灵活参数对 HTML 内容应用 Pangu 空格。
      *
-     * @param htmlContent the HTML content to process / 要处理的 HTML 内容
-     * @param id the element ID to process / 要处理的元素 ID
+     * <p>Supported parameters:</p>
+     * <ul>
+     *   <li>htmlContent (String, required): The HTML content to process</li>
+     *   <li>selector (String, optional): CSS selector to target specific elements</li>
+     * </ul>
+     *
+     * <p>支持的参数：</p>
+     * <ul>
+     *   <li>htmlContent (String, 必需)：要处理的 HTML 内容</li>
+     *   <li>selector (String, 可选)：用于定位特定元素的 CSS 选择器</li>
+     * </ul>
+     *
+     * @param params map containing htmlContent (required) and optional selector
+     * 包含 htmlContent（必需）和可选 selector 的映射
      * @return processed HTML content / 处理后的 HTML 内容
      */
-    String spacingElementById(String htmlContent, String id);
-
-    /**
-     * Apply Pangu spacing to HTML elements with specified class name.
-     * 对 HTML 内容中具有指定 class 的元素应用 Pangu 空格。
-     *
-     * @param htmlContent the HTML content to process / 要处理的 HTML 内容
-     * @param className the class name to process / 要处理的 class 名称
-     * @return processed HTML content / 处理后的 HTML 内容
-     */
-    String spacingElementByClassName(String htmlContent, String className);
+    String applySpacingInHtml(Map<String, Object> params);
 
     /**
      * Process plain text by applying Pangu spacing.
@@ -50,5 +59,5 @@ public interface PanguSpacingService {
      * @param text the plain text to process / 要处理的纯文本
      * @return processed text with Pangu spacing applied / 应用 Pangu 空格处理后的文本
      */
-    String spacingText(String text);
+    String applySpacingInText(String text);
 }
