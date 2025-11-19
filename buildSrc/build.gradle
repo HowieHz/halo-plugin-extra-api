@@ -13,10 +13,10 @@ dependencies {
     implementation localGroovy()
     
     // ASM 用于字节码扫描 - 包含完整的 ASM 库
-    implementation 'org.ow2.asm:asm:9.6'
-    implementation 'org.ow2.asm:asm-tree:9.6'
-    implementation 'org.ow2.asm:asm-analysis:9.6'
-    implementation 'org.ow2.asm:asm-util:9.6'
+    implementation 'org.ow2.asm:asm:9.9'
+    implementation 'org.ow2.asm:asm-tree:9.9'
+    implementation 'org.ow2.asm:asm-analysis:9.9'
+    implementation 'org.ow2.asm:asm-util:9.9'
     
     // Apache Commons Lang 用于字符串处理
     implementation 'org.apache.commons:commons-lang3:3.12.0'
