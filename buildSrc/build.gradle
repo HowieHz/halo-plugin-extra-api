@@ -22,7 +22,7 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     
     // YAML 处理库
-    implementation 'org.yaml:snakeyaml:2.0'
+    implementation 'org.yaml:snakeyaml:2.5'
     
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.30'
