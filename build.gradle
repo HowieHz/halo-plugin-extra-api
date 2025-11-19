@@ -14,7 +14,7 @@ import top.howiehz.gradle.YamlPluginVersionSupport
 
 plugins {
     id 'java'
-    id 'io.freefair.lombok' version '8.14'
+    id 'io.freefair.lombok' version '9.1.0'
     id 'run.halo.plugin.devtools' version '0.6.1' apply false // 禁用自动应用，因为需要手动控制组件索引生成
 }
 
