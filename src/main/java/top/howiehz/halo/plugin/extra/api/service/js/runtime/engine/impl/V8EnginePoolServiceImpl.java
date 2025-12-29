@@ -84,6 +84,7 @@ public class V8EnginePoolServiceImpl
      */
     @Override
     public void destroy() throws Exception {
+        // https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html
         if (enginePool != null) {
             try {
                 enginePool.close();
