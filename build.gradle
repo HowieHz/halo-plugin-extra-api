@@ -305,5 +305,5 @@ tasks.register('buildLite') {
 }
 
 halo {
-    version = '2.21' // 目标 Halo 版本
+    version = '2.22' // 目标 Halo 版本
 }

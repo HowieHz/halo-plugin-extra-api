@@ -1,5 +1,11 @@
 # halo-plugin-extra-api
 
+![GitHub](https://img.shields.io/github/license/HowieHz/halo-plugin-extra-api)
+![GitHub all releases](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/total)
+![GitHub release (latest by date)](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/latest/total)
+![GitHub repo size](https://img.shields.io/github/repo-size/HowieHz/halo-plugin-extra-api)
+[![Halo Version](https://img.shields.io/badge/Halo-2.22.0+-brightgreen.svg)](https://halo.run)
+
 ## 简介
 
 一个为 Halo CMS 提供额外 API 的轻量级插件。

@@ -9,7 +9,7 @@ metadata:
     store.halo.run/app-id: app-di1jh8gd
 spec:
   enabled: true
-  requires: ">=2.21.0"
+  requires: ">=2.22.0"
   author:
     name: HowieHz
     website: https://github.com/HowieHz
