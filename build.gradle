@@ -53,9 +53,9 @@ platforms.each { variant, platformList ->
 // 为每个平台添加对应的 Javet 依赖
 // 为什么分开配置：允许按需打包，避免在单平台部署时包含不必要的 native 库
 platforms.each { variant, platformList ->
-    dependencies.add("javet${variant}", 'com.caoccao.javet:javet:5.0.2')
+    dependencies.add("javet${variant}", 'com.caoccao.javet:javet:5.0.3')
     platformList.each { platform ->
-        dependencies.add("javet${variant}", "com.caoccao.javet:javet-node-${platform}:5.0.2")
+        dependencies.add("javet${variant}", "com.caoccao.javet:javet-node-${platform}:5.0.3")
     }
 }
 
@@ -66,10 +66,10 @@ configurations {
     }
 }
 
-dependencies.add('javetAllPlatforms', 'com.caoccao.javet:javet:5.0.2')
+dependencies.add('javetAllPlatforms', 'com.caoccao.javet:javet:5.0.3')
 platforms.each { variant, platformList ->
     platformList.each { platform ->
-        dependencies.add('javetAllPlatforms', "com.caoccao.javet:javet-node-${platform}:5.0.2")
+        dependencies.add('javetAllPlatforms', "com.caoccao.javet:javet-node-${platform}:5.0.3")
     }
 }
 
@@ -79,7 +79,7 @@ dependencies {
     compileOnly 'run.halo.app:api' // compileOnly：运行时由 Halo 提供，避免冲突
     
     // JavaScript 引擎 - 为什么选择 Javet：支持 Node.js 模块，性能好，维护活跃
-    implementation 'com.caoccao.javet:javet:5.0.2'
+    implementation 'com.caoccao.javet:javet:5.0.3'
     
     // Pangu - 自动在中日韩字符和英文、数字、符号之间添加空格，提升可读性
     implementation 'ws.vinta:pangu:1.1.0'
@@ -95,7 +95,7 @@ dependencies {
     testImplementation 'run.halo.app:api'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'com.caoccao.javet:javet:5.0.2'
+    testImplementation 'com.caoccao.javet:javet:5.0.3'
 }
 
 test {
