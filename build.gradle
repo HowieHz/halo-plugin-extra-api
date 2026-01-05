@@ -75,7 +75,7 @@ platforms.each { variant, platformList ->
 
 dependencies {
     // Halo 平台依赖
-    implementation platform('run.halo.tools.platform:plugin:2.22.0') // BOM 确保版本一致性
+    implementation platform('run.halo.tools.platform:plugin:2.22.5') // BOM 确保版本一致性
     compileOnly 'run.halo.app:api' // compileOnly：运行时由 Halo 提供，避免冲突
     
     // JavaScript 引擎 - 为什么选择 Javet：支持 Node.js 模块，性能好，维护活跃
