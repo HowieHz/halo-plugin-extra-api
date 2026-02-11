@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prebuild": "pnpm run generate-config",
     "generate-config": "node ./scripts/generate-config.js",
     "preview": "vite preview"
   },
