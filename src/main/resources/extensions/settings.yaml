@@ -58,30 +58,30 @@ spec:
               border-radius: 1rem;
               padding: 1rem; !important
             }
-            
+
             div pre.shiki code {
               counter-reset: count;
               padding: 0; !important
             }
-            
+
             div.light pre.shiki code {
               display: block;
             }
-            
+
             div.dark pre.shiki code {
               display: none;
             }
-            
+
             @media (prefers-color-scheme: dark) {
               div.light pre.shiki code {
                 display: none;
               }
-            
+
               div.dark pre.shiki code {
                 display: block;
               }
             }
-            
+
             div pre.shiki code .line:before {
               content: counter(count);
               counter-increment: count;
@@ -91,7 +91,7 @@ spec:
               margin-right: 1.5rem;
               display: inline-block;
             }
-            
+
             div.dark pre.shiki code .line:before {
               content: counter(count);
               counter-increment: count;
@@ -121,7 +121,7 @@ spec:
             - label: Docsme 文档（/docs/**）
               value: /docs/**
         - $formkit: select
-          if: "$enabledDoubleRenderMode === false"
+          if: $enabledDoubleRenderMode === false
           name: theme
           key: theme
           label: 主题
@@ -135,6 +135,10 @@ spec:
               value: aurora-x
             - label: Ayu Dark（dark）
               value: ayu-dark
+            - label: Ayu Light（light）
+              value: ayu-light
+            - label: Ayu Mirage（dark）
+              value: ayu-mirage
             - label: Catppuccin Frappé（dark）
               value: catppuccin-frappe
             - label: Catppuccin Latte（light）
@@ -179,6 +183,8 @@ spec:
               value: gruvbox-light-medium
             - label: Gruvbox Light Soft（light）
               value: gruvbox-light-soft
+            - label: Horizon（dark）
+              value: horizon
             - label: Houston（dark）
               value: houston
             - label: Kanagawa Dragon（dark）
@@ -209,6 +215,8 @@ spec:
               value: monokai
             - label: Night Owl（dark）
               value: night-owl
+            - label: Night Owl Light（light）
+              value: night-owl-light
             - label: Nord（dark）
               value: nord
             - label: One Dark Pro（dark）
@@ -255,21 +263,21 @@ spec:
           key: enabledDoubleRenderMode
           value: true
         - $formkit: text
-          if: "$enabledDoubleRenderMode === true"
+          if: $enabledDoubleRenderMode === true
           name: lightCodeClass
           key: lightCodeClass
           label: 亮色主题代码块类名
           value: light
           help: 文章内容中代码块渲染后的类名，默认为 light。
         - $formkit: text
-          if: "$enabledDoubleRenderMode === true"
+          if: $enabledDoubleRenderMode === true
           name: darkCodeClass
           key: darkCodeClass
           label: 暗色主题代码块类名
           value: dark
           help: 文章内容中代码块渲染后的类名，默认为 dark。
         - $formkit: select
-          if: "$enabledDoubleRenderMode === true"
+          if: $enabledDoubleRenderMode === true
           name: lightTheme
           key: lightTheme
           label: 亮色主题
@@ -283,6 +291,10 @@ spec:
               value: aurora-x
             - label: Ayu Dark（dark）
               value: ayu-dark
+            - label: Ayu Light（light）
+              value: ayu-light
+            - label: Ayu Mirage（dark）
+              value: ayu-mirage
             - label: Catppuccin Frappé（dark）
               value: catppuccin-frappe
             - label: Catppuccin Latte（light）
@@ -327,6 +339,8 @@ spec:
               value: gruvbox-light-medium
             - label: Gruvbox Light Soft（light）
               value: gruvbox-light-soft
+            - label: Horizon（dark）
+              value: horizon
             - label: Houston（dark）
               value: houston
             - label: Kanagawa Dragon（dark）
@@ -357,6 +371,8 @@ spec:
               value: monokai
             - label: Night Owl（dark）
               value: night-owl
+            - label: Night Owl Light（light）
+              value: night-owl-light
             - label: Nord（dark）
               value: nord
             - label: One Dark Pro（dark）
@@ -398,7 +414,7 @@ spec:
             - label: Vitesse Light（light）
               value: vitesse-light
         - $formkit: select
-          if: "$enabledDoubleRenderMode === true"
+          if: $enabledDoubleRenderMode === true
           name: darkTheme
           key: darkTheme
           label: 暗色主题
@@ -412,6 +428,10 @@ spec:
               value: aurora-x
             - label: Ayu Dark（dark）
               value: ayu-dark
+            - label: Ayu Light（light）
+              value: ayu-light
+            - label: Ayu Mirage（dark）
+              value: ayu-mirage
             - label: Catppuccin Frappé（dark）
               value: catppuccin-frappe
             - label: Catppuccin Latte（light）
@@ -456,6 +476,8 @@ spec:
               value: gruvbox-light-medium
             - label: Gruvbox Light Soft（light）
               value: gruvbox-light-soft
+            - label: Horizon（dark）
+              value: horizon
             - label: Houston（dark）
               value: houston
             - label: Kanagawa Dragon（dark）
@@ -486,6 +508,8 @@ spec:
               value: monokai
             - label: Night Owl（dark）
               value: night-owl
+            - label: Night Owl Light（light）
+              value: night-owl-light
             - label: Nord（dark）
               value: nord
             - label: One Dark Pro（dark）
