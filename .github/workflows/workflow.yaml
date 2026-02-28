@@ -112,7 +112,7 @@ jobs:
       - name: Get Name of Artifacts
         id: get_artifacts
         run: |
-          ARTIFACT_PATHNAMES=$(ls build/libs/*.jar)
+          ARTIFACT_PATHNAMES=$(ls build/libs/*.jar | paste -sd "," -)
           echo "Artifact pathnames: ${ARTIFACT_PATHNAMES}"
           echo "ARTIFACT_PATHNAMES=${ARTIFACT_PATHNAMES}" >> $GITHUB_ENV
           echo "RELEASE_ID=${{ github.event.release.id }}" >> $GITHUB_ENV
