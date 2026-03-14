@@ -1,4 +1,4 @@
-# halo-plugin-extra-api
+# API 扩展包
 
 ![GitHub](https://img.shields.io/github/license/HowieHz/halo-plugin-extra-api)
 ![GitHub all releases](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/total)
@@ -67,7 +67,7 @@
 
 ## 文档目录
 
-- [halo-plugin-extra-api](#halo-plugin-extra-api)
+- [API 扩展包](#api-扩展包)
   - [简介](#简介)
   - [核心理念](#核心理念)
   - [功能介绍](#功能介绍)
