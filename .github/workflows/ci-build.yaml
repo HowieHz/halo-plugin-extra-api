@@ -130,7 +130,9 @@ jobs:
             console.log({ owner, repo, sha });
 
             const releaseId = process.env.RELEASE_ID;
-            const artifactPathNames = process.env.ARTIFACT_PATHNAMES.split(' ');
+            const artifactPathNames = process.env.ARTIFACT_PATHNAMES
+              .split(',')
+              .filter(Boolean);
             console.log('Releasing', releaseId, artifactPathNames);
 
             for (const artifactPathName of artifactPathNames) {
