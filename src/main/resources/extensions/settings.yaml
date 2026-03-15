@@ -185,7 +185,7 @@ spec:
               value: gruvbox-light-soft
             - label: Horizon（dark）
               value: horizon
-            - label: Horizon Bright（dark）
+            - label: Horizon Bright（light）
               value: horizon-bright
             - label: Houston（dark）
               value: houston
@@ -343,7 +343,7 @@ spec:
               value: gruvbox-light-soft
             - label: Horizon（dark）
               value: horizon
-            - label: Horizon Bright（dark）
+            - label: Horizon Bright（light）
               value: horizon-bright
             - label: Houston（dark）
               value: houston
@@ -482,7 +482,7 @@ spec:
               value: gruvbox-light-soft
             - label: Horizon（dark）
               value: horizon
-            - label: Horizon Bright（dark）
+            - label: Horizon Bright（light）
               value: horizon-bright
             - label: Houston（dark）
               value: houston
