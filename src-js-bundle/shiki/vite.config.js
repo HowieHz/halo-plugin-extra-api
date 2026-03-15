@@ -9,13 +9,5 @@ export default defineConfig({
       name: 'shiki',
       formats: ['umd']
     },
-    rollupOptions: {
-      output: {
-        // 禁用代码分割，确保单文件
-        manualChunks: undefined,
-        // 内联所有依赖
-        inlineDynamicImports: true
-      }
-    }
   }
 })
