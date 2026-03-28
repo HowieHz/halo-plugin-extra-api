@@ -120,7 +120,7 @@ jobs:
           echo "ARTIFACT_PATHNAMES=${ARTIFACT_PATHNAMES}" >> $GITHUB_ENV
           echo "RELEASE_ID=${{ github.event.release.id }}" >> $GITHUB_ENV
       - name: Upload Release Assets
-        uses: actions/github-script@v2
+        uses: actions/github-script@v8
         if: github.event_name == 'release'
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
