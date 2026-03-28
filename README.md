@@ -212,7 +212,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 - 检测原理
     - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
         - 全量版：包含 JavaScript 运行时，V8EnginePoolService 类存在
-        - 轻量版：构建时排除 js 包下所有类，V8EnginePoolService 类不存在
+        - 轻量版：构建时排除 interop 包下所有类，V8EnginePoolService 类不存在
 - 应用场景
     - 主题兼容性：主题可以根据插件版本提供不同的功能体验
     - 用户提示：向用户说明当前版本的功能限制
@@ -240,7 +240,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 <!--/* 结合其他条件使用，下面这段代码可直接用于 /templates/post.html */-->
 <th:block th:if="${pluginFinder.available('extra-api') and extraApiPluginInfoFinder.isFullVersion()}">
     <!-- 只有在插件可用且为全量版时才显示 -->
-    <div th:utext="${extraApiRenderFinder.highlightCodeInHtml(post.content?.content)}"></div>
+    <div th:utext="${extraApiJsRenderFinder.highlightCodeInHtml(post.content?.content)}"></div>
 </th:block>
 ```
 

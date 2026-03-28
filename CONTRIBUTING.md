@@ -50,7 +50,7 @@ pnpm dev
 
 ### 在 `JsModule` 枚举中添加条目
 
-- 文件：`src/main/java/top/howiehz/halo/plugin/extra/api/service/js/module/JsModule.java`
+- 文件：`src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/runtime/module/JsModule.java`
 - 为模块添加一个枚举常量。UMD 模块 `marked` 的示例：
 
 ```java
@@ -67,14 +67,14 @@ MARKED("marked", "marked.umd.js", JsModuleType.UMD),
 
 ### 预加载模块（可选但推荐）
 
-- 文件：`src/main/java/top/howiehz/halo/plugin/extra/api/service/js/CustomJavetEngine.java`
+- 文件：`src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/runtime/engine/CustomJavetEngine.java`
 - 引擎当前在 `preloadModules()` 中预加载 `Shiki`
 - 使用 `JsModule.MARKED.getSourceCode()` 读取资源，使用 `v8Runtime.getExecutor(code).executeVoid()` 执行。
 - 加载后，验证预期的函数是否暴露在 `globalThis`（或其他入口点）上。保持预加载对错误的容忍性，避免引擎创建失败。
 
 ### 暴露 Java 服务来调用模块
 
-- 在 `service/js/<module>` 下创建服务接口（示例 `service/js/marked/MarkedService.java`），定义您需要的操作。
+- 在 `service/interop/runtime/adapters/<module>` 下创建服务接口（示例 `service/interop/runtime/adapters/marked/MarkedService.java`），定义您需要的操作。
 - 使用 Spring `@Service` 类实现接口，该类使用现有的 `V8EnginePoolService` 对运行时执行调用，类似于 `ShikiHighlightServiceImpl`。
 - 优先读取 `globalThis` 函数（例如 `parseMarkdown`）或 `globalThis.<lib>.parse`。
 
