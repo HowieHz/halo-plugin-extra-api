@@ -12,7 +12,7 @@ import top.howiehz.halo.plugin.extra.api.finder.core.ExtraApiPluginInfoFinder;
  * <p>
  * 检测逻辑：
  * 1. 通过检查 V8EnginePoolService 类是否存在来判断是否为完整版
- * 2. 轻量版构建时会排除 js 包下的所有类，包括 V8EnginePoolService
+ * 2. 轻量版构建时会排除 interop 包下的所有类，包括 V8EnginePoolService
  * 3. 这种方式比检查 JAR 文件名更可靠，因为运行时类路径是确定的
  */
 @Slf4j

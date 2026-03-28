@@ -7,7 +7,7 @@ import top.howiehz.gradle.YamlPluginVersionSupport
  * 无法支持多 JAR 变体构建。通过 buildSrc 自定义组件索引生成来绕过限制。
  * 
  * 构建变体：
- * - jarLite: 轻量版，不包含 JavaScript 功能 - 用于不需要 JS 功能的场景
+ * - jarLite: 轻量版，不包含 interop 功能 - 用于不需要相关运行时集成的场景
  * - jarFullAllPlatforms: 完整版，包含所有平台 Javet 支持 - 用于多平台部署
  * - jarFull[Platform]: 特定平台完整版 - 用于单平台优化部署
  */
@@ -152,13 +152,13 @@ afterEvaluate {
     // 导入自定义组件索引任务类 - 为什么用自定义：支持多 JAR 任务，官方不支持
     def MultiJarPluginComponentsIndexTask = top.howiehz.gradle.MultiJarPluginComponentsIndexTask
     
-    // 轻量版组件索引 - 为什么过滤 JS 类：轻量版不包含 JS 功能，避免无效组件注册
+    // 轻量版组件索引 - 为什么过滤 interop 类：轻量版不包含 interop 功能，避免无效组件注册
     jarLiteIndexTask = tasks.register('generatePluginComponentsIdxJarLite', MultiJarPluginComponentsIndexTask) {
         group = 'halo server'
         description = 'Generates plugin components index for lite version'
         classesDirs.from(sourceSets.main.output.classesDirs)
         jarTaskName.set('jarLite')
-        // 排除 JS 相关的包，避免在 lite 版本中注册这些组件
+        // 排除 interop 相关的包，避免在 lite 版本中注册这些组件
         excludePackages.set([
             'top.howiehz.halo.plugin.extra.api.service.interop',
             'top.howiehz.halo.plugin.extra.api.finder.interop'
@@ -195,23 +195,23 @@ afterEvaluate {
     
     // JAR 构建任务
     
-    // 轻量版：为什么需要：提供不依赖 JS 的基础功能版本，减少资源占用
+    // 轻量版：为什么需要：提供不依赖 interop 能力的核心功能版本，减少资源占用
     tasks.register('jarLite', Jar) {
         group = 'build'
         description = 'Assembles lite version without JS features'
         archiveFileName = "extra-api-lite-${project.version}.jar"
         
-        // 排除 JS 相关类 - 减少包大小，避免未使用的依赖
+        // 排除 interop 相关类 - 减少包大小，避免未使用的依赖
         from(sourceSets.main.output.classesDirs) {
             exclude 'top/howiehz/halo/plugin/extra/api/service/interop/**'
             exclude 'top/howiehz/halo/plugin/extra/api/finder/interop/**'
         }
-        // 排除 JS 相关资源
+        // 排除 interop 相关资源
         from(sourceSets.main.output.resourcesDir) {
             exclude 'js/**'
-            exclude 'extensions/extension-definitions.yaml' // JS 功能的扩展定义
+            exclude 'extensions/extension-definitions.yaml' // interop 功能的扩展定义
         }
-        // 排除 Javet 依赖 - 轻量版不需要 JS 引擎，减少 JAR 大小
+        // 排除 Javet 依赖 - 轻量版不需要 interop 运行时，减少 JAR 大小
         from configurations.runtimeClasspath.filter { 
             !it.name.contains('javet')
         }.collect { 
