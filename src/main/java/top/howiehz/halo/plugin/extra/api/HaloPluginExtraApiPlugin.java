@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
-import top.howiehz.halo.plugin.extra.api.service.basic.post.stats.PostWordCountService;
+import top.howiehz.halo.plugin.extra.api.service.core.post.stats.PostWordCountService;
 
 /**
  * Plugin main class to manage the lifecycle of the plugin.

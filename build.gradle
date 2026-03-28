@@ -160,8 +160,8 @@ afterEvaluate {
         jarTaskName.set('jarLite')
         // 排除 JS 相关的包，避免在 lite 版本中注册这些组件
         excludePackages.set([
-            'top.howiehz.halo.plugin.extra.api.service.js',
-            'top.howiehz.halo.plugin.extra.api.finder.js'
+            'top.howiehz.halo.plugin.extra.api.service.interop',
+            'top.howiehz.halo.plugin.extra.api.finder.interop'
         ])
         outputFile.set(layout.buildDirectory.file('tmp/jarLite/META-INF/plugin-components.idx'))
         dependsOn 'processResources' // 确保在 processResources 之后运行
@@ -203,8 +203,8 @@ afterEvaluate {
         
         // 排除 JS 相关类 - 减少包大小，避免未使用的依赖
         from(sourceSets.main.output.classesDirs) {
-            exclude 'top/howiehz/halo/plugin/extra/api/service/js/**'
-            exclude 'top/howiehz/halo/plugin/extra/api/finder/js/**'
+            exclude 'top/howiehz/halo/plugin/extra/api/service/interop/**'
+            exclude 'top/howiehz/halo/plugin/extra/api/finder/interop/**'
         }
         // 排除 JS 相关资源
         from(sourceSets.main.output.resourcesDir) {
