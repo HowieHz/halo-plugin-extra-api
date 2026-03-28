@@ -7,4 +7,4 @@ rootProject.name = 'extra-api'
 include 'ui'
 include 'shiki'
 
-project(':shiki').projectDir = new File(settingsDir, 'src-js-bundle/shiki')
+project(':shiki').projectDir = new File(settingsDir, 'js-modules/shiki')
