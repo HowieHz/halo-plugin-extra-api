@@ -17,23 +17,44 @@ updates:
           - "run.halo.tools.platform:*"
           - "run.halo.app:api"
           - "run.halo.plugin.devtools"
+        update-types:
+          - "minor"
+          - "patch"
       spring:
         patterns:
           - "org.springframework:*"
           - "org.springframework.boot:*"
           - "org.springframework.data:*"
           - "io.projectreactor:*"
+        update-types:
+          - "minor"
+          - "patch"
       javet:
         patterns:
           - "com.caoccao.javet:*"
+        update-types:
+          - "minor"
+          - "patch"
       lombok:
         patterns:
           - "org.projectlombok:lombok"
           - "io.freefair.lombok"
+        update-types:
+          - "minor"
+          - "patch"
       testing:
         patterns:
           - "org.junit:*"
           - "org.junit.platform:*"
+        update-types:
+          - "minor"
+          - "patch"
+      misc:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "gradle" # See documentation for possible values
     directory: "/buildSrc" # Location of package manifests
     schedule:
@@ -44,6 +65,9 @@ updates:
       buildsrc-libraries:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/ui" # Location of package manifests
     schedule:
@@ -53,8 +77,14 @@ updates:
     groups:
       production-dependencies:
         dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
       development-dependencies:
         dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/js-modules/shiki" # Location of package manifests
     schedule:
@@ -64,8 +94,14 @@ updates:
     groups:
       production-dependencies:
         dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
       development-dependencies:
         dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
@@ -76,3 +112,6 @@ updates:
       github-actions:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
