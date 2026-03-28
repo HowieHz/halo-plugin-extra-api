@@ -9,7 +9,70 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/src-js-bundle/shiki" # Location of package manifests
+      time: "04:30"
+      timezone: "Asia/Shanghai"
+    groups:
+      halo:
+        patterns:
+          - "run.halo.tools.platform:*"
+          - "run.halo.app:api"
+          - "run.halo.plugin.devtools"
+      spring:
+        patterns:
+          - "org.springframework:*"
+          - "org.springframework.boot:*"
+          - "org.springframework.data:*"
+          - "io.projectreactor:*"
+      javet:
+        patterns:
+          - "com.caoccao.javet:*"
+      lombok:
+        patterns:
+          - "org.projectlombok:lombok"
+          - "io.freefair.lombok"
+      testing:
+        patterns:
+          - "org.junit:*"
+          - "org.junit.platform:*"
+  - package-ecosystem: "gradle" # See documentation for possible values
+    directory: "/buildSrc" # Location of package manifests
     schedule:
       interval: "daily"
+      time: "04:30"
+      timezone: "Asia/Shanghai"
+    groups:
+      buildsrc-libraries:
+        patterns:
+          - "*"
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/ui" # Location of package manifests
+    schedule:
+      interval: "daily"
+      time: "04:30"
+      timezone: "Asia/Shanghai"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/js-modules/shiki" # Location of package manifests
+    schedule:
+      interval: "daily"
+      time: "04:30"
+      timezone: "Asia/Shanghai"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
+  - package-ecosystem: "github-actions" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "daily"
+      time: "04:30"
+      timezone: "Asia/Shanghai"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
