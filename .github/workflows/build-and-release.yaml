@@ -27,6 +27,8 @@ jobs:
           java-version: 21
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: false
       - uses: pnpm/action-setup@v5
         name: Install pnpm
         id: pnpm-install
