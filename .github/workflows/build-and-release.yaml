@@ -83,8 +83,12 @@ jobs:
           )
 
           interesting = []
+          filtered = []
+          filtered_statuses = {"UP-TO-DATE", "SKIPPED", "NO-SOURCE", "Did No Work"}
           for task, duration, result in task_rows:
-              if result.strip() in {"UP-TO-DATE", "SKIPPED", "NO-SOURCE", "Did No Work"}:
+              status = result.strip()
+              if status in filtered_statuses:
+                  filtered.append((task, duration, status))
                   continue
               interesting.append((task, duration))
 
@@ -101,6 +105,14 @@ jobs:
                   print(f"- `{task}`: `{duration}`")
           else:
               print("- No executed tasks found in the profile report.")
+          print()
+          print("### Filtered task states")
+          print()
+          if filtered:
+              for task, duration, status in filtered[:10]:
+                  print(f"- `{task}`: `{duration}` (`{status}`)")
+          else:
+              print("- No filtered tasks found in the profile report.")
           PY
       - name: Upload Gradle profile report
         if: always()
