@@ -7,7 +7,7 @@ spec:
     - group: pangu
       label: 中英文混排格式化
       formSchema:
-        - $formkit: checkbox
+        - $formkit: switch
           name: enabledPanguRender
           id: enabledPanguRender
           key: enabledPanguRender
@@ -25,7 +25,7 @@ spec:
           value: 1
           min: 1
           validation: required
-          help: JS 引擎池的最小大小。每个引擎会预加载所需的 JS 模块。
+          help: JS 引擎池最少保留的空闲引擎数量。引擎按需创建，创建后会预加载所需的 JS 模块；该值不能设为 0。
         - $formkit: number
           name: poolMaxSize
           id: poolMaxSize
@@ -34,11 +34,11 @@ spec:
           value: 2
           min: 1
           validation: required
-          help: JS 引擎池的最大大小。设置过大可能导致内存溢出。每个引擎会预加载所需的 JS 模块。
+          help: JS 引擎池允许扩容到的最大引擎数量。设置过大可能导致内存占用过高甚至内存溢出。
     - group: shiki
       label: 代码高亮（仅全量版可用）
       formSchema:
-        - $formkit: checkbox
+        - $formkit: switch
           name: enabledShikiRender
           id: enabledShikiRender
           key: enabledShikiRender
@@ -259,7 +259,7 @@ spec:
               value: vitesse-dark
             - label: Vitesse Light（light）
               value: vitesse-light
-        - $formkit: checkbox
+        - $formkit: switch
           label: 明暗双倍渲染模式
           name: enabledDoubleRenderMode
           key: enabledDoubleRenderMode
