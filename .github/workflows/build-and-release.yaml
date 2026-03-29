@@ -37,6 +37,8 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
+          # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里，
+          # 否则像 :shiki:pnpmInstall 这类子包安装步骤不会命中预期的 pnpm 缓存键。
           cache-dependency-path: |
             ui/pnpm-lock.yaml
             js-modules/shiki/pnpm-lock.yaml
