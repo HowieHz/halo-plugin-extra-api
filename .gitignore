@@ -1,4 +1,5 @@
 /src/main/resources/js/**
+temp/
 
 ### Maven
 target/

@@ -123,6 +123,40 @@ def configurePluginYamlVersion() {
     return YamlPluginVersionSupport.configurePluginYamlVersion(project, manifestFile)
 }
 
+def coreExtensionDefinitionsFile = file('src/main/resources/extensions/extension-definitions-core.yaml')
+def interopExtensionDefinitionsFile = file('src/main/resources/extensions/extension-definitions-interop.yaml')
+
+def registerExtensionDefinitionsTask = { String taskName, List<File> sourceFiles, String outputPath ->
+    tasks.register(taskName) {
+        group = 'build'
+        description = "Generates ${taskName} extension definitions"
+        inputs.files(sourceFiles)
+        outputs.file(layout.buildDirectory.file(outputPath))
+
+        doLast {
+            def mergedContent = sourceFiles.collect { sourceFile ->
+                sourceFile.getText('UTF-8').trim()
+            }.findAll { !it.isEmpty() }.join('\n---\n')
+
+            def outputFile = layout.buildDirectory.file(outputPath).get().asFile
+            outputFile.parentFile.mkdirs()
+            outputFile.setText(mergedContent + '\n', 'UTF-8')
+        }
+    }
+}
+
+def generateCoreExtensionDefinitionsTask = registerExtensionDefinitionsTask(
+    'generateCoreExtensionDefinitions',
+    [coreExtensionDefinitionsFile],
+    'generated/variant-resources/core/extensions/extension-definitions.yaml'
+)
+
+def generateFullExtensionDefinitionsTask = registerExtensionDefinitionsTask(
+    'generateFullExtensionDefinitions',
+    [coreExtensionDefinitionsFile, interopExtensionDefinitionsFile],
+    'generated/variant-resources/full/extensions/extension-definitions.yaml'
+)
+
 def jarLiteIndexTask
 def jarFullAllPlatformsIndexTask
 
@@ -209,7 +243,7 @@ afterEvaluate {
         // 排除 interop 相关资源
         from(sourceSets.main.output.resourcesDir) {
             exclude 'js/**'
-            exclude 'extensions/extension-definitions.yaml' // interop 功能的扩展定义
+            exclude 'extensions/extension-definitions*.yaml' // 变体扩展定义由专门任务生成
         }
         // 排除 Javet 依赖 - 轻量版不需要 interop 运行时，减少 JAR 大小
         from configurations.runtimeClasspath.filter { 
@@ -217,9 +251,13 @@ afterEvaluate {
         }.collect { 
             it.isDirectory() ? it : zipTree(it)
         }
+        into('extensions') {
+            from generateCoreExtensionDefinitionsTask
+            rename { 'extension-definitions.yaml' }
+        }
         
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn 'compileJava', 'processResources', jarLiteIndexTask
+        dependsOn 'compileJava', 'processResources', jarLiteIndexTask, generateCoreExtensionDefinitionsTask
         
         // 包含对应的组件索引文件 - Halo 需要此文件来注册插件组件
         into('META-INF') {
@@ -234,13 +272,20 @@ afterEvaluate {
         description = 'Assembles full version with all platforms'
         archiveFileName = "extra-api-full-all-platforms-${project.version}.jar"
         
-        from sourceSets.main.output // 包含所有编译输出
+        from(sourceSets.main.output) {
+            exclude 'extensions/extension-definitions-core.yaml'
+            exclude 'extensions/extension-definitions-interop.yaml'
+        }
         from configurations.javetAllPlatforms.collect {
             it.isDirectory() ? it : zipTree(it)
         }
+        into('extensions') {
+            from generateFullExtensionDefinitionsTask
+            rename { 'extension-definitions.yaml' }
+        }
         
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn 'classes', jarFullAllPlatformsIndexTask
+        dependsOn 'classes', jarFullAllPlatformsIndexTask, generateFullExtensionDefinitionsTask
         
         into('META-INF') {
             from jarFullAllPlatformsIndexTask.get().outputFile
@@ -260,13 +305,20 @@ afterEvaluate {
             description = "Assembles full version for ${variant}"
             archiveFileName = archiveName
             
-            from sourceSets.main.output
+            from(sourceSets.main.output) {
+                exclude 'extensions/extension-definitions-core.yaml'
+                exclude 'extensions/extension-definitions-interop.yaml'
+            }
             from configurations.getByName(configName).collect {
                 it.isDirectory() ? it : zipTree(it)
             }
+            into('extensions') {
+                from generateFullExtensionDefinitionsTask
+                rename { 'extension-definitions.yaml' }
+            }
             
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-            dependsOn 'classes', indexTaskName
+            dependsOn 'classes', indexTaskName, generateFullExtensionDefinitionsTask
             
             into('META-INF') {
                 from tasks.named(indexTaskName).get().outputFile
