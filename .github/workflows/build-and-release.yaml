@@ -37,7 +37,9 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
-          cache-dependency-path: 'ui/pnpm-lock.yaml'
+          cache-dependency-path: |
+            ui/pnpm-lock.yaml
+            js-modules/shiki/pnpm-lock.yaml
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Install Frontend Dependencies
