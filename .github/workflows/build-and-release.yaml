@@ -52,7 +52,60 @@ jobs:
           if [ -n "$version" ]; then
             sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
           fi
-          ./gradlew clean buildAll
+          ./gradlew clean buildAll --profile --console=plain
+      - name: Summarize Gradle profile
+        if: always()
+        shell: bash
+        run: |
+          profile_report=$(ls -t build/reports/profile/profile-*.html 2>/dev/null | head -n 1 || true)
+          if [ -z "$profile_report" ]; then
+            echo "## Gradle Build Profile" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No Gradle profile report was generated." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          python3 - <<'PY' "$profile_report" >> "$GITHUB_STEP_SUMMARY"
+          import re
+          import sys
+          from pathlib import Path
+
+          report_path = Path(sys.argv[1])
+          text = report_path.read_text(encoding="utf-8")
+
+          total_match = re.search(r'<td>Total Build Time</td>\s*<td class="numeric">([^<]+)</td>', text)
+          task_rows = re.findall(
+              r'<td class="indentPath">([^<]+)</td>\s*<td class="numeric">([^<]+)</td>\s*<td>([^<]*)</td>',
+              text
+          )
+
+          interesting = []
+          for task, duration, result in task_rows:
+              if result.strip() in {"UP-TO-DATE", "SKIPPED", "NO-SOURCE", "Did No Work"}:
+                  continue
+              interesting.append((task, duration))
+
+          print("## Gradle Build Profile")
+          print()
+          print(f"- Report: `{report_path}`")
+          if total_match:
+              print(f"- Total build time: `{total_match.group(1)}`")
+          print()
+          print("### Slowest executed tasks")
+          print()
+          if interesting:
+              for task, duration in interesting[:10]:
+                  print(f"- `{task}`: `{duration}`")
+          else:
+              print("- No executed tasks found in the profile report.")
+          PY
+      - name: Upload Gradle profile report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-profile-report
+          path: build/reports/profile/profile-*.html
+          retention-days: 7
       - name: Archive extra-api jar
         uses: actions/upload-artifact@v7
         with:
