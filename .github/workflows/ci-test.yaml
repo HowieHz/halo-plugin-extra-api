@@ -18,8 +18,9 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          cache: 'gradle'
           java-version: 21
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
       - uses: pnpm/action-setup@v5
         name: Install pnpm
         id: pnpm-install
