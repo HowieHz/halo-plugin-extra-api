@@ -44,9 +44,6 @@ jobs:
             js-modules/shiki/pnpm-lock.yaml
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: Install Frontend Dependencies
-        run: |
-          ./gradlew pnpmInstall
       - name: Build with Gradle
         run: |
           # Set the version with tag name when releasing
