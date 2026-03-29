@@ -15,7 +15,40 @@ permissions:
 
 jobs:
   build:
+    name: Build ${{ matrix.artifact_name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: full-all-platforms
+            gradle_task: jarFullAllPlatforms
+            artifact_name: extra-api-full-all-platforms
+            artifact_path: build/libs/extra-api-full-all-platforms-*.jar
+          - id: full-linux-arm64
+            gradle_task: jarFullLinux-arm64
+            artifact_name: extra-api-full-linux-arm64
+            artifact_path: build/libs/extra-api-full-linux-arm64-*.jar
+          - id: full-linux-x86_64
+            gradle_task: jarFullLinux-x86_64
+            artifact_name: extra-api-full-linux-x86_64
+            artifact_path: build/libs/extra-api-full-linux-x86_64-*.jar
+          - id: full-macos-arm64
+            gradle_task: jarFullMacos-arm64
+            artifact_name: extra-api-full-macos-arm64
+            artifact_path: build/libs/extra-api-full-macos-arm64-*.jar
+          - id: full-macos-x86_64
+            gradle_task: jarFullMacos-x86_64
+            artifact_name: extra-api-full-macos-x86_64
+            artifact_path: build/libs/extra-api-full-macos-x86_64-*.jar
+          - id: full-windows-x86_64
+            gradle_task: jarFullWindows-x86_64
+            artifact_name: extra-api-full-windows-x86_64
+            artifact_path: build/libs/extra-api-full-windows-x86_64-*.jar
+          - id: lite
+            gradle_task: jarLite
+            artifact_name: extra-api-lite
+            artifact_path: build/libs/extra-api-lite-*.jar
     steps:
       - uses: actions/checkout@v5
         with:
@@ -55,7 +88,7 @@ jobs:
           if [ -n "$version" ]; then
             sed -i "s/version=.*-SNAPSHOT$/version=$version/1" gradle.properties
           fi
-          ./gradlew clean buildAll --profile --console=plain
+          ./gradlew ${{ matrix.gradle_task }} --profile --console=plain
       - name: Summarize Gradle profile
         if: always()
         shell: bash
@@ -106,57 +139,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gradle-profile-report
+          name: gradle-profile-${{ matrix.id }}
           path: build/reports/profile/profile-*.html
           retention-days: 1
-      - name: Archive extra-api jar
+      - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: extra-api-archive
-          path: |
-            build/libs/*.jar
-          retention-days: 1
-      - name: Upload extra-api-full-all-platforms
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-full-all-platforms
-          path: build/libs/extra-api-full-all-platforms-*.jar
-          retention-days: 1
-      - name: Upload extra-api-full-linux-arm64
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-full-linux-arm64
-          path: build/libs/extra-api-full-linux-arm64-*.jar
-          retention-days: 1
-      - name: Upload extra-api-full-linux-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-full-linux-x86_64
-          path: build/libs/extra-api-full-linux-x86_64-*.jar
-          retention-days: 1
-      - name: Upload extra-api-full-macos-arm64
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-full-macos-arm64
-          path: build/libs/extra-api-full-macos-arm64-*.jar
-          retention-days: 1
-      - name: Upload extra-api-full-macos-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-full-macos-x86_64
-          path: build/libs/extra-api-full-macos-x86_64-*.jar
-          retention-days: 1
-      - name: Upload extra-api-full-windows-x86_64
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-full-windows-x86_64
-          path: build/libs/extra-api-full-windows-x86_64-*.jar
-          retention-days: 1
-      - name: Upload extra-api-lite
-        uses: actions/upload-artifact@v7
-        with:
-          name: extra-api-lite
-          path: build/libs/extra-api-lite-*.jar
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
           retention-days: 1
 
   github-release:
@@ -164,11 +154,12 @@ jobs:
     needs: build
     if: github.event_name == 'release'
     steps:
-      - name: Download extra-api jar
+      - name: Download release artifacts
         uses: actions/download-artifact@v8
         with:
-          name: extra-api-archive
+          pattern: extra-api-*
           path: build/libs
+          merge-multiple: true
       - name: Get Name of Artifacts
         id: get_artifacts
         run: |
