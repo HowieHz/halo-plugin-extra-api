@@ -50,7 +50,7 @@ jobs:
             artifact_name: extra-api-lite
             artifact_path: build/libs/extra-api-lite-*.jar
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Set up JDK 21
