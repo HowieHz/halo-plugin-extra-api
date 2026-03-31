@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           submodules: true
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -66,18 +66,28 @@ jobs:
         name: Install pnpm
         id: pnpm-install
         with:
-          version: 10
+          version: 10.22.0
           run_install: false
+      - name: Resolve pnpm cache dependency paths
+        id: pnpm-cache-paths
+        shell: bash
+        run: |
+          {
+            echo 'paths<<EOF'
+            echo 'ui/pnpm-lock.yaml'
+            if [ -f js-modules/shiki/pnpm-lock.yaml ]; then
+              echo 'js-modules/shiki/pnpm-lock.yaml'
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 25
           cache: 'pnpm'
-          # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里，
-          # 否则像 :shiki:pnpmInstall 这类子包安装步骤不会命中预期的 pnpm 缓存键。
-          cache-dependency-path: |
-            ui/pnpm-lock.yaml
-            js-modules/shiki/pnpm-lock.yaml
+          # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里。
+          # 先过滤掉不存在的路径，避免 lite 变体或精简仓库缺少子模块时缓存步骤报错。
+          cache-dependency-path: ${{ steps.pnpm-cache-paths.outputs.paths }}
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Build with Gradle
