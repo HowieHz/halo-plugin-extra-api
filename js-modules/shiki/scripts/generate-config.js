@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+
 import yaml from "js-yaml";
 import { bundledThemesInfo } from "shiki/bundle/full";
 
@@ -26,7 +27,7 @@ try {
 
   let updatedCount = 0;
   settings.spec.forms.forEach((form) => {
-    if (form.group!== "shiki") {
+    if (form.group !== "shiki") {
       return;
     }
     form.formSchema?.forEach((field) => {

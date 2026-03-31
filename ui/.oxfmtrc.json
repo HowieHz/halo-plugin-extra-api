@@ -1,0 +1,16 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "ignorePatterns": ["src/assets/**"],
+    "overrides": [
+        {
+            "files": ["**/*.jsonc"],
+            "options": {
+                "trailingComma": "none"
+            }
+        }
+    ],
+    "sortImports": {},
+    "sortPackageJson": {
+        "sortScripts": true
+    }
+}
