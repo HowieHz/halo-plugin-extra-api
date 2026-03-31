@@ -62,26 +62,26 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: false
-      - uses: pnpm/action-setup@v5
+      - if: matrix.id != 'lite'
+        uses: pnpm/action-setup@v5
         name: Install pnpm
         id: pnpm-install
         with:
           version: 10.22.0
           run_install: false
-      - name: Resolve pnpm cache dependency paths
+      - if: matrix.id != 'lite'
+        name: Resolve pnpm cache dependency paths
         id: pnpm-cache-paths
         shell: bash
         run: |
           {
             echo 'paths<<EOF'
-            # lite 变体不会触发 shiki 构建，也不会执行 pnpm install，这里不加入任何缓存依赖路径。
             # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里。
-            if [ "${{ matrix.id }}" != "lite" ] && [ -f js-modules/shiki/pnpm-lock.yaml ]; then
-              echo 'js-modules/shiki/pnpm-lock.yaml'
-            fi
+            echo 'js-modules/shiki/pnpm-lock.yaml'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
-      - name: Set up Node.js
+      - if: matrix.id != 'lite'
+        name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 25
