@@ -2,25 +2,19 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "pnpm run \"/^watch:.*/\"",
-        "watch:rsbuild": "rsbuild build --watch --env-mode=development",
         "build": "run-p build:type-check \"build:build-only {@}\" --",
-        "build:type-check": "vue-tsc --build",
         "build:build-only": "rsbuild build",
+        "build:type-check": "vue-tsc --build",
+        "dev": "pnpm run \"/^watch:.*/\"",
+        "fmt": "pnpm run \"/^fmt:.*/\"",
+        "fmt:oxfmt": "oxfmt \"**/*.{json,jsonc,yaml,md,css,js,ts,html,vue,less}\"",
         "lint": "run-s lint:*",
-        "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
         "lint:eslint": "eslint . --fix",
-        "format": "pnpm run \"/^format:.*/\"",
-        "format:prettier": "prettier --write src/",
+        "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
+        "prepare": "cd .. && husky ui/.husky",
         "test": "pnpm run \"/^test:.*/\"",
         "test:unit": "vitest --passWithNoTests",
-        "prepare": "cd .. && husky ui/.husky"
-    },
-    "prettier": {
-        "printWidth": 100,
-        "semi": false,
-        "singleQuote": true,
-        "tabWidth": 2
+        "watch:rsbuild": "rsbuild build --watch --env-mode=development"
     },
     "dependencies": {
         "@halo-dev/api-client": "^2.23.0",
@@ -51,8 +45,8 @@
         "husky": "^8.0.0",
         "jsdom": "^29.0.1",
         "npm-run-all2": "^8.0.4",
+        "oxfmt": "^0.42.0",
         "oxlint": "^1.57.0",
-        "prettier": "^3.8.1",
         "sass": "^1.98.0",
         "typescript": "~5.9.3",
         "unplugin-icons": "^23.0.1",

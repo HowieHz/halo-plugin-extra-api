@@ -1,6 +1,6 @@
-import { definePlugin } from '@halo-dev/ui-shared'
+import { definePlugin } from "@halo-dev/ui-shared";
 
 export default definePlugin({
   components: {},
   extensionPoints: {},
-})
+});

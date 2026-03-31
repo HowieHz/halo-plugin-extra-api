@@ -62,31 +62,31 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: false
-      - uses: pnpm/action-setup@v5
+      - if: matrix.id != 'lite'
+        uses: pnpm/action-setup@v5
         name: Install pnpm
         id: pnpm-install
         with:
           version: 10.22.0
           run_install: false
-      - name: Resolve pnpm cache dependency paths
+      - if: matrix.id != 'lite'
+        name: Resolve pnpm cache dependency paths
         id: pnpm-cache-paths
         shell: bash
         run: |
           {
             echo 'paths<<EOF'
-            echo 'ui/pnpm-lock.yaml'
-            if [ -f js-modules/shiki/pnpm-lock.yaml ]; then
-              echo 'js-modules/shiki/pnpm-lock.yaml'
-            fi
+            # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里。
+            echo 'js-modules/shiki/pnpm-lock.yaml'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
-      - name: Set up Node.js
+      - if: matrix.id != 'lite'
+        name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 25
           cache: 'pnpm'
-          # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里。
-          # 先过滤掉不存在的路径，避免 lite 变体或精简仓库缺少子模块时缓存步骤报错。
+          # 仅为当前会实际触发 pnpm 的变体提供缓存依赖路径。
           cache-dependency-path: ${{ steps.pnpm-cache-paths.outputs.paths }}
       - name: Make gradlew executable
         run: chmod +x ./gradlew

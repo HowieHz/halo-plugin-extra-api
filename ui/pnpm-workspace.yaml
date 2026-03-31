@@ -1,6 +1,7 @@
 packages:
-  - '.'
+  - "."
 allowBuilds:
-  '@parcel/watcher': true
+  "@parcel/watcher": true
+  core-js: true
   esbuild: true
 engineStrict: true # engines.node will be strictly enforced when installing dependencies
