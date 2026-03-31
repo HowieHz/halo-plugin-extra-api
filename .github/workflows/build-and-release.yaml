@@ -74,8 +74,9 @@ jobs:
         run: |
           {
             echo 'paths<<EOF'
-            echo 'ui/pnpm-lock.yaml'
-            if [ -f js-modules/shiki/pnpm-lock.yaml ]; then
+            # lite 变体不会触发 shiki 构建，也不会执行 pnpm install，这里不加入任何缓存依赖路径。
+            # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里。
+            if [ "${{ matrix.id }}" != "lite" ] && [ -f js-modules/shiki/pnpm-lock.yaml ]; then
               echo 'js-modules/shiki/pnpm-lock.yaml'
             fi
             echo 'EOF'
@@ -85,8 +86,7 @@ jobs:
         with:
           node-version: 25
           cache: 'pnpm'
-          # 新增独立的前端子模块时，记得把对应的 pnpm-lock.yaml 一并加入这里。
-          # 先过滤掉不存在的路径，避免 lite 变体或精简仓库缺少子模块时缓存步骤报错。
+          # 仅为当前会实际触发 pnpm 的变体提供缓存依赖路径。
           cache-dependency-path: ${{ steps.pnpm-cache-paths.outputs.paths }}
       - name: Make gradlew executable
         run: chmod +x ./gradlew
