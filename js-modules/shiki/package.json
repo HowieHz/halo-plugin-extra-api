@@ -1,20 +1,25 @@
 {
-  "name": "shiki",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "prebuild": "pnpm run generate-config",
-    "generate-config": "node ./scripts/generate-config.js",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "js-yaml": "^4.1.1",
-    "vite": "8.0.3"
-  },
-  "dependencies": {
-    "shiki": "^4.0.2"
-  }
+    "name": "shiki",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "prebuild": "pnpm run generate-config",
+        "generate-config": "node ./scripts/generate-config.js",
+        "preview": "vite preview"
+    },
+    "devDependencies": {
+        "js-yaml": "^4.1.1",
+        "vite": "8.0.3"
+    },
+    "dependencies": {
+        "shiki": "^4.0.2"
+    },
+    "engines": {
+        "node": ">=25",
+        "pnpm": "^10.33.0"
+    },
+    "packageManager": "pnpm@10.33.0"
 }
