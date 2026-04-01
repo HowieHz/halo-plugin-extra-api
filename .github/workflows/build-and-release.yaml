@@ -67,7 +67,7 @@ jobs:
         name: Install pnpm
         id: pnpm-install
         with:
-          version: 10.22.0
+          version: 10.33.0
           run_install: false
       - if: matrix.id != 'lite'
         name: Resolve pnpm cache dependency paths
