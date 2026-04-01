@@ -3,15 +3,18 @@ import path from "node:path";
 
 const githubDirPath = ".github";
 const workflowsDirPath = path.join(githubDirPath, "workflows");
-const actionsDirPath = path.join(githubDirPath, "actions");
-const setupActionPath = path.join(actionsDirPath, "setup-node-pnpm", "action.yml");
 const packageJsonPaths = [
   path.join("ui", "package.json"),
   path.join("js-modules", "shiki", "package.json"),
 ];
+const managedWorkflowPaths = [
+  path.join(workflowsDirPath, "build-and-release.yaml"),
+  path.join(workflowsDirPath, "ci-test.yaml"),
+  path.join(workflowsDirPath, "update-toolchain-versions.yml"),
+];
 const dryRun = process.argv.includes("--dry-run");
 const releaseDelayMs = 24 * 60 * 60 * 1000;
-const eligibleReleaseCutoff = new Date(Date.now() - releaseDelayMs);
+const userAgent = "halo-plugin-extra-api-toolchain-updater";
 
 const appendGitHubOutput = async (name, value) => {
   const outputPath = process.env.GITHUB_OUTPUT;
@@ -23,8 +26,6 @@ const appendGitHubOutput = async (name, value) => {
   await fs.appendFile(outputPath, `${name}=${value}\n`);
 };
 
-const compareNumbers = (left, right) => left - right;
-
 const detectJsonIndent = (content) => {
   const match = content.match(/\n( +)"/u);
   return match ? match[1].length : 2;
@@ -35,14 +36,19 @@ const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 const isNotFoundError = (error) =>
   Boolean(error) && typeof error === "object" && "code" in error && error.code === "ENOENT";
 
-const isDateOlderThanCutoff = (value) => {
-  const parsed = new Date(value);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return false;
+const parseTimestamp = (value) => {
+  if (typeof value !== "string") {
+    return null;
   }
 
-  return parsed.getTime() <= eligibleReleaseCutoff.getTime();
+  const normalizedValue = value.trim();
+
+  if (normalizedValue === "") {
+    return null;
+  }
+
+  const timestamp = Date.parse(normalizedValue);
+  return Number.isNaN(timestamp) ? null : timestamp;
 };
 
 const parseSemVer = (version) => {
@@ -59,44 +65,65 @@ const parseSemVer = (version) => {
   };
 };
 
-const compareSemVer = (left, right) =>
-  compareNumbers(left.major, right.major) ||
-  compareNumbers(left.minor, right.minor) ||
-  compareNumbers(left.patch, right.patch);
-
 const stripUtf8Bom = (content) => content.replace(/^\uFEFF/u, "");
 
+const hasReleaseDelayElapsed = (publishedAt, now = Date.now()) => {
+  const publishedTimestamp = parseTimestamp(publishedAt);
+
+  if (publishedTimestamp === null) {
+    throw new Error(`Invalid published timestamp: ${publishedAt || "<empty>"}`);
+  }
+
+  return now - publishedTimestamp >= releaseDelayMs;
+};
+
+// The updater tracks the exact current latest release for each ecosystem.
+// If that latest has not aged for a full 24 hours yet, it must not fall back to
+// an older version, because creating a PR for that older version would still
+// violate the latest-only cooldown rule.
+const logSkippedLatest = (ecosystem, version, publishedAt) => {
+  console.log(
+    [
+      `Skipping ${ecosystem} update because the current latest release ${version} was published at ${publishedAt}.`,
+      "The updater only adopts the current latest after a full 24-hour delay and never falls back to an older version while that latest is still cooling down.",
+    ].join(" "),
+  );
+};
+
 const fetchLatestNodeMajor = async () => {
-  const response = await fetch("https://nodejs.org/dist/index.json", {
+  const response = await fetch("https://api.github.com/repos/nodejs/node/releases/latest", {
     headers: {
-      Accept: "application/json",
-      "User-Agent": "halo-plugin-extra-api-toolchain-updater",
+      Accept: "application/vnd.github+json",
+      "User-Agent": userAgent,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch Node.js releases: ${response.status} ${response.statusText}`);
+    throw new Error(`Failed to fetch the latest Node.js release: ${response.status} ${response.statusText}`);
   }
 
-  const releases = await response.json();
-  const stableVersions = releases
-    .filter((release) => isDateOlderThanCutoff(`${release.date}T00:00:00.000Z`))
-    .map((release) => parseSemVer(release.version))
-    .filter(Boolean)
-    .sort((left, right) => compareSemVer(right, left));
+  const latestRelease = await response.json();
+  const latestVersion = typeof latestRelease.tag_name === "string" ? latestRelease.tag_name.trim() : "";
+  const publishedAt = typeof latestRelease.published_at === "string" ? latestRelease.published_at.trim() : "";
+  const parsedVersion = parseSemVer(latestVersion);
 
-  if (stableVersions.length === 0) {
-    throw new Error("No eligible Node.js versions found in release index after applying release delay");
+  if (!parsedVersion) {
+    throw new Error(`Invalid latest Node.js release version: ${latestVersion || "<empty>"}`);
   }
 
-  return stableVersions[0].major;
+  if (!hasReleaseDelayElapsed(publishedAt)) {
+    logSkippedLatest("Node.js", latestVersion, publishedAt);
+    return null;
+  }
+
+  return parsedVersion.major;
 };
 
 const fetchLatestPnpmVersion = async () => {
   const response = await fetch("https://registry.npmjs.org/pnpm", {
     headers: {
       Accept: "application/json",
-      "User-Agent": "halo-plugin-extra-api-toolchain-updater",
+      "User-Agent": userAgent,
     },
   });
 
@@ -105,22 +132,19 @@ const fetchLatestPnpmVersion = async () => {
   }
 
   const metadata = await response.json();
-  const versions = Object.entries(metadata.time ?? {})
-    .map(([version, publishedAt]) => ({
-      version,
-      publishedAt,
-      parsedVersion: parseSemVer(version),
-    }))
-    .filter(({ version }) => version !== "created" && version !== "modified")
-    .filter(({ publishedAt, parsedVersion }) => typeof publishedAt === "string" && Boolean(parsedVersion))
-    .filter(({ publishedAt }) => isDateOlderThanCutoff(publishedAt))
-    .sort((left, right) => compareSemVer(right.parsedVersion, left.parsedVersion));
+  const latestVersion = typeof metadata["dist-tags"]?.latest === "string" ? metadata["dist-tags"].latest.trim() : "";
+  const publishedAt = typeof metadata.time?.[latestVersion] === "string" ? metadata.time[latestVersion].trim() : "";
 
-  if (versions.length === 0) {
-    throw new Error("No eligible pnpm versions found after applying release delay");
+  if (!parseSemVer(latestVersion)) {
+    throw new Error(`Invalid pnpm latest version: ${latestVersion || "<empty>"}`);
   }
 
-  return versions[0].version;
+  if (!hasReleaseDelayElapsed(publishedAt)) {
+    logSkippedLatest("pnpm", latestVersion, publishedAt);
+    return null;
+  }
+
+  return latestVersion;
 };
 
 const readFileWithLineEnding = async (filePath) => {
@@ -138,37 +162,6 @@ const maybeWriteFile = async (filePath, nextContent) => {
   }
 
   await fs.writeFile(path.resolve(process.cwd(), filePath), nextContent, "utf8");
-};
-
-const collectFilesByName = async (directoryPath, fileName) => {
-  let entries;
-
-  try {
-    entries = await fs.readdir(path.resolve(process.cwd(), directoryPath), { withFileTypes: true });
-  } catch (error) {
-    if (isNotFoundError(error)) {
-      return [];
-    }
-
-    throw error;
-  }
-
-  const filePaths = [];
-
-  for (const entry of entries) {
-    const relativePath = path.join(directoryPath, entry.name);
-
-    if (entry.isDirectory()) {
-      filePaths.push(...(await collectFilesByName(relativePath, fileName)));
-      continue;
-    }
-
-    if (entry.isFile() && entry.name === fileName) {
-      filePaths.push(relativePath);
-    }
-  }
-
-  return filePaths.sort((left, right) => left.localeCompare(right));
 };
 
 const collectExistingFiles = async (filePaths) => {
@@ -196,23 +189,28 @@ const updatePackageJson = async (filePath, nodeMajor, pnpmVersion) => {
 
   packageJson.engines ??= {};
 
-  const nextNodeRange = `>=${nodeMajor}`;
-  const nextPnpmRange = `^${pnpmVersion}`;
-  const nextPackageManager = `pnpm@${pnpmVersion}`;
+  if (nodeMajor !== null) {
+    const nextNodeRange = `>=${nodeMajor}`;
 
-  if (packageJson.engines.node !== nextNodeRange) {
-    packageJson.engines.node = nextNodeRange;
-    updatedFields.push(`engines.node -> ${nextNodeRange}`);
+    if (packageJson.engines.node !== nextNodeRange) {
+      packageJson.engines.node = nextNodeRange;
+      updatedFields.push(`engines.node -> ${nextNodeRange}`);
+    }
   }
 
-  if (packageJson.engines.pnpm !== nextPnpmRange) {
-    packageJson.engines.pnpm = nextPnpmRange;
-    updatedFields.push(`engines.pnpm -> ${nextPnpmRange}`);
-  }
+  if (pnpmVersion !== null) {
+    const nextPnpmRange = `^${pnpmVersion}`;
+    const nextPackageManager = `pnpm@${pnpmVersion}`;
 
-  if (packageJson.packageManager !== nextPackageManager) {
-    packageJson.packageManager = nextPackageManager;
-    updatedFields.push(`packageManager -> ${nextPackageManager}`);
+    if (packageJson.engines.pnpm !== nextPnpmRange) {
+      packageJson.engines.pnpm = nextPnpmRange;
+      updatedFields.push(`engines.pnpm -> ${nextPnpmRange}`);
+    }
+
+    if (packageJson.packageManager !== nextPackageManager) {
+      packageJson.packageManager = nextPackageManager;
+      updatedFields.push(`packageManager -> ${nextPackageManager}`);
+    }
   }
 
   if (updatedFields.length === 0) {
@@ -282,32 +280,12 @@ const replaceWorkflowStepInputValue = (content, actionPattern, inputName, nextVa
   };
 };
 
-const replaceActionDefaultValue = (content, inputName, nextValue) => {
-  const inputPattern = new RegExp(
-    `(${escapeRegExp(inputName)}:\\s*\\n(?:\\s+.*\\n)*?\\s+default:\\s*)(["'])(.*?)\\2`,
-    "u",
-  );
-  const match = content.match(inputPattern);
-
-  if (!match || match[3] === nextValue) {
-    return {
-      changed: false,
-      nextContent: content,
-    };
-  }
-
-  return {
-    changed: true,
-    nextContent: content.replace(inputPattern, `${match[1]}${match[2]}${nextValue}${match[2]}`),
-  };
-};
-
 const updateToolchainFile = async (filePath, nodeMajor, pnpmVersion) => {
   const { content, lineEnding } = await readFileWithLineEnding(filePath);
   const updates = [];
   let nextContent = content;
 
-  if (content.includes("actions/setup-node@")) {
+  if (nodeMajor !== null && content.includes("actions/setup-node@")) {
     const { changed, nextContent: replacedContent } = replaceWorkflowStepInputValue(
       nextContent,
       /uses:\s*actions\/setup-node@/u,
@@ -321,7 +299,7 @@ const updateToolchainFile = async (filePath, nodeMajor, pnpmVersion) => {
     }
   }
 
-  if (content.includes("pnpm/action-setup@")) {
+  if (pnpmVersion !== null && content.includes("pnpm/action-setup@")) {
     const { changed, nextContent: replacedContent } = replaceWorkflowStepInputValue(
       nextContent,
       /uses:\s*pnpm\/action-setup@/u,
@@ -332,19 +310,6 @@ const updateToolchainFile = async (filePath, nodeMajor, pnpmVersion) => {
     if (changed && replacedContent !== nextContent) {
       nextContent = replacedContent;
       updates.push(`pnpm version -> ${pnpmVersion}`);
-    }
-  }
-
-  if (filePath === setupActionPath) {
-    const { changed, nextContent: replacedContent } = replaceActionDefaultValue(
-      nextContent,
-      "pnpm-version",
-      pnpmVersion,
-    );
-
-    if (changed && replacedContent !== nextContent) {
-      nextContent = replacedContent;
-      updates.push(`inputs.pnpm-version.default -> ${pnpmVersion}`);
     }
   }
 
@@ -372,13 +337,7 @@ const updatePackageJsonFiles = async (nodeMajor, pnpmVersion) => {
 };
 
 const updateToolchainFiles = async (nodeMajor, pnpmVersion) => {
-  const workflowEntries = await fs.readdir(path.resolve(process.cwd(), workflowsDirPath), { withFileTypes: true });
-  const workflowFiles = workflowEntries
-    .filter((entry) => entry.isFile() && (entry.name.endsWith(".yml") || entry.name.endsWith(".yaml")))
-    .map((entry) => path.join(workflowsDirPath, entry.name))
-    .sort((left, right) => left.localeCompare(right));
-  const actionFiles = await collectFilesByName(actionsDirPath, "action.yml");
-  const targetFiles = [...actionFiles, ...workflowFiles];
+  const targetFiles = await collectExistingFiles(managedWorkflowPaths);
   const updateGroups = [];
 
   for (const filePath of targetFiles) {
@@ -395,8 +354,17 @@ const updateToolchainFiles = async (nodeMajor, pnpmVersion) => {
 const nodeMajor = await fetchLatestNodeMajor();
 const pnpmVersion = await fetchLatestPnpmVersion();
 
-console.log(`Resolved latest Node.js major after 1 day cooldown: ${nodeMajor}`);
-console.log(`Resolved latest pnpm version after 1 day cooldown: ${pnpmVersion}`);
+if (nodeMajor === null) {
+  console.log("Resolved latest Node.js major: skipped because the current latest release has not reached the 24-hour delay");
+} else {
+  console.log(`Resolved latest Node.js major after 24-hour latest-only delay: ${nodeMajor}`);
+}
+
+if (pnpmVersion === null) {
+  console.log("Resolved latest pnpm version: skipped because the current latest release has not reached the 24-hour delay");
+} else {
+  console.log(`Resolved latest pnpm version after 24-hour latest-only delay: ${pnpmVersion}`);
+}
 
 const updateGroups = [
   ...(await updatePackageJsonFiles(nodeMajor, pnpmVersion)),
@@ -416,8 +384,8 @@ if (updateGroups.length === 0) {
 }
 
 await appendGitHubOutput("changed", updateGroups.length > 0 ? "true" : "false");
-await appendGitHubOutput("node_major", String(nodeMajor));
-await appendGitHubOutput("pnpm_version", pnpmVersion);
+await appendGitHubOutput("node_major", nodeMajor === null ? "" : String(nodeMajor));
+await appendGitHubOutput("pnpm_version", pnpmVersion ?? "");
 await appendGitHubOutput("updated_files", updateGroups.map(({ filePath }) => filePath).join(","));
 await appendGitHubOutput(
   "update_count",
