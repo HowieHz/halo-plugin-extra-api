@@ -84,7 +84,7 @@ jobs:
         name: Set up Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # https://github.com/actions/setup-node/tree/v6
         with:
-          node-version: 25
+          node-version: 24
           cache: 'pnpm'
           # 仅为当前会实际触发 pnpm 的变体提供缓存依赖路径。
           cache-dependency-path: ${{ steps.pnpm-cache-paths.outputs.paths }}

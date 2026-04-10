@@ -77,42 +77,60 @@ const hasReleaseDelayElapsed = (publishedAt, now = Date.now()) => {
   return now - publishedTimestamp >= releaseDelayMs;
 };
 
-// The updater tracks the exact current latest release for each ecosystem.
-// If that latest has not aged for a full 24 hours yet, it must not fall back to
-// an older version, because creating a PR for that older version would still
-// violate the latest-only cooldown rule.
+// The updater tracks the exact current latest eligible release for each ecosystem.
+// For Node.js, that means the latest release from an LTS line instead of the
+// overall latest Current release. If that latest eligible release has not aged
+// for a full 24 hours yet, it must not fall back to an older version, because
+// creating a PR for that older version would still violate the latest-only
+// cooldown rule.
 const logSkippedLatest = (ecosystem, version, publishedAt) => {
   console.log(
     [
-      `Skipping ${ecosystem} update because the current latest release ${version} was published at ${publishedAt}.`,
-      "The updater only adopts the current latest after a full 24-hour delay and never falls back to an older version while that latest is still cooling down.",
+      `Skipping ${ecosystem} update because the current latest eligible release ${version} was published at ${publishedAt}.`,
+      "The updater only adopts the current latest eligible release after a full 24-hour delay and never falls back to an older version while that release is still cooling down.",
     ].join(" "),
   );
 };
 
+const isNodeLtsRelease = (release) => {
+  const lts = release?.lts;
+  return lts === true || (typeof lts === "string" && lts.trim() !== "");
+};
+
 const fetchLatestNodeMajor = async () => {
-  const response = await fetch("https://api.github.com/repos/nodejs/node/releases/latest", {
+  const response = await fetch("https://nodejs.org/dist/index.json", {
     headers: {
-      Accept: "application/vnd.github+json",
+      Accept: "application/json",
       "User-Agent": userAgent,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch the latest Node.js release: ${response.status} ${response.statusText}`);
+    throw new Error(`Failed to fetch the Node.js release index: ${response.status} ${response.statusText}`);
   }
 
-  const latestRelease = await response.json();
-  const latestVersion = typeof latestRelease.tag_name === "string" ? latestRelease.tag_name.trim() : "";
-  const publishedAt = typeof latestRelease.published_at === "string" ? latestRelease.published_at.trim() : "";
+  const releases = await response.json();
+
+  if (!Array.isArray(releases)) {
+    throw new Error("Invalid Node.js release index payload");
+  }
+
+  const latestRelease = releases.find(isNodeLtsRelease);
+
+  if (!latestRelease || typeof latestRelease !== "object") {
+    throw new Error("Unable to resolve the latest Node.js LTS release");
+  }
+
+  const latestVersion = typeof latestRelease.version === "string" ? latestRelease.version.trim() : "";
+  const publishedAt = typeof latestRelease.date === "string" ? latestRelease.date.trim() : "";
   const parsedVersion = parseSemVer(latestVersion);
 
   if (!parsedVersion) {
-    throw new Error(`Invalid latest Node.js release version: ${latestVersion || "<empty>"}`);
+    throw new Error(`Invalid latest Node.js LTS release version: ${latestVersion || "<empty>"}`);
   }
 
   if (!hasReleaseDelayElapsed(publishedAt)) {
-    logSkippedLatest("Node.js", latestVersion, publishedAt);
+    logSkippedLatest("Node.js LTS", latestVersion, publishedAt);
     return null;
   }
 
@@ -355,9 +373,11 @@ const nodeMajor = await fetchLatestNodeMajor();
 const pnpmVersion = await fetchLatestPnpmVersion();
 
 if (nodeMajor === null) {
-  console.log("Resolved latest Node.js major: skipped because the current latest release has not reached the 24-hour delay");
+  console.log(
+    "Resolved latest Node.js LTS major: skipped because the current latest eligible release has not reached the 24-hour delay",
+  );
 } else {
-  console.log(`Resolved latest Node.js major after 24-hour latest-only delay: ${nodeMajor}`);
+  console.log(`Resolved latest Node.js LTS major after 24-hour latest-only delay: ${nodeMajor}`);
 }
 
 if (pnpmVersion === null) {
