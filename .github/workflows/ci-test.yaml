@@ -23,7 +23,7 @@ jobs:
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # https://github.com/gradle/actions/tree/v6
         with:
           cache-read-only: false
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # https://github.com/pnpm/action-setup/tree/v5
+      - uses: pnpm/action-setup@08c4be7e2e672a47d11bd04269e27e5f3e8529cb # https://github.com/pnpm/action-setup/tree/v6.0.0
         name: Install pnpm
         id: pnpm-install
         with:
