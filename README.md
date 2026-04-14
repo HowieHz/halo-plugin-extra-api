@@ -795,7 +795,7 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 
 插件提供两个版本：
 
-- **全量版**：包含所有功能，包括代码高亮等依赖 JS 的相关功能。
+- **全量版**：包含所有功能，包括代码高亮、HTML 页面压缩等依赖原生运行时的功能。
 - **轻量版**：轻量级版本，不包含 JS 相关功能和相关依赖。
 
 ### 轻量版的优势
