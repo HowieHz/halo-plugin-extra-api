@@ -27,11 +27,9 @@ pnpm dev
 ## 配置约定
 
 - 默认值设定由 `src/main/resources/extensions/settings.yaml` 统一定义。
-- 配置类、`fallbackConfig()`、配置供应器（Supplier）和运行时初始化逻辑中，不要重复写同一份业务默认值。
+- 配置类、`fallbackConfig()`、配置提供方（Supplier）和运行时初始化逻辑中，不要重复写同一份业务默认值。
 - 设置缺失、读取失败或对象为空时，可以返回最小可用的兜底配置；但兜底配置不应再维护一份和 `settings.yaml` 并行的业务默认值。
 - 如果某个配置项在运行时可能出现非法值，并且会导致初始化失败，或者旧数据、脏数据可能绕过界面约束，应在消费前校验，必要时修正为可用值，而不是在配置类中再补一套默认值。
-- 默认值设定由 `settings.yaml` 负责。
-- 无效值处理由消费方校验，必要时修正为可用值。
 
 ### 资源处理任务
 
@@ -62,9 +60,9 @@ pnpm dev
 - 相关实现：
   - `src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/web/filter/htmlminify/HtmlMinifyWebFilter.java`
 - 当前 HTML 页面压缩功能依赖 Halo 的附加 Web 过滤器扩展点（`AdditionalWebFilter`）完整读取并重写响应体。
-- 这意味着在压缩前必须先聚合完整 HTML body，再交给 `minify-html` 处理。
+- 这意味着在压缩前必须先聚合完整的 HTML 响应内容，再交给 `minify-html` 处理。
 - 因此该功能天然会带来一次额外的内存占用和复制成本，无法像真正的流式转换那样边读边压。
-- 这不是当前实现的疏漏，而是 Halo 附加 Web 过滤器扩展点（`AdditionalWebFilter`）的接入方式和 `minify-html` API 形态共同决定的限制。
+- 这不是当前实现的疏漏，而是 Halo 附加 Web 过滤器扩展点（`AdditionalWebFilter`）的接入方式和 `minify-html` 接口形态共同决定的限制。
 
 ## 如何添加新的嵌入式 JS 模块
 
@@ -92,13 +90,13 @@ MARKED("marked", "marked.umd.js", JsModuleType.UMD),
 - 文件：`src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/runtime/engine/CustomJavetEngine.java`
 - 引擎当前在 `preloadModules()` 中预加载 `Shiki`
 - 使用 `JsModule.MARKED.getSourceCode()` 读取资源，使用 `v8Runtime.getExecutor(code).executeVoid()` 执行。
-- 加载后，验证预期的函数是否暴露在 `globalThis`（或其他入口点）上。保持预加载对错误的容忍性，避免引擎创建失败。
+- 加载后，验证预期的函数是否暴露在 `globalThis` 这类全局入口上。保持预加载对错误的容忍性，避免引擎创建失败。
 
 ### 暴露 Java 服务来调用模块
 
 - 在 `service/interop/runtime/adapters/<module>` 下创建服务接口（示例 `service/interop/runtime/adapters/marked/MarkedService.java`），定义您需要的操作。
 - 使用 Spring `@Service` 类实现接口，该类使用现有的 `V8EnginePoolService` 对运行时执行调用，类似于 `ShikiHighlightServiceImpl`。
-- 优先读取 `globalThis` 函数（例如 `parseMarkdown`）或 `globalThis.<lib>.parse`。
+- 优先读取 `globalThis` 上的方法（例如 `parseMarkdown`）或 `globalThis.<lib>.parse`。
 
 ### 验证
 
@@ -107,7 +105,7 @@ MARKED("marked", "marked.umd.js", JsModuleType.UMD),
 
 ### 模块类型和自定义解析器
 
-- JsModuleType.UMD：直接执行脚本（UMD 通常附加到 globalThis）。
+- JsModuleType.UMD：直接执行脚本（UMD 通常会挂到 `globalThis` 上）。
 - JsModuleType.ESM：`CustomV8ModuleResolver` 编译并为 ESM 模块返回 IV8Module。
 - JsModuleType.CJS：CommonJS 模块使用模拟的 `module.exports` 对象执行，导出作为模块对象返回。
 
@@ -125,5 +123,5 @@ gradlew.bat clean assemble -x test
 
 - 保持嵌入的 JS 文件相对较小，以保持 jar 大小可管理。
 - 优先选择精简或压缩的 UMD 构建版本进行嵌入。
-- 如果库暴露异步 API（promises），Java 实现应该使用 Javet Promise 助手或 V8ValuePromise 轮询来等待 promise 结果。
+- 如果库暴露异步接口（Promise），Java 实现应使用 Javet 的 Promise 辅助工具或 `V8ValuePromise` 轮询等待结果。
 - 添加单元测试，使用模拟或引擎池来验证解析/高亮行为。
