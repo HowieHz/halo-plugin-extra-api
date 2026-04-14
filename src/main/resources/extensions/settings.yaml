@@ -692,7 +692,7 @@ spec:
           key: removeBangs
           label: 移除 <! ... > 特殊声明
           value: false
-          help: 开启后会移除普通 <! ... > 形式的特殊声明（Bang）；HTML 注释、DOCTYPE 和处理指令由其他开关单独控制。
+          help: 开启后会移除普通 <! ... > 形式的特殊声明（Bang）；IE 条件注释就属于此类。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: removeProcessingInstructions

@@ -115,7 +115,7 @@ public class HtmlMinifyWebFilter implements AdditionalWebFilter {
 
     @Override
     public int getOrder() {
-        return LOWEST_PRECEDENCE - 99;
+        return LOWEST_PRECEDENCE;
     }
 
     class HtmlMinifyResponseDecorator extends ServerHttpResponseDecorator {
