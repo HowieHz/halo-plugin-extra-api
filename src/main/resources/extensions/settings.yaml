@@ -708,7 +708,7 @@ spec:
           key: minifyDoctype
           label: 压缩 DOCTYPE
           value: false
-          help: 开启后会压缩 DOCTYPE 声明，可进一步减小体积；输出可能不完全符合规范校验，但主流浏览器通常仍可正确解析，因此默认关闭。
+          help: 开启后会压缩 DOCTYPE 声明，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: allowNoncompliantUnquotedAttributeValues
@@ -716,7 +716,7 @@ spec:
           key: allowNoncompliantUnquotedAttributeValues
           label: 允许非规范无引号属性值
           value: false
-          help: 允许输出包含 WHATWG 规范不允许字符的无引号属性值，可进一步压缩，但产物可能无法通过严格校验，因此默认关闭。
+          help: 允许输出包含 WHATWG 规范不允许字符的无引号属性值，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: allowOptimalEntities
@@ -724,7 +724,7 @@ spec:
           key: allowOptimalEntities
           label: 允许更激进的实体优化
           value: false
-          help: 允许对 HTML 实体做更激进的最短化处理，可进一步压缩；部分输出可能不完全符合严格校验规则，但主流浏览器通常仍可正确解析，因此默认关闭。
+          help: 允许对 HTML 实体做更激进的最短化处理，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: allowRemovingSpacesBetweenAttributes
@@ -732,4 +732,4 @@ spec:
           key: allowRemovingSpacesBetweenAttributes
           label: 允许移除属性间空格
           value: false
-          help: 在可能时移除属性之间的空格，可进一步缩短输出；产物可能不完全符合规范校验，但主流浏览器通常仍可正确解析，因此默认关闭。
+          help: 在可能时移除属性之间的空格，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
