@@ -690,9 +690,9 @@ spec:
           name: removeBangs
           id: removeBangs
           key: removeBangs
-          label: 移除 Bang 声明
+          label: 移除 <! ... > 特殊声明
           value: false
-          help: 开启后会移除普通 bang 声明，如 <!something> 这类内容。通常可安全减少页面体积。
+          help: 开启后会移除普通 <! ... > 形式的特殊声明（Bang）；HTML 注释、DOCTYPE 和处理指令由其他开关单独控制。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: removeProcessingInstructions
@@ -708,7 +708,7 @@ spec:
           key: minifyDoctype
           label: 压缩 DOCTYPE
           value: false
-          help: 开启后会压缩 DOCTYPE 声明，可进一步减小体积，但生成结果可能无法通过严格 HTML 校验，因此默认关闭。
+          help: 开启后会压缩 DOCTYPE 声明，可进一步减小体积；输出可能不完全符合规范校验，但主流浏览器通常仍可正确解析，因此默认关闭。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: allowNoncompliantUnquotedAttributeValues
@@ -716,7 +716,7 @@ spec:
           key: allowNoncompliantUnquotedAttributeValues
           label: 允许非规范无引号属性值
           value: false
-          help: 允许输出包含 WHATWG 校验通常不接受字符的无引号属性值，可进一步压缩，但产物可能无法通过严格校验，默认关闭。
+          help: 允许输出包含 WHATWG 规范不允许字符的无引号属性值，可进一步压缩，但产物可能无法通过严格校验，因此默认关闭。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: allowOptimalEntities
@@ -724,7 +724,7 @@ spec:
           key: allowOptimalEntities
           label: 允许更激进的实体优化
           value: false
-          help: 允许对 HTML 实体做更激进的最短化处理，可进一步压缩，但部分输出可能不完全符合严格校验规则，默认关闭。
+          help: 允许对 HTML 实体做更激进的最短化处理，可进一步压缩；部分输出可能不完全符合严格校验规则，但主流浏览器通常仍可正确解析，因此默认关闭。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
           name: allowRemovingSpacesBetweenAttributes
@@ -732,4 +732,4 @@ spec:
           key: allowRemovingSpacesBetweenAttributes
           label: 允许移除属性间空格
           value: false
-          help: 在可能时移除属性之间的空格，可进一步缩短输出，但产物可能不完全符合规范校验，默认关闭。
+          help: 在可能时移除属性之间的空格，可进一步缩短输出；产物可能不完全符合规范校验，但主流浏览器通常仍可正确解析，因此默认关闭。
