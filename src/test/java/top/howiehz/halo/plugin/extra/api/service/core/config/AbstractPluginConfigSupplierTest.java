@@ -40,7 +40,7 @@ class AbstractPluginConfigSupplierTest {
     }
 
     @Test
-    void shouldFallbackToDefaultConfigWhenFetcherIsEmpty() {
+    void shouldFallbackToFailSafeConfigWhenFetcherIsEmpty() {
         when(fetcher.fetch("test", TestConfig.class)).thenReturn(Mono.empty());
 
         TestConfig result = supplier.get().block();
@@ -60,7 +60,7 @@ class AbstractPluginConfigSupplierTest {
     }
 
     @Test
-    void shouldFallbackToDefaultConfigWhenFetcherFails() {
+    void shouldFallbackToFailSafeConfigWhenFetcherFails() {
         when(fetcher.fetch("test", TestConfig.class))
             .thenReturn(Mono.error(new RuntimeException("boom")));
 
@@ -86,7 +86,7 @@ class AbstractPluginConfigSupplierTest {
         }
 
         @Override
-        protected TestConfig defaultConfig() {
+        protected TestConfig fallbackConfig() {
             TestConfig config = new TestConfig();
             config.setName("default");
             return config;

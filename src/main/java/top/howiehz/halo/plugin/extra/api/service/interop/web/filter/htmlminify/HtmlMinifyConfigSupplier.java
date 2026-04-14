@@ -26,18 +26,7 @@ public class HtmlMinifyConfigSupplier extends AbstractPluginConfigSupplier<HtmlM
     }
 
     @Override
-    protected HtmlMinifyConfig defaultConfig() {
+    protected HtmlMinifyConfig fallbackConfig() {
         return new HtmlMinifyConfig();
-    }
-
-    @Override
-    protected HtmlMinifyConfig normalizeConfig(HtmlMinifyConfig config) {
-        if (config == null) {
-            return new HtmlMinifyConfig();
-        }
-        if (config.getExcludePaths() == null) {
-            config.setExcludePaths(new HtmlMinifyConfig().getExcludePaths());
-        }
-        return config;
     }
 }

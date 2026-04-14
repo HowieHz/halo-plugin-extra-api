@@ -28,7 +28,7 @@ public class PanguConfigSupplier extends AbstractPluginConfigSupplier<PanguConfi
     }
 
     @Override
-    protected PanguConfig defaultConfig() {
+    protected PanguConfig fallbackConfig() {
         return new PanguConfig();
     }
 }

@@ -1,47 +1,35 @@
 package top.howiehz.halo.plugin.extra.api.service.interop.web.filter.htmlminify;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import in.wilsonl.minifyhtml.Configuration;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class HtmlMinifyServiceTest {
     private final HtmlMinifyService service = new HtmlMinifyService();
 
     @Test
-    void shouldUseSafeDefaultsForNoncompliantOptions() {
+    void shouldUseJavaTypeDefaultsWithoutSchemaValues() {
         HtmlMinifyConfig config = new HtmlMinifyConfig();
 
         assertFalse(config.isAllowNoncompliantUnquotedAttributeValues());
         assertFalse(config.isAllowOptimalEntities());
         assertFalse(config.isAllowRemovingSpacesBetweenAttributes());
         assertFalse(config.isMinifyDoctype());
-        assertTrue(config.getExcludePaths().containsAll(List.of(
-            "/console/**",
-            "/uc/**",
-            "/login/**",
-            "/signup/**",
-            "/logout/**",
-            "/themes/**",
-            "/plugins/**",
-            "/actuator/**",
-            "/api/**",
-            "/apis/**",
-            "/upload/**"
-        )));
-        assertTrue(config.isKeepClosingTags());
-        assertTrue(config.isKeepComments());
-        assertTrue(config.isKeepHtmlAndHeadOpeningTags());
-        assertTrue(config.isKeepInputTypeTextAttr());
-        assertTrue(config.isKeepSsiComments());
-        assertTrue(config.isMinifyCss());
-        assertTrue(config.isMinifyJs());
-        assertTrue(config.isRemoveBangs());
-        assertTrue(config.isRemoveProcessingInstructions());
-        assertTrue(config.isPreserveBraceTemplateSyntax());
-        assertTrue(config.isPreserveChevronPercentTemplateSyntax());
+        assertFalse(config.isKeepClosingTags());
+        assertFalse(config.isKeepComments());
+        assertFalse(config.isKeepHtmlAndHeadOpeningTags());
+        assertFalse(config.isKeepInputTypeTextAttr());
+        assertFalse(config.isKeepSsiComments());
+        assertFalse(config.isMinifyCss());
+        assertFalse(config.isMinifyJs());
+        assertFalse(config.isRemoveBangs());
+        assertFalse(config.isRemoveProcessingInstructions());
+        assertFalse(config.isPreserveBraceTemplateSyntax());
+        assertFalse(config.isPreserveChevronPercentTemplateSyntax());
+        assertNull(config.getExcludePaths());
     }
 
     @Test
@@ -83,8 +71,12 @@ class HtmlMinifyServiceTest {
     }
 
     @Test
-    void shouldMinifyHtmlUsingConfiguredDefaults() {
+    void shouldMinifyHtmlUsingExplicitConfiguration() {
         HtmlMinifyConfig config = new HtmlMinifyConfig();
+        config.setKeepComments(true);
+        config.setMinifyCss(true);
+        config.setMinifyJs(true);
+        config.setPreserveBraceTemplateSyntax(true);
 
         String minified = service.minify(
             "<html><body><div>  Hello  </div><!-- comment --><style>body { color: red; }</style>"

@@ -23,21 +23,22 @@ public abstract class AbstractPluginConfigSupplier<T> implements Supplier<Mono<T
     public Mono<T> get() {
         return fetcher.fetch(configKey(), configType())
             .map(this::normalizeConfig)
-            .switchIfEmpty(Mono.fromSupplier(() -> normalizeConfig(defaultConfig())))
+            .switchIfEmpty(Mono.fromSupplier(() -> normalizeConfig(fallbackConfig())))
             .onErrorResume(error -> {
-                log.warn("Failed to fetch {} config, falling back to defaults", configKey(),
+                log.warn("Failed to fetch {} config, falling back to fail-safe config",
+                    configKey(),
                     error);
-                return Mono.just(normalizeConfig(defaultConfig()));
+                return Mono.just(normalizeConfig(fallbackConfig()));
             });
     }
 
     protected T normalizeConfig(T config) {
-        return config == null ? defaultConfig() : config;
+        return config == null ? fallbackConfig() : config;
     }
 
     protected abstract String configKey();
 
     protected abstract Class<T> configType();
 
-    protected abstract T defaultConfig();
+    protected abstract T fallbackConfig();
 }

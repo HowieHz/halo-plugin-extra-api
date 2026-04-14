@@ -25,7 +25,7 @@ public class ShikiConfigSupplier extends AbstractPluginConfigSupplier<ShikiConfi
     }
 
     @Override
-    protected ShikiConfig defaultConfig() {
+    protected ShikiConfig fallbackConfig() {
         return new ShikiConfig();
     }
 }

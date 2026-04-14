@@ -16,5 +16,5 @@ public class PanguConfig {
      * Whether to enable Pangu rendering.
      * 是否启用 Pangu 自动渲染。
      */
-    private boolean enabledPanguRender = true;
+    private boolean enabledPanguRender;
 }

@@ -17,6 +17,20 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import reactor.core.publisher.Mono;
 
 class HtmlMinifyWebFilterTest {
+    private static final List<String> DEFAULT_EXCLUDE_PATHS = List.of(
+        "/console/**",
+        "/uc/**",
+        "/login/**",
+        "/signup/**",
+        "/logout/**",
+        "/themes/**",
+        "/plugins/**",
+        "/actuator/**",
+        "/api/**",
+        "/apis/**",
+        "/upload/**"
+    );
+
     private HtmlMinifyConfig config;
     private HtmlMinifyWebFilter filter;
     private CountingHtmlMinifyService service;
@@ -25,6 +39,18 @@ class HtmlMinifyWebFilterTest {
     void setUp() {
         config = new HtmlMinifyConfig();
         config.setEnabledHtmlMinify(true);
+        config.setExcludePaths(DEFAULT_EXCLUDE_PATHS);
+        config.setKeepClosingTags(true);
+        config.setKeepComments(true);
+        config.setKeepHtmlAndHeadOpeningTags(true);
+        config.setKeepInputTypeTextAttr(true);
+        config.setKeepSsiComments(true);
+        config.setMinifyCss(true);
+        config.setMinifyJs(true);
+        config.setPreserveBraceTemplateSyntax(true);
+        config.setPreserveChevronPercentTemplateSyntax(true);
+        config.setRemoveBangs(true);
+        config.setRemoveProcessingInstructions(true);
         service = new CountingHtmlMinifyService();
         filter = new HtmlMinifyWebFilter(() -> Mono.just(config), service);
     }
