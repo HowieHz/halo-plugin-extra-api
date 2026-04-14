@@ -119,24 +119,24 @@ public class ShikiCacheMetrics {
     }
 
     /**
-         * Metrics snapshot record.
-         * 指标快照记录。
-         */
-        public record MetricsSnapshot(long cacheHits, long cacheMisses, long totalRequests,
-                                      double hitRatePercent, double missRatePercent,
-                                      long renderBatchCount, long totalRenderTimeMs,
-                                      double avgRenderTimeMs, long deduplicatedRequests,
-                                      long uptimeSeconds) {
+     * Metrics snapshot record.
+     * 指标快照记录。
+     */
+    public record MetricsSnapshot(long cacheHits, long cacheMisses, long totalRequests,
+                                  double hitRatePercent, double missRatePercent,
+                                  long renderBatchCount, long totalRenderTimeMs,
+                                  double avgRenderTimeMs, long deduplicatedRequests,
+                                  long uptimeSeconds) {
 
         @Override
-            public String toString() {
-                return String.format(
-                    "ShikiCacheMetrics{缓存命中=%d, 未命中=%d, 总请求=%d, 命中率=%.2f%%, "
-                        + "渲染批次=%d, 总耗时=%dms, 平均耗时=%.2fms, 去重节省=%d, 运行时间=%ds}",
-                    cacheHits, cacheMisses, totalRequests, hitRatePercent,
-                    renderBatchCount, totalRenderTimeMs, avgRenderTimeMs,
-                    deduplicatedRequests, uptimeSeconds
-                );
-            }
+        public String toString() {
+            return String.format(
+                "ShikiCacheMetrics{缓存命中=%d, 未命中=%d, 总请求=%d, 命中率=%.2f%%, "
+                    + "渲染批次=%d, 总耗时=%dms, 平均耗时=%.2fms, 去重节省=%d, 运行时间=%ds}",
+                cacheHits, cacheMisses, totalRequests, hitRatePercent,
+                renderBatchCount, totalRenderTimeMs, avgRenderTimeMs,
+                deduplicatedRequests, uptimeSeconds
+            );
         }
+    }
 }

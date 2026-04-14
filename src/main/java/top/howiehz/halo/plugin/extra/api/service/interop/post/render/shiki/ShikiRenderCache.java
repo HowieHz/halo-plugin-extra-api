@@ -324,13 +324,13 @@ public class ShikiRenderCache {
     }
 
     /**
-         * Cache entry with expiration time.
-         * 带过期时间的缓存条目。
-         */
-        private record CacheEntry(String html, Instant expiresAt) {
+     * Cache entry with expiration time.
+     * 带过期时间的缓存条目。
+     */
+    private record CacheEntry(String html, Instant expiresAt) {
 
         boolean isExpired() {
-                return Instant.now().isAfter(expiresAt);
-            }
+            return Instant.now().isAfter(expiresAt);
         }
+    }
 }
