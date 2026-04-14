@@ -96,7 +96,7 @@ public class HtmlMinifyConfig {
 
     /**
      * Preserve <% %> template syntax.
-     * 是否保留 <%%> 模板语法。
+     * 是否保留 <% %> 模板语法。
      */
     private boolean preserveChevronPercentTemplateSyntax;
 
