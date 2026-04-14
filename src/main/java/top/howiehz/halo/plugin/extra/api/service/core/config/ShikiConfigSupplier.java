@@ -1,9 +1,6 @@
 package top.howiehz.halo.plugin.extra.api.service.core.config;
 
-import java.util.function.Supplier;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 
 /**
@@ -11,18 +8,24 @@ import run.halo.app.plugin.ReactiveSettingFetcher;
  * Shiki 配置的供应器，以响应式方式获取设置。
  */
 @Component
-@RequiredArgsConstructor
-public class ShikiConfigSupplier implements Supplier<Mono<ShikiConfig>> {
-    private final ReactiveSettingFetcher fetcher;
+public class ShikiConfigSupplier extends AbstractPluginConfigSupplier<ShikiConfig> {
 
-    /**
-     * Get the Shiki configuration from plugin settings.
-     * 从插件设置中获取 Shiki 配置。
-     *
-     * @return Mono emitting the Shiki configuration / 发出 Shiki 配置的 Mono
-     */
+    public ShikiConfigSupplier(ReactiveSettingFetcher fetcher) {
+        super(fetcher);
+    }
+
     @Override
-    public Mono<ShikiConfig> get() {
-        return fetcher.fetch("shiki", ShikiConfig.class);
+    protected String configKey() {
+        return "shiki";
+    }
+
+    @Override
+    protected Class<ShikiConfig> configType() {
+        return ShikiConfig.class;
+    }
+
+    @Override
+    protected ShikiConfig fallbackConfig() {
+        return new ShikiConfig();
     }
 }

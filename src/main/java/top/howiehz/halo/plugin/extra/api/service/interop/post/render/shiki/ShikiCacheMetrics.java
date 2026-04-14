@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -123,41 +122,11 @@ public class ShikiCacheMetrics {
      * Metrics snapshot record.
      * 指标快照记录。
      */
-    @Getter
-    public static class MetricsSnapshot {
-        private final long cacheHits;
-        private final long cacheMisses;
-        private final long totalRequests;
-        private final double hitRatePercent;
-        private final double missRatePercent;
-        private final long renderBatchCount;
-        private final long totalRenderTimeMs;
-        private final double avgRenderTimeMs;
-        private final long deduplicatedRequests;
-        private final long uptimeSeconds;
-
-        public MetricsSnapshot(
-            long cacheHits,
-            long cacheMisses,
-            long totalRequests,
-            double hitRatePercent,
-            double missRatePercent,
-            long renderBatchCount,
-            long totalRenderTimeMs,
-            double avgRenderTimeMs,
-            long deduplicatedRequests,
-            long uptimeSeconds) {
-            this.cacheHits = cacheHits;
-            this.cacheMisses = cacheMisses;
-            this.totalRequests = totalRequests;
-            this.hitRatePercent = hitRatePercent;
-            this.missRatePercent = missRatePercent;
-            this.renderBatchCount = renderBatchCount;
-            this.totalRenderTimeMs = totalRenderTimeMs;
-            this.avgRenderTimeMs = avgRenderTimeMs;
-            this.deduplicatedRequests = deduplicatedRequests;
-            this.uptimeSeconds = uptimeSeconds;
-        }
+    public record MetricsSnapshot(long cacheHits, long cacheMisses, long totalRequests,
+                                  double hitRatePercent, double missRatePercent,
+                                  long renderBatchCount, long totalRenderTimeMs,
+                                  double avgRenderTimeMs, long deduplicatedRequests,
+                                  long uptimeSeconds) {
 
         @Override
         public String toString() {

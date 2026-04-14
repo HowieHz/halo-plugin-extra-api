@@ -1,7 +1,6 @@
 package top.howiehz.halo.plugin.extra.api.service.core.post.render.pangu.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;

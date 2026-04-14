@@ -9,18 +9,17 @@ import lombok.Data;
  */
 @Data
 public class ShikiConfig {
-
     /**
      * Whether to enable Shiki rendering.
      * 是否启用 Shiki 渲染。
      */
-    private boolean enabledShikiRender = true;
+    private boolean enabledShikiRender;
 
     /**
      * Whether to enable double render mode (light and dark themes).
      * 是否启用双渲染模式（浅色和深色主题）。
      */
-    private boolean enabledDoubleRenderMode = false;
+    private boolean enabledDoubleRenderMode;
 
     /**
      * Extra paths where CSS styles should be injected.

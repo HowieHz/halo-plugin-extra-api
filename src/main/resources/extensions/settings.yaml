@@ -13,7 +13,7 @@ spec:
           key: enabledPanguRender
           label: 自动渲染
           help: 启用之后会自动处理文章和单页中段落标签的中英文混排格式，在中日韩字符与英文、数字、符号之间自动插入空格。注：Finder API 渲染不受此配置项影响。
-          value: true
+          value: false
     - group: jsEnginePool
       label: JS 引擎池配置（重启生效）（仅全量版可用）
       formSchema:
@@ -556,3 +556,180 @@ spec:
               value: vitesse-dark
             - label: Vitesse Light（light）
               value: vitesse-light
+    - group: htmlMinify
+      label: HTML 页面压缩（仅全量版可用）
+      formSchema:
+        - $formkit: switch
+          name: enabledHtmlMinify
+          id: enabledHtmlMinify
+          key: enabledHtmlMinify
+          label: 自动压缩
+          value: false
+          help: 启用后，服务端会对前台 HTML 页面响应进行整体压缩。该功能基于 Halo 的附加 Web 过滤器扩展点（AdditionalWebFilter）实现，需要完整读取并重写 HTML 响应内容，因此会带来一定的 CPU 和内存开销。
+        - $formkit: select
+          if: $get(enabledHtmlMinify).value
+          name: excludePaths
+          id: excludePaths
+          key: excludePaths
+          label: 排除路径规则
+          autoSelect: false
+          allowCreate: true
+          clearable: true
+          multiple: true
+          searchable: true
+          value:
+            - /console/**
+            - /uc/**
+            - /login/**
+            - /signup/**
+            - /logout/**
+            - /themes/**
+            - /plugins/**
+            - /actuator/**
+            - /api/**
+            - /apis/**
+            - /upload/**
+          options:
+            - label: 控制台（/console/**）
+              value: /console/**
+            - label: 用户中心（/uc/**）
+              value: /uc/**
+            - label: 登录（/login/**）
+              value: /login/**
+            - label: 注册（/signup/**）
+              value: /signup/**
+            - label: 退出登录（/logout/**）
+              value: /logout/**
+            - label: 主题资源（/themes/**）
+              value: /themes/**
+            - label: 插件资源（/plugins/**）
+              value: /plugins/**
+            - label: 监控（/actuator/**）
+              value: /actuator/**
+            - label: Halo 核心 API（/api/**）
+              value: /api/**
+            - label: Halo 扩展 API（/apis/**）
+              value: /apis/**
+            - label: 上传资源（/upload/**）
+              value: /upload/**
+          help: 命中这些 Ant 风格路径规则的请求不会进入 HTML 压缩链路。支持 * 和 ** 通配符；默认值为当前内置的后台、资源和 API 路径。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: minifyCss
+          id: minifyCss
+          key: minifyCss
+          label: 压缩内联 CSS
+          value: true
+          help: 压缩 style 标签和 style 属性中的 CSS 代码，可减少页面体积。关闭后会保留原始 CSS 内容。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: minifyJs
+          id: minifyJs
+          key: minifyJs
+          label: 压缩内联 JavaScript
+          value: true
+          help: 压缩 script 标签中的 JavaScript 代码，可进一步减少页面体积。关闭后会保留原始脚本内容。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: preserveBraceTemplateSyntax
+          id: preserveBraceTemplateSyntax
+          key: preserveBraceTemplateSyntax
+          label: 保留花括号模板语法
+          value: false
+          help: "遇到 {{ }}, {% %}, {# #} 这类模板片段时保持原样输出，避免误压缩服务端或静态站点模板语法。"
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: preserveChevronPercentTemplateSyntax
+          id: preserveChevronPercentTemplateSyntax
+          key: preserveChevronPercentTemplateSyntax
+          label: 保留 <% %> 模板语法
+          value: false
+          help: 遇到 <% %> 片段时保持原样输出，适用于 JSP、EJS、ERB 等使用该模板分隔符的场景。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: keepClosingTags
+          id: keepClosingTags
+          key: keepClosingTags
+          label: 保留可省略闭合标签
+          value: false
+          help: 开启后会保留原本可以省略的闭合标签，例如部分 li、p 等标签的结束标签。关闭时压缩率更高。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: keepComments
+          id: keepComments
+          key: keepComments
+          label: 保留 HTML 注释
+          value: false
+          help: 开启后会保留普通 HTML 注释。关闭时会移除这些注释，以减少页面体积。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: keepHtmlAndHeadOpeningTags
+          id: keepHtmlAndHeadOpeningTags
+          key: keepHtmlAndHeadOpeningTags
+          label: 保留 html/head 起始标签
+          value: false
+          help: 开启后会保留无属性时原本可省略的 html 和 head 起始标签。关闭时压缩率更高。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: keepInputTypeTextAttr
+          id: keepInputTypeTextAttr
+          key: keepInputTypeTextAttr
+          label: 保留 input[type=text] 属性
+          value: false
+          help: 开启后会保留 input 元素默认的 type=text 属性。关闭时会移除这类默认值以减少输出长度。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: keepSsiComments
+          id: keepSsiComments
+          key: keepSsiComments
+          label: 保留 SSI 注释
+          value: false
+          help: 开启后会保留服务器端包含（SSI）注释。若你的页面或上游代理依赖 SSI，请启用此项。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: removeBangs
+          id: removeBangs
+          key: removeBangs
+          label: 移除 <! ... > 特殊声明
+          value: false
+          help: 开启后会移除普通 <! ... > 形式的特殊声明（Bang）；IE 条件注释就属于此类。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: removeProcessingInstructions
+          id: removeProcessingInstructions
+          key: removeProcessingInstructions
+          label: 移除处理指令
+          value: false
+          help: 开启后会移除处理指令，例如 <?...?> 这类内容。若页面输出链路中可能出现 PHP 或其他处理指令，建议保持关闭。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: minifyDoctype
+          id: minifyDoctype
+          key: minifyDoctype
+          label: 压缩 DOCTYPE
+          value: false
+          help: 开启后会压缩 DOCTYPE 声明，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: allowNoncompliantUnquotedAttributeValues
+          id: allowNoncompliantUnquotedAttributeValues
+          key: allowNoncompliantUnquotedAttributeValues
+          label: 允许非规范无引号属性值
+          value: false
+          help: 允许输出包含 WHATWG 规范不允许字符的无引号属性值，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: allowOptimalEntities
+          id: allowOptimalEntities
+          key: allowOptimalEntities
+          label: 允许更激进的实体优化
+          value: false
+          help: 允许对 HTML 实体做更激进的最短化处理，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。
+        - $formkit: switch
+          if: $get(enabledHtmlMinify).value
+          name: allowRemovingSpacesBetweenAttributes
+          id: allowRemovingSpacesBetweenAttributes
+          key: allowRemovingSpacesBetweenAttributes
+          label: 允许移除属性间空格
+          value: false
+          help: 在可能时移除属性之间的空格，可进一步压缩。启用此选项后生成的 HTML 可能无法完全通过校验，因此此选项默认关闭。但根据 WHATWG 的解析规范，这些 HTML 依然会被正确解析和渲染；同时主流浏览器（Firefox、Chrome、Safari）引擎都实现了这套规范。

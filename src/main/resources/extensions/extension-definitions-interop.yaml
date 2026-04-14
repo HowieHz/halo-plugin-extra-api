@@ -27,3 +27,13 @@ spec:
   className: top.howiehz.halo.plugin.extra.api.service.interop.post.render.shiki.ShikiHeadProcessor
   displayName: "ExtraAPI Shiki 头部处理器"
   description: "为使用 Shiki 渲染的页面注入 CSS 样式"
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: extra-api-html-minify-web-filter
+spec:
+  extensionPointName: additional-webfilter
+  className: top.howiehz.halo.plugin.extra.api.service.interop.web.filter.htmlminify.HtmlMinifyWebFilter
+  displayName: "ExtraAPI HTML 页面压缩过滤器"
+  description: "在服务端对 HTML 页面响应执行 minify-html 压缩"
