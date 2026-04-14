@@ -565,7 +565,7 @@ spec:
           key: enabledHtmlMinify
           label: 自动压缩
           value: false
-          help: 启用之后会在服务端对前台 HTML 页面响应做整体压缩。该能力通过 AdditionalWebFilter 完整读取并重写 HTML 响应体实现，会带来一定的 CPU 与内存开销。
+          help: 启用之后会在服务端对前台 HTML 页面响应做整体压缩。该能力通过 Halo 的附加 Web 过滤器扩展点（AdditionalWebFilter）完整读取并重写 HTML 响应体实现，会带来一定的 CPU 与内存开销。
         - $formkit: select
           if: $get(enabledHtmlMinify).value
           name: excludePaths

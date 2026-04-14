@@ -207,7 +207,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
     - 解释：轻量版时返回 true，全量版时返回 false
 - `getVersionType()`
     - 类型：`string`
-    - 解释：返回 "full" 或 "lite"
+    - 解释：返回 `"full"`（全量版）或 `"lite"`（轻量版）
 - `isJavaScriptAvailable()`
     - 类型：`boolean`
     - 解释：JavaScript 功能可用时返回 true
@@ -217,7 +217,7 @@ extraApiPluginInfoFinder.isJavaScriptAvailable()
 - 检测原理
     - 通过检查 `V8EnginePoolService` 类是否存在来判断版本类型：
         - 全量版：包含 JavaScript 运行时，V8EnginePoolService 类存在
-        - 轻量版：构建时排除 interop 包下所有类，V8EnginePoolService 类不存在
+        - 轻量版：构建时排除原生运行时相关包（`interop` 包）下所有类，`V8EnginePoolService` 类不存在
 - 应用场景
     - 主题兼容性：主题可以根据插件版本提供不同的功能体验
     - 用户提示：向用户说明当前版本的功能限制
@@ -754,7 +754,7 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
     - 压缩失败时自动回退原始 HTML，不影响页面正常返回
 - 性能说明：
     - 处理器会完整读取并重写 HTML 响应体，因此会带来一定 CPU 与内存开销
-    - 压缩工作已切换到 Reactor 的 `boundedElastic` 调度线程，避免阻塞请求线程
+    - 压缩工作会切换到 Reactor 的弹性线程池（`boundedElastic`），避免阻塞请求线程
     - 更适合体积较大、访问量稳定、希望进一步压缩 HTML 传输体积的站点
 
 #### 配置选项

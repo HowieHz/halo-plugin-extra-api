@@ -52,10 +52,10 @@ pnpm dev
 
 - 相关实现：
   - `src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/web/filter/htmlminify/HtmlMinifyWebFilter.java`
-- 当前 HTML 页面压缩功能依赖 `AdditionalWebFilter` 完整读取并重写响应体。
+- 当前 HTML 页面压缩功能依赖 Halo 的附加 Web 过滤器扩展点（`AdditionalWebFilter`）完整读取并重写响应体。
 - 这意味着在压缩前必须先聚合完整 HTML body，再交给 `minify-html` 处理。
 - 因此该功能天然会带来一次额外的内存占用和复制成本，无法像真正的流式转换那样边读边压。
-- 这不是当前实现的疏漏，而是 `AdditionalWebFilter` 接入方式和 `minify-html` API 形态共同决定的限制。
+- 这不是当前实现的疏漏，而是 Halo 附加 Web 过滤器扩展点（`AdditionalWebFilter`）的接入方式和 `minify-html` API 形态共同决定的限制。
 
 ## 如何添加新的嵌入式 JS 模块
 
