@@ -635,7 +635,7 @@ spec:
           id: preserveBraceTemplateSyntax
           key: preserveBraceTemplateSyntax
           label: 保留花括号模板语法
-          value: true
+          value: false
           help: "遇到 {{ }}, {% %}, {# #} 这类模板片段时保持原样输出，避免误压缩服务端或静态站点模板语法。"
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -643,7 +643,7 @@ spec:
           id: preserveChevronPercentTemplateSyntax
           key: preserveChevronPercentTemplateSyntax
           label: 保留 <% %> 模板语法
-          value: true
+          value: false
           help: 遇到 <% %> 片段时保持原样输出，适用于 JSP、EJS、ERB 等使用该模板分隔符的场景。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -651,7 +651,7 @@ spec:
           id: keepClosingTags
           key: keepClosingTags
           label: 保留可省略闭合标签
-          value: true
+          value: false
           help: 开启后会保留原本可以省略的闭合标签，例如部分 li、p 等标签的结束标签。关闭时压缩率更高。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -659,7 +659,7 @@ spec:
           id: keepComments
           key: keepComments
           label: 保留 HTML 注释
-          value: true
+          value: false
           help: 开启后会保留普通 HTML 注释。关闭时会移除这些注释，以减少页面体积。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -667,7 +667,7 @@ spec:
           id: keepHtmlAndHeadOpeningTags
           key: keepHtmlAndHeadOpeningTags
           label: 保留 html/head 起始标签
-          value: true
+          value: false
           help: 开启后会保留无属性时原本可省略的 html 和 head 起始标签。关闭时压缩率更高。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -675,7 +675,7 @@ spec:
           id: keepInputTypeTextAttr
           key: keepInputTypeTextAttr
           label: 保留 input[type=text] 属性
-          value: true
+          value: false
           help: 开启后会保留 input 元素默认的 type=text 属性。关闭时会移除这类默认值以减少输出长度。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -683,7 +683,7 @@ spec:
           id: keepSsiComments
           key: keepSsiComments
           label: 保留 SSI 注释
-          value: true
+          value: false
           help: 开启后会保留服务器端包含（SSI）注释。若你的页面或上游代理依赖 SSI，请启用此项。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -691,7 +691,7 @@ spec:
           id: removeBangs
           key: removeBangs
           label: 移除 Bang 声明
-          value: true
+          value: false
           help: 开启后会移除普通 bang 声明，如 <!something> 这类内容。通常可安全减少页面体积。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
@@ -699,7 +699,7 @@ spec:
           id: removeProcessingInstructions
           key: removeProcessingInstructions
           label: 移除处理指令
-          value: true
+          value: false
           help: 开启后会移除处理指令，例如 <?...?> 这类内容。若页面输出链路中可能出现 PHP 或其他处理指令，建议保持关闭。
         - $formkit: switch
           if: $get(enabledHtmlMinify).value
