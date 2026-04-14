@@ -1,7 +1,7 @@
 package top.howiehz.halo.plugin.extra.api.service.core.config;
 
-import lombok.Data;
 import java.util.List;
+import lombok.Data;
 
 /**
  * Configuration class for Shiki code highlighting.

@@ -1,7 +1,6 @@
 package top.howiehz.halo.plugin.extra.api.service.interop.web.filter.htmlminify;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;

@@ -150,9 +150,9 @@ public class ShikiRenderCodeService {
         if (log.isDebugEnabled()) {
             ShikiCacheMetrics.MetricsSnapshot snapshot = metrics.getSnapshot();
             log.debug("Shiki 渲染统计: 缓存命中率={}%, 去重节省={}, 平均耗时={}ms, 缓存大小={}",
-                String.format("%.1f", snapshot.getHitRatePercent()),
-                snapshot.getDeduplicatedRequests(),
-                String.format("%.1f", snapshot.getAvgRenderTimeMs()), renderCache.size());
+                String.format("%.1f", snapshot.hitRatePercent()),
+                snapshot.deduplicatedRequests(),
+                String.format("%.1f", snapshot.avgRenderTimeMs()), renderCache.size());
         }
 
         // 批量应用高亮结果 - 使用两阶段 DOM 操作减少性能开销
