@@ -64,6 +64,11 @@ configurations {
     javetAllPlatforms {
         extendsFrom configurations.runtimeClasspath
     }
+    liteRuntimeClasspath {
+        extendsFrom configurations.runtimeClasspath
+        exclude group: 'com.caoccao.javet'
+        exclude group: 'in.wilsonl.minifyhtml', module: 'minify-html'
+    }
 }
 
 dependencies.add('javetAllPlatforms', 'com.caoccao.javet:javet:5.0.6')
@@ -80,6 +85,7 @@ dependencies {
     
     // JavaScript 引擎 - 为什么选择 Javet：支持 Node.js 模块，性能好，维护活跃
     implementation 'com.caoccao.javet:javet:5.0.6'
+    implementation 'in.wilsonl.minifyhtml:minify-html:0.18.1'
     
     // Pangu - 自动在中日韩字符和英文、数字、符号之间添加空格，提升可读性
     implementation 'ws.vinta:pangu:1.1.0'
@@ -245,10 +251,8 @@ afterEvaluate {
             exclude 'js/**'
             exclude 'extensions/extension-definitions*.yaml' // 变体扩展定义由专门任务生成
         }
-        // 排除 Javet 依赖 - 轻量版不需要 interop 运行时，减少 JAR 大小
-        from configurations.runtimeClasspath.filter { 
-            !it.name.contains('javet')
-        }.collect { 
+        // 排除部分依赖 - 轻量版不需要 interop 运行时，减少 JAR 大小
+        from configurations.liteRuntimeClasspath.collect {
             it.isDirectory() ? it : zipTree(it)
         }
         into('extensions') {

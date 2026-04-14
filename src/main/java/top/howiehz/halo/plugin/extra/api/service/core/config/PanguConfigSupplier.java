@@ -1,9 +1,6 @@
 package top.howiehz.halo.plugin.extra.api.service.core.config;
 
-import java.util.function.Supplier;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 
 /**
@@ -14,19 +11,24 @@ import run.halo.app.plugin.ReactiveSettingFetcher;
  * @since 1.0.0
  */
 @Component
-@RequiredArgsConstructor
-public class PanguConfigSupplier implements Supplier<Mono<PanguConfig>> {
-    private final ReactiveSettingFetcher fetcher;
+public class PanguConfigSupplier extends AbstractPluginConfigSupplier<PanguConfig> {
 
-    /**
-     * Get the Pangu configuration from plugin settings.
-     * 从插件设置中获取 Pangu 配置。
-     *
-     * @return Mono emitting the Pangu configuration / 发出 Pangu 配置的 Mono
-     */
+    public PanguConfigSupplier(ReactiveSettingFetcher fetcher) {
+        super(fetcher);
+    }
+
     @Override
-    public Mono<PanguConfig> get() {
-        return fetcher.fetch("pangu", PanguConfig.class)
-            .defaultIfEmpty(new PanguConfig());
+    protected String configKey() {
+        return "pangu";
+    }
+
+    @Override
+    protected Class<PanguConfig> configType() {
+        return PanguConfig.class;
+    }
+
+    @Override
+    protected PanguConfig defaultConfig() {
+        return new PanguConfig();
     }
 }
