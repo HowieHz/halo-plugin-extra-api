@@ -16,6 +16,8 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import reactor.core.publisher.Mono;
 
 class HtmlMinifyWebFilterTest {
+    private static final MediaType UTF_8_HTML = new MediaType("text", "html",
+        StandardCharsets.UTF_8);
     private static final List<String> DEFAULT_EXCLUDE_PATHS = List.of(
         "/console/**",
         "/uc/**",
@@ -64,7 +66,7 @@ class HtmlMinifyWebFilterTest {
 
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div><!-- comment --></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -89,7 +91,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             response.getHeaders().set("Content-Encoding", "gzip");
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div></body></html>"
@@ -114,7 +116,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -138,7 +140,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -163,7 +165,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -188,7 +190,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -227,6 +229,30 @@ class HtmlMinifyWebFilterTest {
     }
 
     @Test
+    void shouldSkipHtmlResponsesWithoutExplicitCharset() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/demo")
+                .accept(MediaType.TEXT_HTML)
+                .build()
+        );
+
+        filter.filter(exchange, decoratedExchange -> {
+            var response = decoratedExchange.getResponse();
+            response.setStatusCode(HttpStatus.OK);
+            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            var body = response.bufferFactory()
+                .wrap("<html><body><div>  Hello  </div></body></html>"
+                    .getBytes(StandardCharsets.UTF_8));
+            return response.writeWith(Mono.just(body));
+        }).block();
+
+        String result = exchange.getResponse().getBodyAsString().block();
+
+        assertEquals("<html><body><div>  Hello  </div></body></html>", result);
+        assertEquals(0, service.minifyCount.get());
+    }
+
+    @Test
     void shouldNotInvokeMinifierWhenFeatureDisabled() {
         config.setEnabledHtmlMinify(false);
         MockServerWebExchange exchange = MockServerWebExchange.from(
@@ -238,7 +264,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div><!-- comment --></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -262,7 +288,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div><!-- comment --></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
@@ -296,7 +322,7 @@ class HtmlMinifyWebFilterTest {
         filter.filter(exchange, decoratedExchange -> {
             var response = decoratedExchange.getResponse();
             response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.TEXT_HTML);
+            response.getHeaders().setContentType(UTF_8_HTML);
             var body = response.bufferFactory()
                 .wrap("<html><body><div>  Hello  </div></body></html>"
                     .getBytes(StandardCharsets.UTF_8));
