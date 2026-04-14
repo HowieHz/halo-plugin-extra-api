@@ -1,7 +1,5 @@
 package top.howiehz.halo.plugin.extra.api.service.interop.web.filter.htmlminify;
 
-import static org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers;
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Supplier;
@@ -17,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
@@ -38,30 +35,25 @@ import run.halo.app.security.AdditionalWebFilter;
 public class HtmlMinifyWebFilter implements AdditionalWebFilter {
     private final Supplier<Mono<HtmlMinifyConfig>> htmlMinifyConfigSupplier;
     private final HtmlMinifyService htmlMinifyService;
-    private final ServerWebExchangeMatcher htmlCandidateRequestMatcher =
-        pathMatchers(HttpMethod.GET, "/**");
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
     private final Scheduler scheduler = Schedulers.boundedElastic();
 
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange,
         @NonNull WebFilterChain chain) {
-        return htmlCandidateRequestMatcher.matches(exchange)
-            .flatMap(matchResult -> {
-                if (!matchResult.isMatch()) {
+        if (exchange.getRequest().getMethod() != HttpMethod.GET) {
+            return chain.filter(exchange);
+        }
+        return htmlMinifyConfigSupplier.get()
+            .flatMap(config -> {
+                String path = exchange.getRequest().getPath().value();
+                if (!config.isEnabledHtmlMinify() || isExcludedPath(path, config)) {
                     return chain.filter(exchange);
                 }
-                return htmlMinifyConfigSupplier.get()
-                    .flatMap(config -> {
-                        String path = exchange.getRequest().getPath().value();
-                        if (!config.isEnabledHtmlMinify() || isExcludedPath(path, config)) {
-                            return chain.filter(exchange);
-                        }
-                        var decoratedExchange = exchange.mutate()
-                            .response(new HtmlMinifyResponseDecorator(exchange, config))
-                            .build();
-                        return chain.filter(decoratedExchange);
-                    });
+                var decoratedExchange = exchange.mutate()
+                    .response(new HtmlMinifyResponseDecorator(exchange, config))
+                    .build();
+                return chain.filter(decoratedExchange);
             });
     }
 

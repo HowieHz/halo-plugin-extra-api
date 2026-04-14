@@ -43,6 +43,35 @@ def platforms = [
     'Windows-x86_64': ['windows-x86_64']
 ]
 
+def minifyHtmlNativeLibsByVariant = [
+    'Linux-arm64'   : 'linux-aarch64.nativelib',
+    'Linux-x86_64'  : 'linux-x64.nativelib',
+    'Macos-arm64'   : 'mac-aarch64.nativelib',
+    'Macos-x86_64'  : 'mac-x64.nativelib',
+    'Windows-x86_64': 'win-x64.nativelib'
+]
+
+def runtimeClasspathTrees = { configuration, String selectedMinifyHtmlNativeLib = null ->
+    configuration.resolvedConfiguration.resolvedArtifacts.collect { artifact ->
+        def artifactFile = artifact.file
+        if (artifactFile.isDirectory()) {
+            return artifactFile
+        }
+        def artifactTree = zipTree(artifactFile)
+        if (artifact.moduleVersion.id.group == 'in.wilsonl.minifyhtml'
+            && artifact.name == 'minify-html'
+            && selectedMinifyHtmlNativeLib != null) {
+            return artifactTree.matching {
+                exclude { details ->
+                    details.path.endsWith('.nativelib')
+                        && details.path != selectedMinifyHtmlNativeLib
+                }
+            }
+        }
+        return artifactTree
+    }
+}
+
 // 为每个平台创建专用配置，继承 runtimeClasspath 以保证依赖一致性
 platforms.each { variant, platformList ->
     configurations.create("javet${variant}") {
@@ -280,9 +309,7 @@ afterEvaluate {
             exclude 'extensions/extension-definitions-core.yaml'
             exclude 'extensions/extension-definitions-interop.yaml'
         }
-        from configurations.javetAllPlatforms.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
+        from(runtimeClasspathTrees(configurations.javetAllPlatforms))
         into('extensions') {
             from generateFullExtensionDefinitionsTask
             rename { 'extension-definitions.yaml' }
@@ -303,6 +330,7 @@ afterEvaluate {
         def configName = "javet${variant}"
         def archiveName = "extra-api-full-${variant.toLowerCase()}-${project.version}.jar"
         def indexTaskName = "generatePluginComponentsIdx${taskName.capitalize()}"
+        def minifyHtmlNativeLib = minifyHtmlNativeLibsByVariant[variant]
         
         tasks.register(taskName, Jar) {
             group = 'build'
@@ -313,9 +341,7 @@ afterEvaluate {
                 exclude 'extensions/extension-definitions-core.yaml'
                 exclude 'extensions/extension-definitions-interop.yaml'
             }
-            from configurations.getByName(configName).collect {
-                it.isDirectory() ? it : zipTree(it)
-            }
+            from(runtimeClasspathTrees(configurations.getByName(configName), minifyHtmlNativeLib))
             into('extensions') {
                 from generateFullExtensionDefinitionsTask
                 rename { 'extension-definitions.yaml' }
