@@ -606,9 +606,9 @@ spec:
               value: /plugins/**
             - label: 监控（/actuator/**）
               value: /actuator/**
-            - label: 兼容 API（/api/**）
+            - label: Halo 核心 API（/api/**）
               value: /api/**
-            - label: Halo API（/apis/**）
+            - label: Halo 扩展 API（/apis/**）
               value: /apis/**
             - label: 上传资源（/upload/**）
               value: /upload/**
