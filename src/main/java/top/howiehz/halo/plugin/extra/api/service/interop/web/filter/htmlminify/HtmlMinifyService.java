@@ -23,10 +23,10 @@ public class HtmlMinifyService {
         if (html == null || html.isBlank()) {
             return html;
         }
-        return MinifyHtml.minify(html, toNativeConfiguration(config));
+        return MinifyHtml.minify(html, buildNativeConfiguration(config));
     }
 
-    Configuration toNativeConfiguration(HtmlMinifyConfig config) {
+    private Configuration buildNativeConfiguration(HtmlMinifyConfig config) {
         return new Configuration.Builder()
             .setAllowNoncompliantUnquotedAttributeValues(
                 config.isAllowNoncompliantUnquotedAttributeValues())

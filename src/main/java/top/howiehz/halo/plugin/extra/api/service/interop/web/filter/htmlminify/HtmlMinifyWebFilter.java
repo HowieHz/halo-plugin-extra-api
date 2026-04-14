@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
-import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -39,14 +38,15 @@ import run.halo.app.security.AdditionalWebFilter;
 public class HtmlMinifyWebFilter implements AdditionalWebFilter {
     private final Supplier<Mono<HtmlMinifyConfig>> htmlMinifyConfigSupplier;
     private final HtmlMinifyService htmlMinifyService;
-    private final ServerWebExchangeMatcher requestMatcher = createRequestMatcher();
+    private final ServerWebExchangeMatcher htmlCandidateRequestMatcher =
+        pathMatchers(HttpMethod.GET, "/**");
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
     private final Scheduler scheduler = Schedulers.boundedElastic();
 
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange,
         @NonNull WebFilterChain chain) {
-        return requestMatcher.matches(exchange)
+        return htmlCandidateRequestMatcher.matches(exchange)
             .flatMap(matchResult -> {
                 if (!matchResult.isMatch()) {
                     return chain.filter(exchange);
@@ -63,11 +63,6 @@ public class HtmlMinifyWebFilter implements AdditionalWebFilter {
                         return chain.filter(decoratedExchange);
                     });
             });
-    }
-
-    ServerWebExchangeMatcher createRequestMatcher() {
-        var pathMatcher = pathMatchers(HttpMethod.GET, "/**");
-        return new AndServerWebExchangeMatcher(pathMatcher);
     }
 
     boolean isExcludedPath(String path, HtmlMinifyConfig config) {

@@ -44,6 +44,30 @@ pnpm dev
 
 构建完成后，可以在 `build/libs` 目录找到插件 jar 文件。
 
+## 已知问题
+
+以下问题属于当前架构和上游依赖形态带来的限制，开发时需要明确认知。
+
+### HTML 页面压缩的响应体改写不是流式的
+
+- 相关实现：
+  - `src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/web/filter/htmlminify/HtmlMinifyWebFilter.java`
+- 当前 HTML 页面压缩功能依赖 `AdditionalWebFilter` 完整读取并重写响应体。
+- 这意味着在压缩前必须先聚合完整 HTML body，再交给 `minify-html` 处理。
+- 因此该功能天然会带来一次额外的内存占用和复制成本，无法像真正的流式转换那样边读边压。
+- 这不是当前实现的疏漏，而是 `AdditionalWebFilter` 接入方式和 `minify-html` API 形态共同决定的限制。
+
+### minify-html 依赖无法按平台进一步瘦身
+
+- 相关构建配置：
+  - `build.gradle`
+- 当前使用的 `in.wilsonl.minifyhtml:minify-html` 是上游发布的多平台 JNI artifact。
+- 即使本项目已经对 Javet 做了平台拆分，全量版的 `minify-html` 依赖仍会整体进入 full 包，不能像 Javet 一样按 OS / architecture 单独裁剪。
+- 如果后续需要进一步压缩 full 包体积，只能考虑：
+  - 替换上游依赖
+  - 自行重打包 JNI 产物
+  - 或在构建层单独维护平台化分发方案
+
 ## 如何添加新的嵌入式 JS 模块
 
 本项目将 JavaScript 工具嵌入到 Java 运行时中，并将其预加载到 Javet V8 运行时中。按照以下步骤添加对新 JS 模块的支持。
