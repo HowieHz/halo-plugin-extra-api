@@ -1,6 +1,5 @@
 package top.howiehz.halo.plugin.extra.api.finder.core.impl;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -17,7 +16,6 @@ import top.howiehz.halo.plugin.extra.api.finder.core.ExtraApiPluginInfoFinder;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @Finder("extraApiPluginInfoFinder")
 public class ExtraApiPluginInfoFinderImpl implements ExtraApiPluginInfoFinder {
 

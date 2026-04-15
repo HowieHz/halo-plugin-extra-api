@@ -3,7 +3,6 @@ package top.howiehz.halo.plugin.extra.api.service.core.post.stats.impl;
 import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,6 @@ import top.howiehz.halo.plugin.extra.api.service.core.post.stats.PostStatsDataCa
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class PostStatsDataCacheManagerImpl implements PostStatsDataCacheManager {
 
     final ConcurrentHashMap<String, BigInteger> releasePostWordCounts = new ConcurrentHashMap<>();
