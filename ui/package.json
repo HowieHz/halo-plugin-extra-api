@@ -17,9 +17,9 @@
         "watch:rsbuild": "rsbuild build --watch --env-mode=development"
     },
     "dependencies": {
-        "@halo-dev/api-client": "^2.23.0",
-        "@halo-dev/components": "^2.23.0",
-        "@halo-dev/ui-shared": "^2.23.0",
+        "@halo-dev/api-client": "^2.24.0",
+        "@halo-dev/components": "^2.24.0",
+        "@halo-dev/ui-shared": "^2.24.0",
         "axios": "^1.15.0",
         "canvas-confetti": "^1.9.4",
         "husky": "^9.1.7",
