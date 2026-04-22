@@ -4,7 +4,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/total)
 ![GitHub release (latest by date)](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/latest/total)
 ![GitHub repo size](https://img.shields.io/github/repo-size/HowieHz/halo-plugin-extra-api)
-[![Halo Version](https://img.shields.io/badge/Halo-2.22.0+-brightgreen.svg)](https://halo.run)
+[![Halo Version](https://img.shields.io/badge/Halo-2.24.0+-brightgreen.svg)](https://halo.run)
 
 ## 简介
 
