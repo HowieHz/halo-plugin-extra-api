@@ -790,13 +790,15 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 
 ### 全量版已知问题
 
-- 问题一：卸载后重新安装全量版插件，不重启就启用。调用 JS 相关 API 时会出现错误：
-    - **首次安装并启动**: 正常工作
-    - **禁用后重新启用**: 正常工作
-    - **卸载后重新安装**: ❌ 会出现 `JavetException: Javet library is not loaded` 错误
-    - **重启 Halo 后**: 恢复正常工作
+#### 问题一
 
-#### 问题一解决方案
+卸载后重新安装全量版插件，不重启就启用。调用 JS 相关 API 时会出现错误：
+- **首次安装并启动**: 正常工作
+- **禁用后重新启用**: 正常工作
+- **卸载后重新安装**: ❌ 会出现 `JavetException: Javet library is not loaded` 错误
+- **重启 Halo 后**: 恢复正常工作
+
+##### 解决方案
 
 安装好新版本插件后**先别启用**！   
 在启用新版本插件之前，请**先重启 Halo CMS**。
@@ -810,25 +812,25 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 
 **问题根源**:
 
-1. **Halo 插件架构**: 根据 [Halo 开发文档 - 插件架构](https://docs.halo.run/developer-guide/core/framework), Halo 使用
+1. Halo 插件架构: 根据 [Halo 开发文档 - 插件架构](https://docs.halo.run/developer-guide/core/framework), Halo 使用
    Spring Plugin Framework 实现插件隔离
     - 每个插件拥有独立的 Spring ApplicationContext
     - 每个插件使用独立的 classloader 加载资源
     - 插件间通过 ExtensionPoint 机制通信
     - classloader 完全隔离,无法跨插件共享类或资源
 
-2. **Javet 原生库加载机制**:
+2. Javet 原生库加载机制:
     - Javet 需要从 JAR 中提取原生库文件(`.dll`/`.so`/`.dylib`)到临时目录
     - JVM 通过 JNI 加载这些原生库文件
     - 原生库文件一旦加载,会被 JVM 锁定
 
-3. **冲突发生过程**:
-    - 安装插件时,Javet 提取原生库文件到 `C:\Users\用户名\AppData\Local\Temp\javet\进程ID\`（以 Windows 举例）
+3. 冲突发生过程:
+    - 安装插件时，Javet 提取原生库文件到 `C:\Users\用户名\AppData\Local\Temp\javet\进程ID\`（以 Windows 举例）
     - JVM 加载这些文件并锁定
-    - 卸载插件时,虽然 classloader 被销毁,但原生库文件仍被 JVM 锁定,无法删除
-    - 重新安装时,Javet 尝试提取新文件到同一位置
-    - 因为文件被锁定,提取失败
-    - Javet 初始化失败,报错 `Javet library is not loaded because <null>`
+    - 卸载插件时，虽然 classloader 被销毁,但原生库文件仍被 JVM 锁定,无法删除
+    - 重新安装时，Javet 尝试提取新文件到同一位置
+    - 因为文件被锁定，提取失败
+    - Javet 初始化失败，报错 `Javet library is not loaded because <null>`
 
 **典型错误日志解读**:
 
