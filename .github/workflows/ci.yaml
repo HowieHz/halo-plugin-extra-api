@@ -1,55 +1,77 @@
-name: Test
+name: CI
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - labeled
+      - unlabeled
 
 jobs:
-  test:
+  required-checks:
+    name: Required Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # https://github.com/actions/checkout/tree/v6
+      - name: Checkout Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # https://github.com/actions/checkout/tree/v6
         with:
+          fetch-depth: 0
           submodules: true
+
       - name: Set up JDK
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # https://github.com/actions/setup-java/tree/v5
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: 21
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # https://github.com/gradle/actions/tree/v6
         with:
           cache-read-only: false
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # https://github.com/pnpm/action-setup/releases/tag/v6.0.3
-        name: Install pnpm
-        id: pnpm-install
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # https://github.com/pnpm/action-setup/releases/tag/v6.0.3
         with:
           version: 10.33.0
           run_install: false
+
       - name: Resolve pnpm cache dependency paths
         id: pnpm-cache-paths
         shell: bash
         run: |
           {
             echo 'paths<<EOF'
+            echo 'ui/pnpm-lock.yaml'
             echo 'js-modules/shiki/pnpm-lock.yaml'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
+
       - name: Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: pnpm
           cache-dependency-path: ${{ steps.pnpm-cache-paths.outputs.paths }}
+
+      - name: Check release constraints
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          IS_RELEASE_PR: ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
+        run: node .github/scripts/check-release-constraints.js
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: gradlew test
-        run: |
-          ./gradlew test
-      # - name: Front test
-      #   run: |
-      #     cd ui
-      #     pnpm test
+
+      - name: Build and test all variants
+        run: ./gradlew test buildAll --console=plain

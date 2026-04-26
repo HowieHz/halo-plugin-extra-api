@@ -8,8 +8,9 @@ const packageJsonPaths = [
   path.join("js-modules", "shiki", "package.json"),
 ];
 const managedWorkflowPaths = [
-  path.join(workflowsDirPath, "build-and-release.yaml"),
-  path.join(workflowsDirPath, "ci-test.yaml"),
+  path.join(workflowsDirPath, "ci.yaml"),
+  path.join(workflowsDirPath, "check-release-guard.yml"),
+  path.join(workflowsDirPath, "release-stable-plugin.yml"),
   path.join(workflowsDirPath, "update-toolchain-versions.yml"),
 ];
 const dryRun = process.argv.includes("--dry-run");
