@@ -4,9 +4,9 @@
     "type": "module",
     "engines": {
         "node": ">=24",
-        "pnpm": "^10.33.0"
+        "pnpm": "^10.33.2"
     },
-    "packageManager": "pnpm@10.33.0",
+    "packageManager": "pnpm@10.33.2",
     "scripts": {
         "sync:changelog-links": "node .github/scripts/update-changelog-links.js"
     }
