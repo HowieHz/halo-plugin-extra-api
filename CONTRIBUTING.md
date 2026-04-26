@@ -97,7 +97,7 @@ GitHub Release 页面和 Halo 应用市场最终展示顺序都固定为：
 
 ### 📦 核心构建任务
 
-- __jarLite__ - 构建轻量版，完全排除JS功能和Javet依赖
+- __jarLite__ - 构建轻量版，排除 interop 相关功能，以及 Javet、`minify-html` 等 JNI 依赖
 - __jarFullAllPlatforms__ - 构建包含所有平台支持的完整版
 - __jarFull{Platform}__ - 构建特定平台的完整版(如jarFullLinux-x86_64)
 
