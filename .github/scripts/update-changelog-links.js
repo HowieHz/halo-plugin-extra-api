@@ -1,5 +1,6 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const REPO_OWNER = "HowieHz";
 const REPO_NAME = "halo-plugin-extra-api";
@@ -9,7 +10,7 @@ const RELEASE_HEADING_RE = /^## \[(\d+\.\d+\.\d+)\]\s*-\s*/gmu;
 const TRAILING_LINK_LINE_RE =
   /^\[(?:Unreleased|unreleased|\d+\.\d+\.\d+)\]:\s*https:\/\/github\.com\/howiehz\/halo-plugin-extra-api\/(?:compare\/\S+|releases\/tag\/\S+)\s*$/iu;
 
-function extractReleaseVersions(content) {
+export function extractReleaseVersions(content) {
   const versions = [];
   for (const match of content.matchAll(RELEASE_HEADING_RE)) {
     versions.push(match[1]);
@@ -17,7 +18,7 @@ function extractReleaseVersions(content) {
   return versions;
 }
 
-function buildCompareLinks(versions) {
+export function buildCompareLinks(versions) {
   if (versions.length === 0) {
     return [];
   }
@@ -37,7 +38,7 @@ function buildCompareLinks(versions) {
   return links;
 }
 
-function stripTrailingCompareLinks(content) {
+export function stripTrailingCompareLinks(content) {
   const lines = content.replace(/\r\n/gu, "\n").split("\n");
   let index = lines.length - 1;
 
@@ -69,7 +70,7 @@ function stripTrailingCompareLinks(content) {
     .trimEnd();
 }
 
-function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE) {
+export function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE) {
   const content = fs.readFileSync(filePath, "utf8");
   const baseContent = stripTrailingCompareLinks(content);
   const versions = extractReleaseVersions(baseContent);
@@ -83,14 +84,8 @@ function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE) {
   fs.writeFileSync(filePath, updatedContent);
 }
 
-module.exports = {
-  extractReleaseVersions,
-  buildCompareLinks,
-  stripTrailingCompareLinks,
-  syncChangelogCompareLinks,
-};
-
-if (require.main === module) {
+const currentFilePath = fileURLToPath(import.meta.url);
+if (process.argv[1] && path.resolve(process.argv[1]) === currentFilePath) {
   const targetFile = process.argv[2];
   syncChangelogCompareLinks(targetFile || DEFAULT_CHANGELOG_FILE);
 }

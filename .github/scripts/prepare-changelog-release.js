@@ -1,7 +1,7 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
 
-const { extractReleaseVersions, syncChangelogCompareLinks } = require("./update-changelog-links");
+import { extractReleaseVersions, syncChangelogCompareLinks } from "./update-changelog-links.js";
 
 const releaseVersion = process.argv[2];
 const previousVersion = process.argv[3];

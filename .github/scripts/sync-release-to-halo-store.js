@@ -1,9 +1,8 @@
-const { execFileSync } = require("node:child_process");
-const fs = require("node:fs");
-const path = require("node:path");
-const process = require("node:process");
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
-const { assertKnownReleaseAssets, sortForHaloStoreUpload } = require("./release-asset-order");
+import { assertKnownReleaseAssets, sortForHaloStoreUpload } from "./release-asset-order.js";
 
 const {
   ASSETS_DIR,

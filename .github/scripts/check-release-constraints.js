@@ -1,8 +1,8 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const { execFileSync } = require("node:child_process");
+import fs from "node:fs";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
 
-const { buildCompareLinks, extractReleaseVersions } = require("./update-changelog-links");
+import { buildCompareLinks, extractReleaseVersions } from "./update-changelog-links.js";
 
 const baseSha = process.env.BASE_SHA;
 const isReleasePr = process.env.IS_RELEASE_PR === "true";

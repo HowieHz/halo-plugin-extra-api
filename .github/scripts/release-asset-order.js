@@ -1,4 +1,4 @@
-const DISPLAY_ORDER = [
+export const DISPLAY_ORDER = [
   "lite",
   "linux-x86_64",
   "linux-arm64",
@@ -8,7 +8,7 @@ const DISPLAY_ORDER = [
   "all-platforms",
 ];
 
-const PREFIX_BY_VARIANT = {
+export const PREFIX_BY_VARIANT = {
   lite: "extra-api-lite-",
   "linux-x86_64": "extra-api-full-linux-x86_64-",
   "linux-arm64": "extra-api-full-linux-arm64-",
@@ -18,7 +18,7 @@ const PREFIX_BY_VARIANT = {
   "all-platforms": "extra-api-full-all-platforms-",
 };
 
-function resolveAssetVariant(fileName) {
+export function resolveAssetVariant(fileName) {
   for (const variant of DISPLAY_ORDER) {
     if (fileName.startsWith(PREFIX_BY_VARIANT[variant])) {
       return variant;
@@ -40,26 +40,17 @@ function compareByDisplayOrder(left, right) {
   return left.localeCompare(right, "en");
 }
 
-function sortForGitHubRelease(fileNames) {
+export function sortForGitHubRelease(fileNames) {
   return [...fileNames].sort(compareByDisplayOrder);
 }
 
-function sortForHaloStoreUpload(fileNames) {
+export function sortForHaloStoreUpload(fileNames) {
   return sortForGitHubRelease(fileNames).reverse();
 }
 
-function assertKnownReleaseAssets(fileNames) {
+export function assertKnownReleaseAssets(fileNames) {
   const unknown = fileNames.filter((fileName) => resolveAssetVariant(fileName) === null);
   if (unknown.length > 0) {
     throw new Error(`Unknown release assets: ${unknown.join(", ")}`);
   }
 }
-
-module.exports = {
-  DISPLAY_ORDER,
-  PREFIX_BY_VARIANT,
-  resolveAssetVariant,
-  sortForGitHubRelease,
-  sortForHaloStoreUpload,
-  assertKnownReleaseAssets,
-};
