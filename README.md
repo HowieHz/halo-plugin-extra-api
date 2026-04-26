@@ -891,13 +891,13 @@ ERROR - JavetException: Javet library is not loaded because <null>
 1. 访问 [Releases 页面](https://github.com/HowieHz/halo-plugin-extra-api/releases)
 2. 下载最新版本的 JAR 文件：
     - `extra-api-lite-版本号.jar`：轻量版（适用于所有平台）
-    - `extra-api-full-all-platforms-版本号.jar`：全量版（包含所有平台依赖，体积较大，不推荐下载）
     - 如需使用全量版，推荐下载平台特定版本：
-        - `extra-api-full-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
         - `extra-api-full-linux-x86_64-版本号.jar`：适用于 Linux x86_64 平台的版本
+        - `extra-api-full-linux-arm64-版本号.jar`：适用于 Linux ARM64 平台的版本
         - `extra-api-full-macos-arm64-版本号.jar`：适用于 macOS ARM64 平台的版本
         - `extra-api-full-macos-x86_64-版本号.jar`：适用于 macOS x86_64 平台的版本
         - `extra-api-full-windows-x86_64-版本号.jar`：适用于 Windows x86_64 平台的版本
+    - `extra-api-full-all-platforms-版本号.jar`：包含所有平台依赖的全量版，体积较大，不推荐下载
 3. 将下载的 JAR 文件上传到 Halo 的插件管理页面安装
 
 ### 开发版
@@ -912,12 +912,12 @@ ERROR - JavetException: Javet library is not loaded because <null>
 2. 在 "Artifacts" 部分，下载 `extra-api` 压缩包。
 3. 解压后，您将找到以下 JAR 文件：
     - `extra-api-lite-版本号-SNAPSHOT.jar`：轻量版（适用于所有平台）
-    - `extra-api-full-all-platforms-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
-    - `extra-api-full-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
     - `extra-api-full-linux-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux x86_64 平台）
+    - `extra-api-full-linux-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 Linux ARM64 平台）
     - `extra-api-full-macos-arm64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS ARM64 平台）
     - `extra-api-full-macos-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 macOS x86_64 平台）
     - `extra-api-full-windows-x86_64-版本号-SNAPSHOT.jar`：全量版（适用于 Windows x86_64 平台）
+    - `extra-api-full-all-platforms-版本号-SNAPSHOT.jar`：全量版（包含所有平台依赖）
 
 选择适合您系统的 JAR 文件安装到 Halo。
 

@@ -1,0 +1,319 @@
+name: Release Stable Plugin
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - closed
+
+concurrency:
+  group: release-plugin-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare Stable Release Metadata
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_version: ${{ steps.meta.outputs.release_version }}
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      previous_version: ${{ steps.meta.outputs.previous_version }}
+      release_date: ${{ steps.meta.outputs.release_date }}
+      release_commit_sha: ${{ steps.commit.outputs.release_commit_sha }}
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # https://github.com/actions/checkout/tree/v6
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.PR_WORKFLOW_TOKEN || github.token }}
+
+      - name: Resolve Stable Release Metadata
+        id: meta
+        shell: bash
+        run: |
+          RELEASE_VERSION=$(sed -n 's/^version=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
+
+          if [ -z "$RELEASE_VERSION" ]; then
+            echo "Missing version in gradle.properties" >&2
+            exit 1
+          fi
+
+          if ! [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release version in gradle.properties must be semantic version (x.y.z), got: $RELEASE_VERSION" >&2
+            exit 1
+          fi
+
+          PREVIOUS_TAG=$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No stable release tag found" >&2
+            exit 1
+          fi
+
+          if git rev-parse "v$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Target release tag already exists: v$RELEASE_VERSION" >&2
+            exit 1
+          fi
+
+          if [ "$(printf '%s\n%s\n' "${PREVIOUS_TAG#v}" "$RELEASE_VERSION" | sort -V | tail -n 1)" != "$RELEASE_VERSION" ] || [ "${PREVIOUS_TAG#v}" = "$RELEASE_VERSION" ]; then
+            echo "Target release version must be greater than previous stable version ${PREVIOUS_TAG#v}" >&2
+            exit 1
+          fi
+
+          RELEASE_DATE=$(TZ=Asia/Shanghai date +%F)
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_tag=v$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "previous_version=${PREVIOUS_TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        with:
+          node-version: 24
+
+      - name: Verify Release Merge Is Still the Tip of Main
+        env:
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          RELEASE_VERSION: ${{ steps.meta.outputs.release_version }}
+        shell: bash
+        run: |
+          CURRENT_SHA=$(git rev-parse HEAD)
+          CURRENT_SUBJECT=$(git log -1 --pretty=%s)
+          EXPECTED_SUBJECT="docs(changelog): sync $RELEASE_VERSION release"
+
+          if [ "$CURRENT_SHA" = "$MERGE_SHA" ]; then
+            echo "main still points at the merged release pull request."
+            exit 0
+          fi
+
+          if [ "$CURRENT_SUBJECT" = "$EXPECTED_SUBJECT" ] && [ "$(git rev-parse HEAD^)" = "$MERGE_SHA" ]; then
+            echo "Detected previously pushed release sync commit for this release."
+            exit 0
+          fi
+
+          echo "main advanced after the release pull request was merged. Refuse to publish a mixed release." >&2
+          echo "Expected merge commit: $MERGE_SHA" >&2
+          echo "Current main commit: $CURRENT_SHA" >&2
+          exit 1
+
+      - name: Promote changelog entry
+        run: node .github/scripts/prepare-changelog-release.js "${{ steps.meta.outputs.release_version }}" "${{ steps.meta.outputs.previous_version }}" "${{ steps.meta.outputs.release_date }}"
+
+      - name: Commit changelog
+        id: commit
+        shell: bash
+        run: |
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "CHANGELOG.md is already synced for this release."
+            echo "release_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): sync ${{ steps.meta.outputs.release_version }} release"
+          git push origin HEAD:main
+          echo "release_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.artifact_name }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: lite
+            gradle_task: jarLite
+            artifact_name: extra-api-lite
+            artifact_path: build/libs/extra-api-lite-*.jar
+            needs_node_toolchain: false
+          - id: full-linux-x86_64
+            gradle_task: jarFullLinux-x86_64
+            artifact_name: extra-api-full-linux-x86_64
+            artifact_path: build/libs/extra-api-full-linux-x86_64-*.jar
+            needs_node_toolchain: true
+          - id: full-linux-arm64
+            gradle_task: jarFullLinux-arm64
+            artifact_name: extra-api-full-linux-arm64
+            artifact_path: build/libs/extra-api-full-linux-arm64-*.jar
+            needs_node_toolchain: true
+          - id: full-macos-arm64
+            gradle_task: jarFullMacos-arm64
+            artifact_name: extra-api-full-macos-arm64
+            artifact_path: build/libs/extra-api-full-macos-arm64-*.jar
+            needs_node_toolchain: true
+          - id: full-macos-x86_64
+            gradle_task: jarFullMacos-x86_64
+            artifact_name: extra-api-full-macos-x86_64
+            artifact_path: build/libs/extra-api-full-macos-x86_64-*.jar
+            needs_node_toolchain: true
+          - id: full-windows-x86_64
+            gradle_task: jarFullWindows-x86_64
+            artifact_name: extra-api-full-windows-x86_64
+            artifact_path: build/libs/extra-api-full-windows-x86_64-*.jar
+            needs_node_toolchain: true
+          - id: full-all-platforms
+            gradle_task: jarFullAllPlatforms
+            artifact_name: extra-api-full-all-platforms
+            artifact_path: build/libs/extra-api-full-all-platforms-*.jar
+            needs_node_toolchain: true
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # https://github.com/actions/checkout/tree/v6
+        with:
+          ref: ${{ needs.prepare.outputs.release_commit_sha }}
+          submodules: true
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # https://github.com/actions/setup-java/tree/v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # https://github.com/gradle/actions/tree/v6
+        with:
+          cache-read-only: false
+
+      - name: Install pnpm
+        if: matrix.needs_node_toolchain
+        uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # https://github.com/pnpm/action-setup/releases/tag/v6.0.3
+        with:
+          version: 10.33.0
+          run_install: false
+
+      - name: Resolve pnpm cache dependency paths
+        if: matrix.needs_node_toolchain
+        id: pnpm-cache-paths
+        shell: bash
+        run: |
+          {
+            echo 'paths<<EOF'
+            echo 'ui/pnpm-lock.yaml'
+            echo 'js-modules/shiki/pnpm-lock.yaml'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        if: matrix.needs_node_toolchain
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: ${{ steps.pnpm-cache-paths.outputs.paths }}
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build release artifact
+        run: ./gradlew ${{ matrix.gradle_task }} --console=plain
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # https://github.com/actions/upload-artifact/tree/v7
+        with:
+          name: release-asset-${{ matrix.id }}
+          path: ${{ matrix.artifact_path }}
+          retention-days: 1
+
+  github-release:
+    name: Publish Stable Release
+    needs:
+      - prepare
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # https://github.com/actions/checkout/tree/v6
+        with:
+          ref: ${{ needs.prepare.outputs.release_commit_sha }}
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # https://github.com/actions/download-artifact/tree/v8
+        with:
+          pattern: release-asset-*
+          path: build/libs
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.PR_WORKFLOW_TOKEN || github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.release_version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release_commit_sha }}
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "GitHub release already exists: $RELEASE_TAG"
+            exit 0
+          fi
+
+          assets=(
+            "build/libs/extra-api-lite-${RELEASE_VERSION}.jar"
+            "build/libs/extra-api-full-linux-x86_64-${RELEASE_VERSION}.jar"
+            "build/libs/extra-api-full-linux-arm64-${RELEASE_VERSION}.jar"
+            "build/libs/extra-api-full-macos-arm64-${RELEASE_VERSION}.jar"
+            "build/libs/extra-api-full-macos-x86_64-${RELEASE_VERSION}.jar"
+            "build/libs/extra-api-full-windows-x86_64-${RELEASE_VERSION}.jar"
+            "build/libs/extra-api-full-all-platforms-${RELEASE_VERSION}.jar"
+          )
+
+          for asset in "${assets[@]}"; do
+            if [ ! -f "$asset" ]; then
+              echo "Missing expected release asset: $asset" >&2
+              exit 1
+            fi
+          done
+
+          gh release create "$RELEASE_TAG" "${assets[@]}" \
+            --title "$RELEASE_VERSION" \
+            --notes-file .github/templates/release-note-template.md \
+            --target "$RELEASE_SHA"
+
+  app-store-release:
+    name: Sync Stable Release to Halo App Store
+    needs:
+      - prepare
+      - build
+      - github-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # https://github.com/actions/checkout/tree/v6
+        with:
+          ref: ${{ needs.prepare.outputs.release_commit_sha }}
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # https://github.com/actions/download-artifact/tree/v8
+        with:
+          pattern: release-asset-*
+          path: build/libs
+          merge-multiple: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        with:
+          node-version: 24
+
+      - name: Run Halo App Store sync
+        env:
+          ASSETS_DIR: build/libs
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HALO_BACKEND_BASEURL: https://www.halo.run
+          HALO_PAT: ${{ secrets.HALO_PAT }}
+          RELEASE_NAME: ${{ needs.prepare.outputs.release_version }}
+          RELEASE_NOTES_FILE: .github/templates/release-note-template.md
+          RELEASE_PRERELEASE: "false"
+        run: node .github/scripts/sync-release-to-halo-store.js

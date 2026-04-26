@@ -24,6 +24,64 @@ pnpm dev
 ./gradlew build
 ```
 
+## GitHub 自动化
+
+- `.github/workflows/ci.yaml`
+  - PR 合并前必须通过必需检查 `CI / Required Checks`。
+  - 此工作流负责 PR 的主要检查，包括插件构建、测试，以及发版版本号约束。
+  - 普通 PR 可以照常改代码，但不能修改 `gradle.properties` 里的 `version`；如果修改了，这个工作流会直接失败。
+  - 只有带 `release` 标签的 PR 才允许修改 `gradle.properties` 里的 `version`，且版本号必须是递增的语义化版本；不满足时同样由这个工作流拦截。
+- `.github/workflows/check-release-guard.yml`
+  - 为带 `release` 标签的 PR 提供额外的发布摘要检查。
+  - 会在 PR 中标记上一个稳定版标签和本次请求发布的版本号，便于合并前复核。
+- `.github/workflows/release-stable-plugin.yml`
+  - 负责带 `release` 标签的 PR 合并后的正式发版流程。
+  - 会校验合并后的 `main` 是否仍然对应这次发版 PR、把 `CHANGELOG.md` 的 `Unreleased` 提升为正式版本、提交更新日志变更，并创建 GitHub 发布页（Release）。
+  - 随后会自动把同一批构建产物同步到 Halo 应用市场。
+
+## 发布流程
+
+### 发布前检查清单
+
+1. 准备合并到本次版本的提交和 PR 已全部进入 `main` 之前的待发布 PR。
+2. `CHANGELOG.md` 的 `## [Unreleased]` 下已经补充完整本次版本说明，并且没有删除 `## [Unreleased]` 标题。
+3. 发布 PR（带 `release` 标签）只允许手动修改 `gradle.properties` 中的 `version`，该值将作为正式版目标版本号。
+4. 发版前人工确认 `src/main/resources/plugin.yaml` 的 `spec.requires` 仍符合目标 Halo CMS 版本要求。
+
+### 正式版发布方法
+
+正式版通过带标签的 PR 自动发布：
+
+1. 创建用于正式发布的 PR。
+2. 为 PR 添加 `release` 标签，并将 `gradle.properties` 中的 `version` 改为目标语义化版本号，例如 `3.1.2`。
+3. 等待 `CI / Required Checks` 与 `Check Release Guard / Check Release Constraints` 通过，并确认摘要中的目标版本号与上一个稳定版无误。
+4. 合并 PR 到 `main`。
+
+PR 合并后，机器人会自动执行以下动作：
+
+1. 将 `CHANGELOG.md` 中 `## [Unreleased]` 的内容提升为本次正式版条目，并保留 `## [Unreleased]` 标题。
+2. 自动重建 `CHANGELOG.md` 末尾的版本对比链接定义。
+3. 将更新日志变更提交回 `main`。
+4. 构建全部发布变体，并创建 GitHub Release。
+5. 同步同一批构建产物到 Halo 应用市场。
+
+### 发布产物顺序
+
+GitHub Release 页面和 Halo 应用市场最终展示顺序都固定为：
+
+1. `lite`
+2. `linux-x86_64`
+3. `linux-arm64`
+4. `macos-arm64`
+5. `macos-x86_64`
+6. `windows-x86_64`
+7. `all-platforms`
+
+注意：
+
+- GitHub Release 侧按上述顺序直接上传附件。
+- Halo 应用市场侧会按展示逆序处理上传顺序，因此自动化脚本会反向上传，以保证最终展示顺序仍与上面的列表一致。
+
 ## 配置约定
 
 - 默认值设定由 `src/main/resources/extensions/settings.yaml` 统一定义。
@@ -39,7 +97,7 @@ pnpm dev
 
 ### 📦 核心构建任务
 
-- __jarLite__ - 构建轻量版，完全排除JS功能和Javet依赖
+- __jarLite__ - 构建轻量版，排除 interop 相关功能，以及 Javet、`minify-html` 等 JNI 依赖
 - __jarFullAllPlatforms__ - 构建包含所有平台支持的完整版
 - __jarFull{Platform}__ - 构建特定平台的完整版(如jarFullLinux-x86_64)
 
@@ -63,6 +121,10 @@ pnpm dev
 - 这意味着在压缩前必须先聚合完整的 HTML 响应内容，再交给 `minify-html` 处理。
 - 因此该功能天然会带来一次额外的内存占用和复制成本，无法像真正的流式转换那样边读边压。
 - 这不是当前实现的疏漏，而是 Halo 附加 Web 过滤器扩展点（`AdditionalWebFilter`）的接入方式和 `minify-html` 接口形态共同决定的限制。
+
+## 修订发布说明
+
+请在 `CHANGELOG.md` 的 `## [Unreleased]` 下记录本次正式版需要对外说明的变更。
 
 ## 如何添加新的嵌入式 JS 模块
 
