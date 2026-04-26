@@ -26,6 +26,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        with:
+          node-version: 24
+
       - name: Check release constraints
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
