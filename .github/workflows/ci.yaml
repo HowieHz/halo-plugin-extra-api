@@ -75,3 +75,9 @@ jobs:
 
       - name: Build and test all variants
         run: ./gradlew test buildAll --console=plain
+
+      - name: Upload CI build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # https://github.com/actions/upload-artifact/tree/v7
+        with:
+          name: ci-build-artifacts
+          path: build/libs/*.jar
