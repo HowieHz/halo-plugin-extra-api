@@ -187,7 +187,7 @@ jobs:
         if: matrix.needs_node_toolchain
         uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # https://github.com/pnpm/action-setup/releases/tag/v6.0.3
         with:
-          version: 10.33.0
+          version: 10.33.2
           run_install: false
 
       - name: Resolve pnpm cache dependency paths

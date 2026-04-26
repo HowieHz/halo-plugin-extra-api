@@ -4,6 +4,7 @@ import path from "node:path";
 const githubDirPath = ".github";
 const workflowsDirPath = path.join(githubDirPath, "workflows");
 const packageJsonPaths = [
+  "package.json",
   path.join("ui", "package.json"),
   path.join("js-modules", "shiki", "package.json"),
 ];
