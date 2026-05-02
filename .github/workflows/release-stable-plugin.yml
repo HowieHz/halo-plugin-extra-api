@@ -257,14 +257,8 @@ jobs:
             exit 0
           fi
 
-          assets=(
-            "build/libs/extra-api-lite-${RELEASE_VERSION}.jar"
-            "build/libs/extra-api-full-linux-x86_64-${RELEASE_VERSION}.jar"
-            "build/libs/extra-api-full-linux-arm64-${RELEASE_VERSION}.jar"
-            "build/libs/extra-api-full-macos-arm64-${RELEASE_VERSION}.jar"
-            "build/libs/extra-api-full-macos-x86_64-${RELEASE_VERSION}.jar"
-            "build/libs/extra-api-full-windows-x86_64-${RELEASE_VERSION}.jar"
-            "build/libs/extra-api-full-all-platforms-${RELEASE_VERSION}.jar"
+          mapfile -t assets < <(
+            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1]).reverse()) console.log('build/libs/' + name);" "$RELEASE_VERSION"
           )
 
           for asset in "${assets[@]}"; do
@@ -274,6 +268,8 @@ jobs:
             fi
           done
 
+          # GitHub Releases currently display newly uploaded assets first,
+          # so upload in reverse order to keep the page order user-facing KISS.
           gh release create "$RELEASE_TAG" "${assets[@]}" \
             --title "$RELEASE_VERSION" \
             --notes-file .github/templates/release-note-template.md \

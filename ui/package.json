@@ -7,7 +7,7 @@
         "build:type-check": "vue-tsc --build",
         "dev": "pnpm run \"/^watch:.*/\"",
         "fmt": "pnpm run \"/^fmt:.*/\"",
-        "fmt:oxfmt": "oxfmt \"**/*.{json,jsonc,yaml,md,css,js,ts,html,vue,less}\"",
+        "fmt:oxfmt": "oxfmt --threads 2 \"**/*.{json,jsonc,yaml,md,css,js,ts,html,vue,less}\"",
         "lint": "run-s lint:*",
         "lint:eslint": "eslint . --fix",
         "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
