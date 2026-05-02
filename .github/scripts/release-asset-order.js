@@ -44,6 +44,14 @@ export function sortForGitHubRelease(fileNames) {
   return [...fileNames].sort(compareByDisplayOrder);
 }
 
+export function buildReleaseAssetNames(version) {
+  return DISPLAY_ORDER.map((variant) => `${PREFIX_BY_VARIANT[variant]}${version}.jar`);
+}
+
+export function buildGitHubReleaseUploadAssetNames(version) {
+  return buildReleaseAssetNames(version).reverse();
+}
+
 export function sortForHaloStoreUpload(fileNames) {
   return sortForGitHubRelease(fileNames).reverse();
 }

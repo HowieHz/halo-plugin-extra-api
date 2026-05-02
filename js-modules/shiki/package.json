@@ -7,7 +7,7 @@
         "build": "vite build",
         "dev": "vite",
         "fmt": "pnpm run \"/^fmt:.*/\"",
-        "fmt:oxfmt": "oxfmt \"**/*.{json,jsonc,yaml,md,css,js,ts,html,vue,less}\"",
+        "fmt:oxfmt": "oxfmt --threads 2 \"**/*.{json,jsonc,yaml,md,css,js,ts,html,vue,less}\"",
         "generate-config": "node ./scripts/generate-config.js",
         "prebuild": "pnpm run generate-config",
         "preview": "vite preview"
