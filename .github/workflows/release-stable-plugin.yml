@@ -258,7 +258,7 @@ jobs:
           fi
 
           mapfile -t assets < <(
-            node --input-type=module -e "import { buildGitHubReleaseUploadAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildGitHubReleaseUploadAssetNames(process.argv[1])) console.log('build/libs/' + name);" "$RELEASE_VERSION"
+            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1]).reverse()) console.log('build/libs/' + name);" "$RELEASE_VERSION"
           )
 
           for asset in "${assets[@]}"; do

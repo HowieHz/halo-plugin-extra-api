@@ -40,25 +40,18 @@ function compareByDisplayOrder(left, right) {
   return left.localeCompare(right, "en");
 }
 
-export function sortForGitHubRelease(fileNames) {
+export function assertKnownAssets(fileNames) {
+  const unknown = fileNames.filter((fileName) => resolveAssetVariant(fileName) === null);
+  if (unknown.length > 0) {
+    throw new Error(`Unknown release assets: ${unknown.join(", ")}`);
+  }
+}
+
+export function sortByDisplayOrder(fileNames) {
+  assertKnownAssets(fileNames);
   return [...fileNames].sort(compareByDisplayOrder);
 }
 
 export function buildReleaseAssetNames(version) {
   return DISPLAY_ORDER.map((variant) => `${PREFIX_BY_VARIANT[variant]}${version}.jar`);
-}
-
-export function buildGitHubReleaseUploadAssetNames(version) {
-  return buildReleaseAssetNames(version).reverse();
-}
-
-export function sortForHaloStoreUpload(fileNames) {
-  return sortForGitHubRelease(fileNames).reverse();
-}
-
-export function assertKnownReleaseAssets(fileNames) {
-  const unknown = fileNames.filter((fileName) => resolveAssetVariant(fileName) === null);
-  if (unknown.length > 0) {
-    throw new Error(`Unknown release assets: ${unknown.join(", ")}`);
-  }
 }

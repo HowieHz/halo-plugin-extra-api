@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { assertKnownReleaseAssets, sortForHaloStoreUpload } from "./release-asset-order.js";
+import { assertKnownAssets, sortByDisplayOrder } from "./release-asset-order.js";
 
 const {
   ASSETS_DIR,
@@ -47,8 +47,8 @@ function listAssets() {
     throw new Error(`Assets directory is empty: ${ASSETS_DIR}`);
   }
 
-  assertKnownReleaseAssets(assets);
-  return sortForHaloStoreUpload(assets);
+  assertKnownAssets(assets);
+  return sortByDisplayOrder(assets).reverse();
 }
 
 function readPluginManifest(assetPath) {
