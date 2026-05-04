@@ -24,6 +24,8 @@
 
 ## [Unreleased]
 
+## [3.1.3] - 2026-05-04
+
 ### 🐛 错误修复
 
 - 修复 HTML 页面压缩在响应 `Content-Type` 未显式声明 `charset` 时无法执行的问题，默认按 UTF-8 处理 HTML 响应。
@@ -154,7 +156,8 @@
 
 - 新增文章字数计算 API
 
-[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.2...HEAD
+[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.3...HEAD
+[3.1.3]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.0.4...v3.1.0
