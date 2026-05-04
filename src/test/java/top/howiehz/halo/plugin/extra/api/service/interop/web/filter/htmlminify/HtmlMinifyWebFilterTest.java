@@ -229,7 +229,7 @@ class HtmlMinifyWebFilterTest {
     }
 
     @Test
-    void shouldSkipHtmlResponsesWithoutExplicitCharset() {
+    void shouldMinifyHtmlResponsesWithoutExplicitCharset() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
             MockServerHttpRequest.get("/demo")
                 .accept(MediaType.TEXT_HTML)
@@ -248,8 +248,8 @@ class HtmlMinifyWebFilterTest {
 
         String result = exchange.getResponse().getBodyAsString().block();
 
-        assertEquals("<html><body><div>  Hello  </div></body></html>", result);
-        assertEquals(0, service.minifyCount.get());
+        assertTrue(result.contains("<div>Hello</div>"));
+        assertEquals(1, service.minifyCount.get());
     }
 
     @Test
