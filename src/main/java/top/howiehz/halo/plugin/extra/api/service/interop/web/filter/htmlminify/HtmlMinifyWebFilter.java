@@ -107,8 +107,11 @@ public class HtmlMinifyWebFilter implements AdditionalWebFilter {
 
     private boolean usesUtf8Charset(ServerHttpResponse response) {
         MediaType contentType = response.getHeaders().getContentType();
-        if (contentType == null || contentType.getCharset() == null) {
+        if (contentType == null) {
             return false;
+        }
+        if (contentType.getCharset() == null) {
+            return true;
         }
         return StandardCharsets.UTF_8.equals(contentType.getCharset());
     }
