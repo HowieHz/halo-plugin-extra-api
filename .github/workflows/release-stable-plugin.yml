@@ -258,7 +258,7 @@ jobs:
           fi
 
           mapfile -t assets < <(
-            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1]).reverse()) console.log('build/libs/' + name);" "$RELEASE_VERSION"
+            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1])) console.log('build/libs/' + name);" "$RELEASE_VERSION"
           )
 
           for asset in "${assets[@]}"; do
@@ -268,8 +268,8 @@ jobs:
             fi
           done
 
-          # GitHub Releases currently display newly uploaded assets first,
-          # so upload in reverse order to keep the page order user-facing KISS.
+          # GitHub Releases currently preserve asset upload order in the UI,
+          # so upload assets in DISPLAY_ORDER directly.
           gh release create "$RELEASE_TAG" "${assets[@]}" \
             --title "$RELEASE_VERSION" \
             --notes-file .github/templates/release-note-template.md \
