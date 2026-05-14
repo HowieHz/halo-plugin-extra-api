@@ -28,7 +28,7 @@
     "devDependencies": {
         "@halo-dev/ui-plugin-bundler-kit": "^2.24.0",
         "@iconify/json": "^2.2.472",
-        "@rsbuild/core": "^2.0.5",
+        "@rsbuild/core": "^2.0.6",
         "@rsbuild/plugin-sass": "^1.5.2",
         "@tsconfig/node24": "^24.0.1",
         "@types/canvas-confetti": "^1.9.0",
@@ -51,7 +51,7 @@
         "typescript": "~6.0.3",
         "unplugin-icons": "^23.0.1",
         "vitest": "^4.1.6",
-        "vue-tsc": "^3.2.8"
+        "vue-tsc": "^3.2.9"
     },
     "engines": {
         "node": ">=24",
