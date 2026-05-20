@@ -44,7 +44,7 @@
         "eslint-plugin-vue": "~10.9.1",
         "husky": "^8.0.0",
         "jsdom": "^29.1.1",
-        "npm-run-all2": "^8.0.4",
+        "npm-run-all2": "^9.0.0",
         "oxfmt": "^0.50.0",
         "oxlint": "^1.65.0",
         "sass": "^1.99.0",
