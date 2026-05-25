@@ -24,6 +24,8 @@
 
 ## [Unreleased]
 
+## [3.1.4] - 2026-05-25
+
 ### 🛠️ 杂项维护
 
 - 更新依赖
@@ -160,7 +162,8 @@
 
 - 新增文章字数计算 API
 
-[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.3...HEAD
+[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.4...HEAD
+[3.1.4]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.0...v3.1.1
