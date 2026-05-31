@@ -27,9 +27,9 @@
     },
     "devDependencies": {
         "@halo-dev/ui-plugin-bundler-kit": "^2.24.0",
-        "@iconify/json": "^2.2.479",
-        "@rsbuild/core": "^2.0.7",
-        "@rsbuild/plugin-sass": "^1.5.2",
+        "@iconify/json": "^2.2.481",
+        "@rsbuild/core": "^2.0.9",
+        "@rsbuild/plugin-sass": "^1.5.3",
         "@tsconfig/node24": "^24.0.1",
         "@types/canvas-confetti": "^1.9.0",
         "@types/jsdom": "^28.0.3",
@@ -39,7 +39,7 @@
         "@vue/eslint-config-typescript": "^14.7.0",
         "@vue/test-utils": "^2.4.10",
         "@vue/tsconfig": "^0.9.1",
-        "eslint": "^10.4.0",
+        "eslint": "^10.4.1",
         "eslint-plugin-oxlint": "^1.67.0",
         "eslint-plugin-vue": "~10.9.1",
         "husky": "^8.0.0",
@@ -51,7 +51,7 @@
         "typescript": "~6.0.3",
         "unplugin-icons": "^23.0.1",
         "vitest": "^4.1.7",
-        "vue-tsc": "^3.3.2"
+        "vue-tsc": "^3.3.3"
     },
     "engines": {
         "node": ">=24",
