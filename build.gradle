@@ -15,7 +15,7 @@ import top.howiehz.gradle.YamlPluginVersionSupport
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '9.5.0'
-    id 'run.halo.plugin.devtools' version '0.7.0' apply false // 禁用自动应用，因为需要手动控制组件索引生成
+    id 'run.halo.plugin.devtools' version '0.8.0' apply false // 禁用自动应用，因为需要手动控制组件索引生成
 }
 
 apply plugin: 'run.halo.plugin.devtools' // 手动应用以便后续禁用默认组件索引任务
