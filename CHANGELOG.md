@@ -24,6 +24,8 @@
 
 ## [Unreleased]
 
+## [3.1.5] - 2026-06-15
+
 ### 💥 破坏性变更
 
 - Halo CMS 最低版本要求更改为 2.25.0
@@ -173,7 +175,8 @@
 
 - 新增文章字数计算 API
 
-[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.4...HEAD
+[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.5...HEAD
+[3.1.5]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.1...v3.1.2
