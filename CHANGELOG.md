@@ -24,6 +24,8 @@
 
 ## [Unreleased]
 
+## [3.1.6] - 2026-06-15
+
 ### 🐛 错误修复
 
 - HTML 页面压缩默认排除 `/assets/**` 和 `/ui-assets/**` 静态资源路径，避免误处理静态资源响应。
@@ -179,7 +181,8 @@
 
 - 新增文章字数计算 API
 
-[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.5...HEAD
+[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.6...HEAD
+[3.1.6]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.2...v3.1.3
