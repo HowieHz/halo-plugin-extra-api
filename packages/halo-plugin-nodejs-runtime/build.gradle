@@ -1,0 +1,175 @@
+import top.howiehz.gradle.YamlPluginVersionSupport
+
+plugins {
+    id 'java'
+    id 'io.freefair.lombok' version '9.5.0'
+    id 'run.halo.plugin.devtools' version '0.8.0' apply false
+}
+
+apply plugin: 'run.halo.plugin.devtools'
+
+group = 'top.howiehz.halo.plugin.node.runtime'
+version = rootProject.findProperty('nodejsRuntimeVersion')
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+def platforms = [
+    'Linux-arm64'   : ['linux-arm64'],
+    'Linux-x86_64'  : ['linux-x86_64'],
+    'Macos-arm64'   : ['macos-arm64'],
+    'Macos-x86_64'  : ['macos-x86_64'],
+    'Windows-x86_64': ['windows-x86_64']
+]
+
+def runtimeClasspathTrees = { configuration ->
+    configuration.resolvedConfiguration.resolvedArtifacts.collect { artifact ->
+        artifact.file.isDirectory() ? artifact.file : zipTree(artifact.file)
+    }
+}
+
+platforms.each { variant, platformList ->
+    configurations.create("javet${variant}") {
+        extendsFrom configurations.runtimeClasspath
+    }
+}
+
+configurations {
+    javetAllPlatforms {
+        extendsFrom configurations.runtimeClasspath
+    }
+}
+
+dependencies {
+    implementation project(':nodejs-runtime-api')
+    implementation platform('run.halo.tools.platform:plugin:2.25.0')
+    compileOnly 'run.halo.app:api'
+    compileOnly 'org.springframework:spring-context'
+    compileOnly 'org.springframework:spring-core'
+    compileOnly 'org.springframework:spring-beans'
+    compileOnly 'io.projectreactor:reactor-core'
+
+    implementation 'com.caoccao.javet:javet:5.0.8'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    testImplementation 'run.halo.app:api'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+platforms.each { variant, platformList ->
+    dependencies.add("javet${variant}", 'com.caoccao.javet:javet:5.0.8')
+    platformList.each { platform ->
+        dependencies.add("javet${variant}", "com.caoccao.javet:javet-node-${platform}:5.0.8")
+    }
+}
+
+dependencies.add('javetAllPlatforms', 'com.caoccao.javet:javet:5.0.8')
+platforms.each { variant, platformList ->
+    platformList.each { platform ->
+        dependencies.add('javetAllPlatforms', "com.caoccao.javet:javet-node-${platform}:5.0.8")
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+def configurePluginYamlVersion() {
+    def manifestFile = file('src/main/resources/plugin.yaml')
+    return YamlPluginVersionSupport.configurePluginYamlVersion(project, manifestFile)
+}
+
+def extensionDefinitionsFile = file('src/main/resources/extensions/extension-definitions.yaml')
+def indexTasks = [:]
+
+afterEvaluate {
+    tasks.matching { it.name == 'generatePluginComponentsIdx' }.configureEach {
+        enabled = false
+    }
+
+    def MultiJarPluginComponentsIndexTask = top.howiehz.gradle.MultiJarPluginComponentsIndexTask
+
+    def registerIndexTask = { String targetJarTaskName ->
+        def indexTaskName = "generatePluginComponentsIdx${targetJarTaskName.capitalize()}"
+        indexTasks[targetJarTaskName] = tasks.register(indexTaskName, MultiJarPluginComponentsIndexTask) {
+            group = 'halo server'
+            description = "Generates plugin components index for ${targetJarTaskName}"
+            classesDirs.from(sourceSets.main.output.classesDirs)
+            jarTaskName.set(targetJarTaskName)
+            outputFile.set(layout.buildDirectory.file("tmp/${targetJarTaskName}/META-INF/plugin-components.idx"))
+            doFirst(configurePluginYamlVersion())
+        }
+    }
+
+    registerIndexTask('jarAllPlatforms')
+    platforms.each { variant, ignored ->
+        registerIndexTask("jar${variant}")
+    }
+
+    tasks.register('jarAllPlatforms', Jar) {
+        group = 'build'
+        description = 'Assembles nodejs-runtime with all supported Javet platforms'
+        archiveFileName = "nodejs-runtime-all-platforms-${project.version}.jar"
+        from(sourceSets.main.output)
+        from(runtimeClasspathTrees(configurations.javetAllPlatforms))
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn 'classes', project(':nodejs-runtime-api').tasks.named('jar'), indexTasks.jarAllPlatforms
+        into('META-INF') {
+            from indexTasks.jarAllPlatforms.get().outputFile
+            rename { 'plugin-components.idx' }
+        }
+    }
+
+    platforms.each { variant, ignored ->
+        def taskName = "jar${variant}"
+        def configName = "javet${variant}"
+        tasks.register(taskName, Jar) {
+            group = 'build'
+            description = "Assembles nodejs-runtime for ${variant}"
+            archiveFileName = "nodejs-runtime-${variant.toLowerCase()}-${project.version}.jar"
+            from(sourceSets.main.output)
+            from(runtimeClasspathTrees(configurations.getByName(configName)))
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            dependsOn 'classes', project(':nodejs-runtime-api').tasks.named('jar'), indexTasks[taskName]
+            into('META-INF') {
+                from indexTasks[taskName].get().outputFile
+                rename { 'plugin-components.idx' }
+            }
+        }
+    }
+}
+
+jar {
+    enabled = false
+    dependsOn 'jarAllPlatforms'
+}
+
+build {
+    dependsOn 'jarAllPlatforms'
+}
+
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Build all nodejs-runtime jar variants'
+    dependsOn 'jarAllPlatforms'
+    platforms.each { variant, ignored ->
+        dependsOn "jar${variant}"
+    }
+}
+
+halo {
+    version = '2.25'
+}

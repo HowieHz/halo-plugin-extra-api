@@ -1,0 +1,41 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: plugin-nodejs-runtime-settings
+spec:
+  forms:
+    - group: runtime
+      label: Node.js 运行时
+      formSchema:
+        - $formkit: number
+          name: poolMinSize
+          key: poolMinSize
+          label: 最小引擎数量
+          value: 1
+          min: 1
+          validation: required
+          help: 最小引擎数量。数值越大，空闲时内存占用越多。
+        - $formkit: number
+          name: poolMaxSize
+          key: poolMaxSize
+          label: 最大引擎数量
+          value: 2
+          min: 1
+          validation: required
+          help: 最大引擎数量。数值越大，并发 JS 调用能力越强，但 CPU 和内存占用越高。
+        - $formkit: number
+          name: defaultTimeoutSeconds
+          key: defaultTimeoutSeconds
+          label: 默认超时时间（秒）
+          value: 30
+          min: 1
+          validation: required
+          help: 调用方没有指定 timeout 时使用的默认执行超时时间。
+        - $formkit: number
+          name: maxTimeoutSeconds
+          key: maxTimeoutSeconds
+          label: 最大超时时间（秒）
+          value: -1
+          min: -1
+          validation: required
+          help: 调用方允许指定的最大 timeout。-1 表示不限制最大值。它不是默认超时时间，也不表示禁用超时。第一版使用无界等待队列，如果调用量长期超过处理能力，等待队列可能增长并占用内存。

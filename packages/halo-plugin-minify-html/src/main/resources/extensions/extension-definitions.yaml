@@ -1,0 +1,9 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: minify-html-web-filter
+spec:
+  extensionPointName: additional-webfilter
+  className: top.howiehz.halo.plugin.minify.html.HtmlMinifyWebFilter
+  displayName: "HTML 页面压缩过滤器"
+  description: "在服务端对 HTML 页面响应执行 minify-html 压缩"

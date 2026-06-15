@@ -48,8 +48,9 @@ jobs:
         run: |
           {
             echo 'paths<<EOF'
-            echo 'ui/pnpm-lock.yaml'
-            echo 'js-modules/shiki/pnpm-lock.yaml'
+            echo 'pnpm-lock.yaml'
+            echo 'packages/halo-plugin-extra-api/ui/pnpm-lock.yaml'
+            echo 'packages/halo-plugin-extra-api/js-modules/shiki/pnpm-lock.yaml'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -67,6 +68,12 @@ jobs:
           IS_RELEASE_PR: ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
         run: node .github/scripts/check-release-constraints.js
 
+      - name: Install docs dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs
+        run: pnpm docs:build
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -77,4 +84,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # https://github.com/actions/upload-artifact/tree/v7
         with:
           name: ci-build-artifacts
-          path: build/libs/*.jar
+          path: |
+            packages/halo-plugin-extra-api/build/libs/*.jar
+            packages/halo-plugin-nodejs-runtime/build/libs/*.jar
+            packages/halo-plugin-minify-html/build/libs/*.jar

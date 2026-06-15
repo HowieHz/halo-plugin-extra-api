@@ -73,7 +73,7 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/ui" # Location of package manifests
+    directory: "/packages/halo-plugin-extra-api/ui" # Location of package manifests
     schedule:
       interval: "daily"
       time: "04:30"
@@ -92,7 +92,7 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/js-modules/shiki" # Location of package manifests
+    directory: "/packages/halo-plugin-extra-api/js-modules/shiki" # Location of package manifests
     schedule:
       interval: "daily"
       time: "04:30"

@@ -12,7 +12,10 @@ if (!releaseVersion || !previousVersion || !releaseDate) {
   process.exit(1);
 }
 
-const changelogFilePath = path.join(process.cwd(), "CHANGELOG.md");
+const changelogFilePath = process.argv[5]
+  ? path.resolve(process.cwd(), process.argv[5])
+  : path.join(process.cwd(), "packages/halo-plugin-extra-api/CHANGELOG.md");
+const tagPrefix = process.argv[6] || "halo-plugin-extra-api@";
 const content = fs.readFileSync(changelogFilePath, "utf8");
 const unreleasedHeading = "## [Unreleased]";
 const unreleasedIndex = content.indexOf(unreleasedHeading);
@@ -47,4 +50,4 @@ if (!unreleasedBody) {
 const newReleaseBlock = `${unreleasedHeading}\n\n## [${releaseVersion}] - ${releaseDate}\n\n${unreleasedBody}\n\n`;
 const updatedContent = `${content.slice(0, unreleasedIndex)}${newReleaseBlock}${content.slice(nextHeadingIndex + 1)}`;
 fs.writeFileSync(changelogFilePath, updatedContent);
-syncChangelogCompareLinks(changelogFilePath);
+syncChangelogCompareLinks(changelogFilePath, { tagPrefix });

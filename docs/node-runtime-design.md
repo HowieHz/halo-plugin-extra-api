@@ -4,15 +4,15 @@
 
 ## 目标
 
-- `node-runtime` 作为公共前置插件，提供 Node/Javet engine pool 和 JS 调用能力。
+- `nodejs-runtime` 作为公共前置插件，提供 Node/Javet engine pool 和 JS 调用能力。
 - 附属插件使用 ESM 编写源码，在构建时打包成单文件 CommonJS-compatible bundle。
-- `node-runtime` 只执行稳定 bundle，不支持运行时 `require`、`node_modules`、Node 内置模块解析。
+- `nodejs-runtime` 只执行稳定 bundle，不支持运行时 `require`、`node_modules`、Node 内置模块解析。
 - Javet 类型不暴露给附属插件。调用方不接触 `V8Runtime`、`JavetException`、Promise 细节。
 
 ## 插件分层
 
-- `node-runtime-api`: 发布给其他插件编译依赖，包含 API 接口和数据结构。
-- `node-runtime`: Halo 插件，实现 engine pool、模块注册、执行、维护接口。
+- `nodejs-runtime-api`: 发布给其他插件编译依赖，包含 API 接口和数据结构。
+- `nodejs-runtime`: Halo 插件，实现 engine pool、模块注册、执行、维护接口。
 - 附属插件: 实现 `NodeModuleProvider`，通过 `NodeRuntime.call(...)` 调用自己的或其他插件的模块。
 
 ## API 草案

@@ -1,0 +1,102 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = 'top.howiehz.halo.plugin.node.runtime'
+version = rootProject.findProperty('nodejsRuntimeVersion')
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+dependencies {
+    compileOnly platform('run.halo.tools.platform:plugin:2.25.0')
+    compileOnly 'run.halo.app:api'
+    compileOnly 'io.projectreactor:reactor-core'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifactId = 'nodejs-runtime-api'
+
+            pom {
+                name = 'Halo Node.js Runtime API'
+                description = 'API interfaces and DTOs for the Halo nodejs-runtime plugin.'
+                url = 'https://github.com/HowieHz/halo-plugins'
+
+                licenses {
+                    license {
+                        name = 'GNU Affero General Public License v3.0'
+                        url = 'https://www.gnu.org/licenses/agpl-3.0.html'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'HowieHz'
+                        name = 'HowieHz'
+                        url = 'https://github.com/HowieHz'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:https://github.com/HowieHz/halo-plugins.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/HowieHz/halo-plugins.git'
+                    url = 'https://github.com/HowieHz/halo-plugins'
+                }
+            }
+        }
+    }
+
+    repositories {
+        def publishUrl = findProperty('mavenPublishUrl')
+            ?: System.getenv('MAVEN_PUBLISH_URL')
+            ?: "https://maven.pkg.github.com/HowieHz/halo-plugins"
+        maven {
+            name = 'remote'
+            url = uri(publishUrl)
+            credentials {
+                username = findProperty('mavenUsername')
+                    ?: System.getenv('MAVEN_USERNAME')
+                    ?: System.getenv('GITHUB_ACTOR')
+                password = findProperty('mavenPassword')
+                    ?: System.getenv('MAVEN_PASSWORD')
+                    ?: System.getenv('GITHUB_TOKEN')
+            }
+        }
+    }
+}
+
+def signingKey = findProperty('signingKey') ?: System.getenv('GPG_SIGNING_KEY')
+def signingPassword = findProperty('signingPassword') ?: System.getenv('GPG_SIGNING_PASSWORD')
+
+signing {
+    required {
+        gradle.taskGraph.hasTask('publish') && signingKey
+    }
+    if (signingKey) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign publishing.publications.mavenJava
+    }
+}

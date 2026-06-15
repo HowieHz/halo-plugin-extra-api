@@ -1,0 +1,49 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionPointDefinition
+metadata:
+  name: node-runtime
+spec:
+  className: top.howiehz.halo.plugin.node.runtime.api.NodeRuntime
+  displayName: "Node.js 运行时"
+  description: "提供共享的 Node/Javet JavaScript 调用能力"
+  type: SINGLE_INSTANCE
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: node-runtime-impl
+spec:
+  className: top.howiehz.halo.plugin.node.runtime.NodeRuntimeService
+  extensionPointName: node-runtime
+  displayName: "Node.js 运行时"
+  description: "默认 Node/Javet JavaScript 运行时实现"
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionPointDefinition
+metadata:
+  name: node-runtime-maintenance
+spec:
+  className: top.howiehz.halo.plugin.node.runtime.api.NodeRuntimeMaintenance
+  displayName: "Node.js 运行时维护"
+  description: "提供 Node/Javet 运行时重建能力"
+  type: SINGLE_INSTANCE
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: node-runtime-maintenance-impl
+spec:
+  className: top.howiehz.halo.plugin.node.runtime.NodeRuntimeService
+  extensionPointName: node-runtime-maintenance
+  displayName: "Node.js 运行时维护"
+  description: "默认 Node/Javet 运行时维护实现"
+---
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionPointDefinition
+metadata:
+  name: node-module-provider
+spec:
+  className: top.howiehz.halo.plugin.node.runtime.api.NodeModuleProvider
+  displayName: "Node Module Provider"
+  description: "允许插件向 nodejs-runtime 注册单文件 CommonJS bundle"
+  type: MULTI_INSTANCE

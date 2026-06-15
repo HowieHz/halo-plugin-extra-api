@@ -19,9 +19,20 @@ jobs:
     permissions:
       contents: write
     outputs:
+      extra_api_changed: ${{ steps.meta.outputs.extra_api_changed }}
+      extra_api_tag: ${{ steps.meta.outputs.extra_api_tag }}
+      extra_api_version: ${{ steps.meta.outputs.extra_api_version }}
       release_version: ${{ steps.meta.outputs.release_version }}
-      release_tag: ${{ steps.meta.outputs.release_tag }}
       previous_version: ${{ steps.meta.outputs.previous_version }}
+      nodejs_runtime_api_tag: ${{ steps.meta.outputs.nodejs_runtime_api_tag }}
+      nodejs_runtime_changed: ${{ steps.meta.outputs.nodejs_runtime_changed }}
+      nodejs_runtime_tag: ${{ steps.meta.outputs.nodejs_runtime_tag }}
+      previous_nodejs_runtime_version: ${{ steps.meta.outputs.previous_nodejs_runtime_version }}
+      nodejs_runtime_version: ${{ steps.meta.outputs.nodejs_runtime_version }}
+      minify_html_changed: ${{ steps.meta.outputs.minify_html_changed }}
+      minify_html_tag: ${{ steps.meta.outputs.minify_html_tag }}
+      previous_minify_html_version: ${{ steps.meta.outputs.previous_minify_html_version }}
+      minify_html_version: ${{ steps.meta.outputs.minify_html_version }}
       release_date: ${{ steps.meta.outputs.release_date }}
       release_commit_sha: ${{ steps.commit.outputs.release_commit_sha }}
     steps:
@@ -37,9 +48,19 @@ jobs:
         shell: bash
         run: |
           RELEASE_VERSION=$(sed -n 's/^version=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
+          NODEJS_RUNTIME_VERSION=$(sed -n 's/^nodejsRuntimeVersion=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
+          MINIFY_HTML_VERSION=$(sed -n 's/^minifyHtmlVersion=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
 
           if [ -z "$RELEASE_VERSION" ]; then
             echo "Missing version in gradle.properties" >&2
+            exit 1
+          fi
+          if [ -z "$NODEJS_RUNTIME_VERSION" ]; then
+            echo "Missing nodejsRuntimeVersion in gradle.properties" >&2
+            exit 1
+          fi
+          if [ -z "$MINIFY_HTML_VERSION" ]; then
+            echo "Missing minifyHtmlVersion in gradle.properties" >&2
             exit 1
           fi
 
@@ -47,27 +68,101 @@ jobs:
             echo "Release version in gradle.properties must be semantic version (x.y.z), got: $RELEASE_VERSION" >&2
             exit 1
           fi
-
-          PREVIOUS_TAG=$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No stable release tag found" >&2
+          if ! [[ "$NODEJS_RUNTIME_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "nodejsRuntimeVersion in gradle.properties must be semantic version (x.y.z), got: $NODEJS_RUNTIME_VERSION" >&2
+            exit 1
+          fi
+          if ! [[ "$MINIFY_HTML_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "minifyHtmlVersion in gradle.properties must be semantic version (x.y.z), got: $MINIFY_HTML_VERSION" >&2
             exit 1
           fi
 
-          if git rev-parse "v$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo "Target release tag already exists: v$RELEASE_VERSION" >&2
+          PREVIOUS_EXTRA_API_VERSION=$(git tag --list 'halo-plugin-extra-api@*' | sed -n 's/^halo-plugin-extra-api@//p' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          if [ -z "$PREVIOUS_EXTRA_API_VERSION" ]; then
+            PREVIOUS_EXTRA_API_VERSION=$(git tag --list 'v*' | sed -n 's/^v//p' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          fi
+          if [ -z "$PREVIOUS_EXTRA_API_VERSION" ]; then
+            echo "No stable extra-api release tag found" >&2
             exit 1
           fi
 
-          if [ "$(printf '%s\n%s\n' "${PREVIOUS_TAG#v}" "$RELEASE_VERSION" | sort -V | tail -n 1)" != "$RELEASE_VERSION" ] || [ "${PREVIOUS_TAG#v}" = "$RELEASE_VERSION" ]; then
-            echo "Target release version must be greater than previous stable version ${PREVIOUS_TAG#v}" >&2
+          PREVIOUS_NODEJS_RUNTIME_VERSION=$(grep -m 1 -E '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' packages/halo-plugin-nodejs-runtime/CHANGELOG.md | sed -E 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*$/\1/')
+          if [ -z "$PREVIOUS_NODEJS_RUNTIME_VERSION" ]; then
+            echo "No historical nodejs-runtime release found" >&2
+            exit 1
+          fi
+
+          PREVIOUS_MINIFY_HTML_VERSION=$(git tag --list 'halo-plugin-minify-html@*' | sed -n 's/^halo-plugin-minify-html@//p' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          if [ -z "$PREVIOUS_MINIFY_HTML_VERSION" ]; then
+            PREVIOUS_MINIFY_HTML_VERSION="0.0.0"
+          fi
+
+          EXTRA_API_CHANGED=false
+          NODEJS_RUNTIME_CHANGED=false
+          MINIFY_HTML_CHANGED=false
+          EXTRA_API_TAG="halo-plugin-extra-api@$RELEASE_VERSION"
+          NODEJS_RUNTIME_TAG="halo-plugin-nodejs-runtime@$NODEJS_RUNTIME_VERSION"
+          NODEJS_RUNTIME_API_TAG="nodejs-runtime-api@$NODEJS_RUNTIME_VERSION"
+          MINIFY_HTML_TAG="halo-plugin-minify-html@$MINIFY_HTML_VERSION"
+
+          if [ "$RELEASE_VERSION" != "$PREVIOUS_EXTRA_API_VERSION" ]; then
+            EXTRA_API_CHANGED=true
+            if [ "$(printf '%s\n%s\n' "$PREVIOUS_EXTRA_API_VERSION" "$RELEASE_VERSION" | sort -V | tail -n 1)" != "$RELEASE_VERSION" ]; then
+              echo "Extra API version must be greater than previous stable version $PREVIOUS_EXTRA_API_VERSION" >&2
+              exit 1
+            fi
+            if git rev-parse "$EXTRA_API_TAG" >/dev/null 2>&1; then
+              echo "Target release tag already exists: $EXTRA_API_TAG" >&2
+              exit 1
+            fi
+          fi
+
+          if [ "$NODEJS_RUNTIME_VERSION" != "$PREVIOUS_NODEJS_RUNTIME_VERSION" ]; then
+            NODEJS_RUNTIME_CHANGED=true
+            if [ "$(printf '%s\n%s\n' "$PREVIOUS_NODEJS_RUNTIME_VERSION" "$NODEJS_RUNTIME_VERSION" | sort -V | tail -n 1)" != "$NODEJS_RUNTIME_VERSION" ]; then
+              echo "nodejsRuntimeVersion must be greater than previous nodejs-runtime version when changed: $PREVIOUS_NODEJS_RUNTIME_VERSION -> $NODEJS_RUNTIME_VERSION" >&2
+              exit 1
+            fi
+            for target_tag in "$NODEJS_RUNTIME_TAG" "$NODEJS_RUNTIME_API_TAG"; do
+              if git rev-parse "$target_tag" >/dev/null 2>&1; then
+                echo "Target release tag already exists: $target_tag" >&2
+                exit 1
+              fi
+            done
+          fi
+
+          if [ "$MINIFY_HTML_VERSION" != "$PREVIOUS_MINIFY_HTML_VERSION" ]; then
+            MINIFY_HTML_CHANGED=true
+            if [ "$(printf '%s\n%s\n' "$PREVIOUS_MINIFY_HTML_VERSION" "$MINIFY_HTML_VERSION" | sort -V | tail -n 1)" != "$MINIFY_HTML_VERSION" ]; then
+              echo "minifyHtmlVersion must be greater than previous minify-html version when changed: $PREVIOUS_MINIFY_HTML_VERSION -> $MINIFY_HTML_VERSION" >&2
+              exit 1
+            fi
+            if git rev-parse "$MINIFY_HTML_TAG" >/dev/null 2>&1; then
+              echo "Target release tag already exists: $MINIFY_HTML_TAG" >&2
+              exit 1
+            fi
+          fi
+
+          if [ "$EXTRA_API_CHANGED" != "true" ] && [ "$NODEJS_RUNTIME_CHANGED" != "true" ] && [ "$MINIFY_HTML_CHANGED" != "true" ]; then
+            echo "No package version changed. Refuse to publish an empty release." >&2
             exit 1
           fi
 
           RELEASE_DATE=$(TZ=Asia/Shanghai date +%F)
+          echo "extra_api_changed=$EXTRA_API_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "extra_api_tag=$EXTRA_API_TAG" >> "$GITHUB_OUTPUT"
+          echo "extra_api_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-          echo "release_tag=v$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-          echo "previous_version=${PREVIOUS_TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "previous_version=$PREVIOUS_EXTRA_API_VERSION" >> "$GITHUB_OUTPUT"
+          echo "nodejs_runtime_api_tag=$NODEJS_RUNTIME_API_TAG" >> "$GITHUB_OUTPUT"
+          echo "nodejs_runtime_changed=$NODEJS_RUNTIME_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "nodejs_runtime_tag=$NODEJS_RUNTIME_TAG" >> "$GITHUB_OUTPUT"
+          echo "previous_nodejs_runtime_version=$PREVIOUS_NODEJS_RUNTIME_VERSION" >> "$GITHUB_OUTPUT"
+          echo "nodejs_runtime_version=$NODEJS_RUNTIME_VERSION" >> "$GITHUB_OUTPUT"
+          echo "minify_html_changed=$MINIFY_HTML_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "minify_html_tag=$MINIFY_HTML_TAG" >> "$GITHUB_OUTPUT"
+          echo "previous_minify_html_version=$PREVIOUS_MINIFY_HTML_VERSION" >> "$GITHUB_OUTPUT"
+          echo "minify_html_version=$MINIFY_HTML_VERSION" >> "$GITHUB_OUTPUT"
           echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
@@ -78,12 +173,11 @@ jobs:
       - name: Verify Release Merge Is Still the Tip of Main
         env:
           MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
-          RELEASE_VERSION: ${{ steps.meta.outputs.release_version }}
         shell: bash
         run: |
           CURRENT_SHA=$(git rev-parse HEAD)
           CURRENT_SUBJECT=$(git log -1 --pretty=%s)
-          EXPECTED_SUBJECT="docs(changelog): sync $RELEASE_VERSION release"
+          EXPECTED_SUBJECT="docs(changelog): sync package release"
 
           if [ "$CURRENT_SHA" = "$MERGE_SHA" ]; then
             echo "main still points at the merged release pull request."
@@ -101,22 +195,31 @@ jobs:
           exit 1
 
       - name: Promote changelog entry
-        run: node .github/scripts/prepare-changelog-release.js "${{ steps.meta.outputs.release_version }}" "${{ steps.meta.outputs.previous_version }}" "${{ steps.meta.outputs.release_date }}"
+        if: steps.meta.outputs.extra_api_changed == 'true'
+        run: node .github/scripts/prepare-changelog-release.js "${{ steps.meta.outputs.release_version }}" "${{ steps.meta.outputs.previous_version }}" "${{ steps.meta.outputs.release_date }}" packages/halo-plugin-extra-api/CHANGELOG.md
+
+      - name: Promote nodejs-runtime changelog entry
+        if: steps.meta.outputs.nodejs_runtime_changed == 'true'
+        run: node .github/scripts/prepare-changelog-release.js "${{ steps.meta.outputs.nodejs_runtime_version }}" "${{ steps.meta.outputs.previous_nodejs_runtime_version }}" "${{ steps.meta.outputs.release_date }}" packages/halo-plugin-nodejs-runtime/CHANGELOG.md halo-plugin-nodejs-runtime@
+
+      - name: Promote minify-html changelog entry
+        if: steps.meta.outputs.minify_html_changed == 'true' && steps.meta.outputs.previous_minify_html_version != '0.0.0'
+        run: node .github/scripts/prepare-changelog-release.js "${{ steps.meta.outputs.minify_html_version }}" "${{ steps.meta.outputs.previous_minify_html_version }}" "${{ steps.meta.outputs.release_date }}" packages/halo-plugin-minify-html/CHANGELOG.md halo-plugin-minify-html@
 
       - name: Commit changelog
         id: commit
         shell: bash
         run: |
-          if git diff --quiet -- CHANGELOG.md; then
-            echo "CHANGELOG.md is already synced for this release."
+          if git diff --quiet -- packages/halo-plugin-extra-api/CHANGELOG.md packages/halo-plugin-nodejs-runtime/CHANGELOG.md packages/halo-plugin-minify-html/CHANGELOG.md; then
+            echo "Package changelogs are already synced for this release."
             echo "release_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "docs(changelog): sync ${{ steps.meta.outputs.release_version }} release"
+          git add packages/halo-plugin-extra-api/CHANGELOG.md packages/halo-plugin-nodejs-runtime/CHANGELOG.md packages/halo-plugin-minify-html/CHANGELOG.md
+          git commit -m "docs(changelog): sync package release"
           git push origin HEAD:main
           echo "release_commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -131,40 +234,100 @@ jobs:
       matrix:
         include:
           - id: lite
-            gradle_task: jarLite
+            gradle_task: :extra-api:jarLite
             artifact_name: extra-api-lite
-            artifact_path: build/libs/extra-api-lite-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-lite-*.jar
             needs_node_toolchain: false
           - id: full-linux-x86_64
-            gradle_task: jarFullLinux-x86_64
+            gradle_task: :extra-api:jarFullLinux-x86_64
             artifact_name: extra-api-full-linux-x86_64
-            artifact_path: build/libs/extra-api-full-linux-x86_64-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-full-linux-x86_64-*.jar
             needs_node_toolchain: true
           - id: full-linux-arm64
-            gradle_task: jarFullLinux-arm64
+            gradle_task: :extra-api:jarFullLinux-arm64
             artifact_name: extra-api-full-linux-arm64
-            artifact_path: build/libs/extra-api-full-linux-arm64-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-full-linux-arm64-*.jar
             needs_node_toolchain: true
           - id: full-macos-arm64
-            gradle_task: jarFullMacos-arm64
+            gradle_task: :extra-api:jarFullMacos-arm64
             artifact_name: extra-api-full-macos-arm64
-            artifact_path: build/libs/extra-api-full-macos-arm64-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-full-macos-arm64-*.jar
             needs_node_toolchain: true
           - id: full-macos-x86_64
-            gradle_task: jarFullMacos-x86_64
+            gradle_task: :extra-api:jarFullMacos-x86_64
             artifact_name: extra-api-full-macos-x86_64
-            artifact_path: build/libs/extra-api-full-macos-x86_64-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-full-macos-x86_64-*.jar
             needs_node_toolchain: true
           - id: full-windows-x86_64
-            gradle_task: jarFullWindows-x86_64
+            gradle_task: :extra-api:jarFullWindows-x86_64
             artifact_name: extra-api-full-windows-x86_64
-            artifact_path: build/libs/extra-api-full-windows-x86_64-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-full-windows-x86_64-*.jar
             needs_node_toolchain: true
           - id: full-all-platforms
-            gradle_task: jarFullAllPlatforms
+            gradle_task: :extra-api:jarFullAllPlatforms
             artifact_name: extra-api-full-all-platforms
-            artifact_path: build/libs/extra-api-full-all-platforms-*.jar
+            artifact_path: packages/halo-plugin-extra-api/build/libs/extra-api-full-all-platforms-*.jar
             needs_node_toolchain: true
+          - id: nodejs-runtime-linux-x86_64
+            gradle_task: :nodejs-runtime:jarLinux-x86_64
+            artifact_name: nodejs-runtime-linux-x86_64
+            artifact_path: packages/halo-plugin-nodejs-runtime/build/libs/nodejs-runtime-linux-x86_64-*.jar
+            needs_node_toolchain: false
+          - id: nodejs-runtime-linux-arm64
+            gradle_task: :nodejs-runtime:jarLinux-arm64
+            artifact_name: nodejs-runtime-linux-arm64
+            artifact_path: packages/halo-plugin-nodejs-runtime/build/libs/nodejs-runtime-linux-arm64-*.jar
+            needs_node_toolchain: false
+          - id: nodejs-runtime-macos-arm64
+            gradle_task: :nodejs-runtime:jarMacos-arm64
+            artifact_name: nodejs-runtime-macos-arm64
+            artifact_path: packages/halo-plugin-nodejs-runtime/build/libs/nodejs-runtime-macos-arm64-*.jar
+            needs_node_toolchain: false
+          - id: nodejs-runtime-macos-x86_64
+            gradle_task: :nodejs-runtime:jarMacos-x86_64
+            artifact_name: nodejs-runtime-macos-x86_64
+            artifact_path: packages/halo-plugin-nodejs-runtime/build/libs/nodejs-runtime-macos-x86_64-*.jar
+            needs_node_toolchain: false
+          - id: nodejs-runtime-windows-x86_64
+            gradle_task: :nodejs-runtime:jarWindows-x86_64
+            artifact_name: nodejs-runtime-windows-x86_64
+            artifact_path: packages/halo-plugin-nodejs-runtime/build/libs/nodejs-runtime-windows-x86_64-*.jar
+            needs_node_toolchain: false
+          - id: nodejs-runtime-all-platforms
+            gradle_task: :nodejs-runtime:jarAllPlatforms
+            artifact_name: nodejs-runtime-all-platforms
+            artifact_path: packages/halo-plugin-nodejs-runtime/build/libs/nodejs-runtime-all-platforms-*.jar
+            needs_node_toolchain: false
+          - id: minify-html-linux-x86_64
+            gradle_task: :minify-html:jarLinux-x86_64
+            artifact_name: minify-html-linux-x86_64
+            artifact_path: packages/halo-plugin-minify-html/build/libs/minify-html-linux-x86_64-*.jar
+            needs_node_toolchain: false
+          - id: minify-html-linux-arm64
+            gradle_task: :minify-html:jarLinux-arm64
+            artifact_name: minify-html-linux-arm64
+            artifact_path: packages/halo-plugin-minify-html/build/libs/minify-html-linux-arm64-*.jar
+            needs_node_toolchain: false
+          - id: minify-html-macos-arm64
+            gradle_task: :minify-html:jarMacos-arm64
+            artifact_name: minify-html-macos-arm64
+            artifact_path: packages/halo-plugin-minify-html/build/libs/minify-html-macos-arm64-*.jar
+            needs_node_toolchain: false
+          - id: minify-html-macos-x86_64
+            gradle_task: :minify-html:jarMacos-x86_64
+            artifact_name: minify-html-macos-x86_64
+            artifact_path: packages/halo-plugin-minify-html/build/libs/minify-html-macos-x86_64-*.jar
+            needs_node_toolchain: false
+          - id: minify-html-windows-x86_64
+            gradle_task: :minify-html:jarWindows-x86_64
+            artifact_name: minify-html-windows-x86_64
+            artifact_path: packages/halo-plugin-minify-html/build/libs/minify-html-windows-x86_64-*.jar
+            needs_node_toolchain: false
+          - id: minify-html-all-platforms
+            gradle_task: :minify-html:jarAllPlatforms
+            artifact_name: minify-html-all-platforms
+            artifact_path: packages/halo-plugin-minify-html/build/libs/minify-html-all-platforms-*.jar
+            needs_node_toolchain: false
     steps:
       - name: Checkout Source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # https://github.com/actions/checkout/tree/v6.0.3
@@ -197,8 +360,8 @@ jobs:
         run: |
           {
             echo 'paths<<EOF'
-            echo 'ui/pnpm-lock.yaml'
-            echo 'js-modules/shiki/pnpm-lock.yaml'
+            echo 'packages/halo-plugin-extra-api/ui/pnpm-lock.yaml'
+            echo 'packages/halo-plugin-extra-api/js-modules/shiki/pnpm-lock.yaml'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -244,21 +407,22 @@ jobs:
           path: build/libs
           merge-multiple: true
 
-      - name: Publish GitHub Release
+      - name: Publish Extra API GitHub Release
+        if: needs.prepare.outputs.extra_api_changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.PR_WORKFLOW_TOKEN || github.token }}
-          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
-          RELEASE_VERSION: ${{ needs.prepare.outputs.release_version }}
+          EXTRA_API_TAG: ${{ needs.prepare.outputs.extra_api_tag }}
+          EXTRA_API_VERSION: ${{ needs.prepare.outputs.extra_api_version }}
           RELEASE_SHA: ${{ needs.prepare.outputs.release_commit_sha }}
         shell: bash
         run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            echo "GitHub release already exists: $RELEASE_TAG"
+          if gh release view "$EXTRA_API_TAG" >/dev/null 2>&1; then
+            echo "GitHub release already exists: $EXTRA_API_TAG"
             exit 0
           fi
 
           mapfile -t assets < <(
-            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1])) console.log('build/libs/' + name);" "$RELEASE_VERSION"
+            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1], process.argv[2]).filter((name) => name.startsWith('extra-api-'))) console.log('build/libs/' + name);" "$EXTRA_API_VERSION" "$EXTRA_API_VERSION"
           )
 
           for asset in "${assets[@]}"; do
@@ -270,9 +434,88 @@ jobs:
 
           # GitHub Releases currently preserve asset upload order in the UI,
           # so upload assets in DISPLAY_ORDER directly.
-          gh release create "$RELEASE_TAG" "${assets[@]}" \
-            --title "$RELEASE_VERSION" \
+          gh release create "$EXTRA_API_TAG" "${assets[@]}" \
+            --title "halo-plugin-extra-api $EXTRA_API_VERSION" \
             --notes-file .github/templates/release-note-template.md \
+            --target "$RELEASE_SHA"
+
+      - name: Publish Node.js Runtime GitHub Release
+        if: needs.prepare.outputs.nodejs_runtime_changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PR_WORKFLOW_TOKEN || github.token }}
+          NODEJS_RUNTIME_TAG: ${{ needs.prepare.outputs.nodejs_runtime_tag }}
+          NODEJS_RUNTIME_VERSION: ${{ needs.prepare.outputs.nodejs_runtime_version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release_commit_sha }}
+        shell: bash
+        run: |
+          if gh release view "$NODEJS_RUNTIME_TAG" >/dev/null 2>&1; then
+            echo "GitHub release already exists: $NODEJS_RUNTIME_TAG"
+            exit 0
+          fi
+
+          mapfile -t assets < <(
+            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1], process.argv[2]).filter((name) => name.startsWith('nodejs-runtime-'))) console.log('build/libs/' + name);" "$NODEJS_RUNTIME_VERSION" "$NODEJS_RUNTIME_VERSION"
+          )
+
+          for asset in "${assets[@]}"; do
+            if [ ! -f "$asset" ]; then
+              echo "Missing expected release asset: $asset" >&2
+              exit 1
+            fi
+          done
+
+          gh release create "$NODEJS_RUNTIME_TAG" "${assets[@]}" \
+            --title "halo-plugin-nodejs-runtime $NODEJS_RUNTIME_VERSION" \
+            --notes "详情请参阅 packages/halo-plugin-nodejs-runtime/CHANGELOG.md。" \
+            --target "$RELEASE_SHA"
+
+      - name: Publish Minify HTML GitHub Release
+        if: needs.prepare.outputs.minify_html_changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PR_WORKFLOW_TOKEN || github.token }}
+          MINIFY_HTML_TAG: ${{ needs.prepare.outputs.minify_html_tag }}
+          MINIFY_HTML_VERSION: ${{ needs.prepare.outputs.minify_html_version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release_commit_sha }}
+        shell: bash
+        run: |
+          if gh release view "$MINIFY_HTML_TAG" >/dev/null 2>&1; then
+            echo "GitHub release already exists: $MINIFY_HTML_TAG"
+            exit 0
+          fi
+
+          mapfile -t assets < <(
+            node --input-type=module -e "import { buildReleaseAssetNames } from './.github/scripts/release-asset-order.js'; for (const name of buildReleaseAssetNames(process.argv[1], process.argv[2], process.argv[3]).filter((name) => name.startsWith('minify-html-'))) console.log('build/libs/' + name);" "$MINIFY_HTML_VERSION" "$MINIFY_HTML_VERSION" "$MINIFY_HTML_VERSION"
+          )
+
+          for asset in "${assets[@]}"; do
+            if [ ! -f "$asset" ]; then
+              echo "Missing expected release asset: $asset" >&2
+              exit 1
+            fi
+          done
+
+          gh release create "$MINIFY_HTML_TAG" "${assets[@]}" \
+            --title "halo-plugin-minify-html $MINIFY_HTML_VERSION" \
+            --notes "详情请参阅 packages/halo-plugin-minify-html/CHANGELOG.md。" \
+            --target "$RELEASE_SHA"
+
+      - name: Publish Node Runtime API GitHub Release
+        if: needs.prepare.outputs.nodejs_runtime_changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PR_WORKFLOW_TOKEN || github.token }}
+          NODEJS_RUNTIME_API_TAG: ${{ needs.prepare.outputs.nodejs_runtime_api_tag }}
+          NODEJS_RUNTIME_VERSION: ${{ needs.prepare.outputs.nodejs_runtime_version }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release_commit_sha }}
+        shell: bash
+        run: |
+          if gh release view "$NODEJS_RUNTIME_API_TAG" >/dev/null 2>&1; then
+            echo "GitHub release already exists: $NODEJS_RUNTIME_API_TAG"
+            exit 0
+          fi
+
+          gh release create "$NODEJS_RUNTIME_API_TAG" \
+            --title "nodejs-runtime-api $NODEJS_RUNTIME_VERSION" \
+            --notes "Maven package: top.howiehz.halo.plugin.node.runtime:nodejs-runtime-api:$NODEJS_RUNTIME_VERSION" \
             --target "$RELEASE_SHA"
 
   app-store-release:
@@ -281,6 +524,7 @@ jobs:
       - prepare
       - build
       - github-release
+    if: needs.prepare.outputs.extra_api_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -312,4 +556,5 @@ jobs:
           RELEASE_NAME: ${{ needs.prepare.outputs.release_version }}
           RELEASE_NOTES_FILE: .github/templates/release-note-template.md
           RELEASE_PRERELEASE: "false"
+          ASSET_NAME_PREFIX: extra-api-
         run: node .github/scripts/sync-release-to-halo-store.js

@@ -13,7 +13,7 @@
 ./gradlew build
 
 # 开发前端
-cd ui
+cd packages/halo-plugin-extra-api/ui
 pnpm install
 pnpm dev
 ```
@@ -29,14 +29,14 @@ pnpm dev
 - `.github/workflows/ci.yaml`
   - PR 合并前必须通过必需检查 `CI / Required Checks`。
   - 此工作流负责 PR 的主要检查，包括插件构建、测试，以及发版版本号约束。
-  - 普通 PR 可以照常改代码，但不能修改 `gradle.properties` 里的 `version`；如果修改了，这个工作流会直接失败。
-  - 只有带 `release` 标签的 PR 才允许修改 `gradle.properties` 里的 `version`，且版本号必须是递增的语义化版本；不满足时同样由这个工作流拦截。
+  - 普通 PR 可以照常改代码，但不能修改 `gradle.properties` 里的发布版本字段；如果修改了，这个工作流会直接失败。
+  - 只有带 `release` 标签的 PR 才允许修改 `gradle.properties` 里的发布版本字段，且版本号必须是递增的语义化版本；不满足时同样由这个工作流拦截。
 - `.github/workflows/check-release-guard.yml`
   - 为带 `release` 标签的 PR 提供额外的发布摘要检查。
-  - 会在 PR 中标记上一个稳定版标签和本次请求发布的版本号，便于合并前复核。
+  - 会在 PR 中标记上一个 Extra API 稳定版、本次请求发布的版本号，以及检测到的待发布包 tag，便于合并前复核。
 - `.github/workflows/release-stable-plugin.yml`
   - 负责带 `release` 标签的 PR 合并后的正式发版流程。
-  - 会校验合并后的 `main` 是否仍然对应这次发版 PR、把 `CHANGELOG.md` 的 `Unreleased` 提升为正式版本、提交更新日志变更，并创建 GitHub 发布页（Release）。
+  - 会校验合并后的 `main` 是否仍然对应这次发版 PR、把变更包的 changelog `Unreleased` 提升为正式版本、提交更新日志变更，并创建 GitHub 发布页（Release）。
   - 随后会自动把同一批构建产物同步到 Halo 应用市场。
 
 ## 发布流程
@@ -44,26 +44,35 @@ pnpm dev
 ### 发布前检查清单
 
 1. 准备合并到本次版本的提交和 PR 已全部进入 `main` 之前的待发布 PR。
-2. `CHANGELOG.md` 的 `## [Unreleased]` 下已经补充完整本次版本说明，并且没有删除 `## [Unreleased]` 标题。
-3. 发布 PR（带 `release` 标签）只允许手动修改 `gradle.properties` 中的 `version`，该值将作为正式版目标版本号。
-4. 发版前人工确认 `src/main/resources/plugin.yaml` 的 `spec.requires` 仍符合目标 Halo CMS 版本要求。
+2. `packages/halo-plugin-extra-api/CHANGELOG.md` 的 `## [Unreleased]` 下已经补充完整本次 Extra API 版本说明，并且没有删除 `## [Unreleased]` 标题。
+3. 如本次包含 Node.js Runtime 变更，`packages/halo-plugin-nodejs-runtime/CHANGELOG.md` 也应记录对应版本说明。
+4. 如本次包含 Minify HTML 变更，`packages/halo-plugin-minify-html/CHANGELOG.md` 也应记录对应版本说明。
+5. 发布 PR（带 `release` 标签）只允许手动修改 `gradle.properties` 中的 `version`、`nodejsRuntimeVersion` 和 `minifyHtmlVersion`，其中 `version` 是 Extra API 版本，`nodejsRuntimeVersion` 是 Node.js Runtime / API 版本，`minifyHtmlVersion` 是 Minify HTML 版本。
+6. 发版前人工确认各插件 `src/main/resources/plugin.yaml` 的 `spec.requires` 仍符合目标 Halo CMS 版本要求。
 
 ### 正式版发布方法
 
 正式版通过带标签的 PR 自动发布：
 
 1. 创建用于正式发布的 PR。
-2. 为 PR 添加 `release` 标签，并将 `gradle.properties` 中的 `version` 改为目标语义化版本号，例如 `3.1.2`。
+2. 为 PR 添加 `release` 标签，并将 `gradle.properties` 中的 `version` 改为 Extra API 目标语义化版本号，例如 `3.1.7`。如需发布新的 Node.js Runtime / API，同步调整 `nodejsRuntimeVersion`，例如 `1.0.1`；如需发布新的 Minify HTML，同步调整 `minifyHtmlVersion`。
 3. 等待 `CI / Required Checks` 与 `Check Release Guard / Check Release Constraints` 通过，并确认摘要中的目标版本号与上一个稳定版无误。
 4. 合并 PR 到 `main`。
 
 PR 合并后，机器人会自动执行以下动作：
 
-1. 将 `CHANGELOG.md` 中 `## [Unreleased]` 的内容提升为本次正式版条目，并保留 `## [Unreleased]` 标题。
-2. 自动重建 `CHANGELOG.md` 末尾的版本对比链接定义。
+1. 将变更包 changelog 中 `## [Unreleased]` 的内容提升为本次正式版条目，并保留 `## [Unreleased]` 标题。
+2. 自动重建变更包 changelog 末尾的版本对比链接定义。
 3. 将更新日志变更提交回 `main`。
 4. 构建全部发布变体，并创建 GitHub Release。
 5. 同步同一批构建产物到 Halo 应用市场。（先创建草稿版本，成功上传全部构建产物后再发布，避免市场侧先出现不完整附件）
+
+GitHub Release tag 使用包级格式：
+
+- `halo-plugin-extra-api@版本号`
+- `halo-plugin-nodejs-runtime@版本号`
+- `nodejs-runtime-api@版本号`
+- `halo-plugin-minify-html@版本号`
 
 ### 发布产物顺序
 
@@ -97,7 +106,7 @@ GitHub Release 页面和 Halo 应用市场最终展示顺序都固定为：
 
 ### 📦 核心构建任务
 
-- __jarLite__ - 构建轻量版，排除 interop 相关功能，以及 Javet、`minify-html` 等 JNI 依赖
+- __jarLite__ - 构建轻量版，排除 interop 相关功能
 - __jarFullAllPlatforms__ - 构建包含所有平台支持的完整版
 - __jarFull{Platform}__ - 构建特定平台的完整版(如jarFullLinux-x86_64)
 
@@ -107,7 +116,18 @@ GitHub Release 页面和 Halo 应用市场最终展示顺序都固定为：
 - __buildLite__ - 仅构建轻量版
 - __build__/__jar__ - 默认构建包含所有平台支持的完整版
 
-构建完成后，可以在 `build/libs` 目录找到插件 jar 文件。
+构建完成后，可以在各插件包的 `build/libs` 目录找到插件 jar 文件。
+
+### 发布 nodejs-runtime API 到 GitHub Packages
+
+默认发布到 GitHub Packages：
+
+```bash
+GITHUB_ACTOR=HowieHz GITHUB_TOKEN=your-token ./gradlew :nodejs-runtime-api:publish
+```
+
+发布地址为 `https://maven.pkg.github.com/HowieHz/halo-plugins`。GitHub Actions 可以手动触发 `Publish Node.js Runtime API`，也会在 GitHub Release 发布时自动运行。
+
 
 ## 已知问题
 
@@ -116,7 +136,7 @@ GitHub Release 页面和 Halo 应用市场最终展示顺序都固定为：
 ### HTML 页面压缩的响应体改写不是流式的
 
 - 相关实现：
-  - `src/main/java/top/howiehz/halo/plugin/extra/api/service/interop/web/filter/htmlminify/HtmlMinifyWebFilter.java`
+  - `packages/halo-plugin-minify-html/src/main/java/top/howiehz/halo/plugin/minify/html/HtmlMinifyWebFilter.java`
 - 当前 HTML 页面压缩功能依赖 Halo 的附加 Web 过滤器扩展点（`AdditionalWebFilter`）完整读取并重写响应体。
 - 这意味着在压缩前必须先聚合完整的 HTML 响应内容，再交给 `minify-html` 处理。
 - 因此该功能天然会带来一次额外的内存占用和复制成本，无法像真正的流式转换那样边读边压。
@@ -124,7 +144,11 @@ GitHub Release 页面和 Halo 应用市场最终展示顺序都固定为：
 
 ## 修订发布说明
 
-请在 `CHANGELOG.md` 的 `## [Unreleased]` 下记录本次正式版需要对外说明的变更。
+请在对应插件的 changelog 中记录本次正式版需要对外说明的变更：
+
+- Extra API: `packages/halo-plugin-extra-api/CHANGELOG.md`
+- Node.js Runtime: `packages/halo-plugin-nodejs-runtime/CHANGELOG.md`
+- Minify HTML: `packages/halo-plugin-minify-html/CHANGELOG.md`
 
 ## 如何添加新的嵌入式 JS 模块
 

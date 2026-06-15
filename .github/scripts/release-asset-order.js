@@ -1,21 +1,45 @@
 export const DISPLAY_ORDER = [
-  "lite",
-  "linux-x86_64",
-  "linux-arm64",
-  "macos-arm64",
-  "macos-x86_64",
-  "windows-x86_64",
-  "all-platforms",
+  "extra-api-lite",
+  "extra-api-linux-x86_64",
+  "extra-api-linux-arm64",
+  "extra-api-macos-arm64",
+  "extra-api-macos-x86_64",
+  "extra-api-windows-x86_64",
+  "extra-api-all-platforms",
+  "nodejs-runtime-linux-x86_64",
+  "nodejs-runtime-linux-arm64",
+  "nodejs-runtime-macos-arm64",
+  "nodejs-runtime-macos-x86_64",
+  "nodejs-runtime-windows-x86_64",
+  "nodejs-runtime-all-platforms",
+  "minify-html-linux-x86_64",
+  "minify-html-linux-arm64",
+  "minify-html-macos-arm64",
+  "minify-html-macos-x86_64",
+  "minify-html-windows-x86_64",
+  "minify-html-all-platforms",
 ];
 
 export const PREFIX_BY_VARIANT = {
-  lite: "extra-api-lite-",
-  "linux-x86_64": "extra-api-full-linux-x86_64-",
-  "linux-arm64": "extra-api-full-linux-arm64-",
-  "macos-arm64": "extra-api-full-macos-arm64-",
-  "macos-x86_64": "extra-api-full-macos-x86_64-",
-  "windows-x86_64": "extra-api-full-windows-x86_64-",
-  "all-platforms": "extra-api-full-all-platforms-",
+  "extra-api-lite": "extra-api-lite-",
+  "extra-api-linux-x86_64": "extra-api-full-linux-x86_64-",
+  "extra-api-linux-arm64": "extra-api-full-linux-arm64-",
+  "extra-api-macos-arm64": "extra-api-full-macos-arm64-",
+  "extra-api-macos-x86_64": "extra-api-full-macos-x86_64-",
+  "extra-api-windows-x86_64": "extra-api-full-windows-x86_64-",
+  "extra-api-all-platforms": "extra-api-full-all-platforms-",
+  "nodejs-runtime-linux-x86_64": "nodejs-runtime-linux-x86_64-",
+  "nodejs-runtime-linux-arm64": "nodejs-runtime-linux-arm64-",
+  "nodejs-runtime-macos-arm64": "nodejs-runtime-macos-arm64-",
+  "nodejs-runtime-macos-x86_64": "nodejs-runtime-macos-x86_64-",
+  "nodejs-runtime-windows-x86_64": "nodejs-runtime-windows-x86_64-",
+  "nodejs-runtime-all-platforms": "nodejs-runtime-all-platforms-",
+  "minify-html-linux-x86_64": "minify-html-linux-x86_64-",
+  "minify-html-linux-arm64": "minify-html-linux-arm64-",
+  "minify-html-macos-arm64": "minify-html-macos-arm64-",
+  "minify-html-macos-x86_64": "minify-html-macos-x86_64-",
+  "minify-html-windows-x86_64": "minify-html-windows-x86_64-",
+  "minify-html-all-platforms": "minify-html-all-platforms-",
 };
 
 export function resolveAssetVariant(fileName) {
@@ -52,6 +76,13 @@ export function sortByDisplayOrder(fileNames) {
   return [...fileNames].sort(compareByDisplayOrder);
 }
 
-export function buildReleaseAssetNames(version) {
-  return DISPLAY_ORDER.map((variant) => `${PREFIX_BY_VARIANT[variant]}${version}.jar`);
+export function buildReleaseAssetNames(extraApiVersion, nodejsRuntimeVersion = extraApiVersion, minifyHtmlVersion = extraApiVersion) {
+  return DISPLAY_ORDER.map((variant) => {
+    const version = variant.startsWith("nodejs-runtime-")
+      ? nodejsRuntimeVersion
+      : variant.startsWith("minify-html-")
+        ? minifyHtmlVersion
+        : extraApiVersion;
+    return `${PREFIX_BY_VARIANT[variant]}${version}.jar`;
+  });
 }

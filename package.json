@@ -1,5 +1,5 @@
 {
-    "name": "halo-plugin-extra-api",
+    "name": "halo-plugins",
     "private": true,
     "type": "module",
     "engines": {
@@ -8,6 +8,9 @@
     },
     "packageManager": "pnpm@11.6.0",
     "scripts": {
+        "docs:build": "pnpm --filter docs build",
+        "docs:preview": "pnpm --filter docs preview",
+        "docs:watch": "pnpm --filter docs watch",
         "sync:changelog-links": "node .github/scripts/update-changelog-links.js"
     }
 }

@@ -40,8 +40,8 @@ jobs:
           body: |
             This PR updates the repository toolchain versions tracked in:
             - `package.json`
-            - `ui/package.json`
-            - `js-modules/shiki/package.json`
+            - `packages/halo-plugin-extra-api/ui/package.json`
+            - `packages/halo-plugin-extra-api/js-modules/shiki/package.json`
             - workflows that bootstrap Node.js and pnpm directly
 
             Releases are only considered eligible after a 1 day delay, matching the repository's Dependabot cooldown.

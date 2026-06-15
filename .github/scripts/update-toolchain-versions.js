@@ -5,8 +5,8 @@ const githubDirPath = ".github";
 const workflowsDirPath = path.join(githubDirPath, "workflows");
 const packageJsonPaths = [
   "package.json",
-  path.join("ui", "package.json"),
-  path.join("js-modules", "shiki", "package.json"),
+  path.join("packages", "extra-api", "ui", "package.json"),
+  path.join("packages", "extra-api", "js-modules", "shiki", "package.json"),
 ];
 const managedWorkflowPaths = [
   path.join(workflowsDirPath, "ci.yaml"),

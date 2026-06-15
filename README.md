@@ -1,16 +1,16 @@
 # API 扩展包
 
-![GitHub](https://img.shields.io/github/license/HowieHz/halo-plugin-extra-api)
-![GitHub all releases](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/total)
-![GitHub release (latest by date)](https://img.shields.io/github/downloads/HowieHz/halo-plugin-extra-api/latest/total)
-![GitHub repo size](https://img.shields.io/github/repo-size/HowieHz/halo-plugin-extra-api)
+![GitHub](https://img.shields.io/github/license/HowieHz/halo-plugins)
+![GitHub all releases](https://img.shields.io/github/downloads/HowieHz/halo-plugins/total)
+![GitHub release (latest by date)](https://img.shields.io/github/downloads/HowieHz/halo-plugins/latest/total)
+![GitHub repo size](https://img.shields.io/github/repo-size/HowieHz/halo-plugins)
 [![Halo Version](https://img.shields.io/badge/Halo-2.25.0+-brightgreen.svg)](https://halo.run)
 
 ## 简介
 
 一个为 Halo CMS 提供额外 API 的轻量级插件。
 
-快捷跳转：[版本说明](#版本说明)/[全量版使用须知](#全量版使用须知)/[文档目录](#文档目录)
+快捷跳转：[在线文档](https://howiehz.top/halo-plugins/)/[版本说明](#版本说明)/[全量版使用须知](#全量版使用须知)/[文档目录](#文档目录)
 
 ## 核心理念
 
@@ -50,7 +50,7 @@
 - 无需主题适配即可使用的功能：
     - [中英文混排格式化处理器](#中英文混排格式化处理器)
     - [代码高亮处理器](#代码高亮处理器)（仅全量版可用）
-    - [HTML 页面压缩处理器](#html-页面压缩处理器)（仅全量版可用）
+    - [HTML 页面压缩处理器](#html-页面压缩处理器)（独立插件）
 - 提供给主题开发者使用的 Finder API：
     - [插件本体信息相关 API](#插件本体信息相关-api)
     - [文章字数统计 API（单篇/全站）](#文章字数统计-api)
@@ -58,9 +58,9 @@
     - [中英文混排格式化 API](#中英文混排格式化-api)
     - [代码高亮 API](#代码高亮-api)（仅全量版可用）
 
-欢迎为此插件提 [Issue](https://github.com/HowieHz/halo-plugin-extra-api/issues/new)，任何你需要的功能都可以在此处提出，我将在能力范围内尽力实现。
+欢迎为此插件提 [Issue](https://github.com/HowieHz/halo-plugins/issues/new)，任何你需要的功能都可以在此处提出，我将在能力范围内尽力实现。
 
-💖 支持本项目: 如果你觉得这个插件有用，点个 [Star](https://github.com/HowieHz/halo-plugin-extra-api) 就是对我最大的鼓励!
+💖 支持本项目: 如果你觉得这个插件有用，点个 [Star](https://github.com/HowieHz/halo-plugins) 就是对我最大的鼓励!
 
 感谢所有支持本项目的用户和开发者，也特别感谢 Halo CMS 团队为插件生态提供的优秀平台。
 
@@ -688,9 +688,9 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 
 ### HTML 页面压缩处理器
 
-插件提供了自动化的 HTML 页面压缩处理器，无需在模板中手动调用，即可在服务端对前台 HTML 响应进行整体压缩。
+`minify-html` 独立插件提供了自动化的 HTML 页面压缩处理器，无需在模板中手动调用，即可在服务端对前台 HTML 响应进行整体压缩。
 
-此功能通过 [minify-html](https://github.com/wilsonzlin/minify-html) 的 Java JNI 绑定实现，仅在[全量版](#版本说明)中可用。
+此功能通过 [minify-html](https://github.com/wilsonzlin/minify-html) 的 Java JNI 绑定实现，已从 Extra API 拆分为独立插件。
 
 #### 特点
 
@@ -709,7 +709,7 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 
 #### 配置选项
 
-在“插件设置 - HTML 页面压缩（仅全量版可用）”提供以下配置项：
+在 `minify-html` 插件设置的“HTML 页面压缩”中提供以下配置项：
 
 - 自动压缩：启用之后会在服务端对前台 HTML 页面响应做整体压缩。
 - 排除路径规则：
@@ -745,7 +745,7 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 
 插件提供两个版本：
 
-- **全量版**：包含所有功能，包括代码高亮、HTML 页面压缩等依赖原生运行时的功能。
+- **全量版**：包含所有 Extra API 功能，包括代码高亮等依赖 Node.js 运行时的功能。
 - **轻量版**：轻量级版本，不包含 JS 相关功能和相关依赖。
 
 ### 轻量版的优势
@@ -759,8 +759,6 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 ### 轻量版本缺少的功能
 
 - 代码高亮（Shiki.js 渲染）
-- HTML 页面压缩（minify-html JNI）
-
 <!-- - 图表渲染（Mermaid）
 - 公式渲染（KaTeX） -->
 
@@ -889,7 +887,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
 
 稳定版通过 GitHub Releases 发布，建议生产环境使用。
 
-1. 访问 [Releases 页面](https://github.com/HowieHz/halo-plugin-extra-api/releases)
+1. 访问 [Releases 页面](https://github.com/HowieHz/halo-plugins/releases)
 2. 下载最新版本的 JAR 文件：
     - `extra-api-lite-版本号.jar`：轻量版（适用于所有平台）
     - 如需使用全量版，推荐下载平台特定版本：
@@ -905,7 +903,7 @@ ERROR - JavetException: Javet library is not loaded because <null>
 
 插件的开发版 JAR 文件通过 GitHub Actions 自动构建，仅用于测试和开发。
 
-- [GitHub Actions Workflow](https://github.com/HowieHz/halo-plugin-extra-api/actions/workflows/workflow.yaml)
+- [GitHub Actions Workflow](https://github.com/HowieHz/halo-plugins/actions/workflows/workflow.yaml)
 
 #### 下载步骤
 

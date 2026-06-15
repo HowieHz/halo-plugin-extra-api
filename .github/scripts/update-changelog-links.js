@@ -3,12 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_OWNER = "HowieHz";
-const REPO_NAME = "halo-plugin-extra-api";
-const REPO_PATH_RE = /^https:\/\/github\.com\/howiehz\/halo-plugin-extra-api\//iu;
-const DEFAULT_CHANGELOG_FILE = path.join(process.cwd(), "CHANGELOG.md");
+const REPO_NAME = "halo-plugins";
+const REPO_PATH_RE = /^https:\/\/github\.com\/howiehz\/halo-plugins\//iu;
+const DEFAULT_CHANGELOG_FILE = path.join(process.cwd(), "packages/halo-plugin-extra-api/CHANGELOG.md");
 const RELEASE_HEADING_RE = /^## \[(\d+\.\d+\.\d+)\]\s*-\s*/gmu;
 const TRAILING_LINK_LINE_RE =
-  /^\[(?:Unreleased|unreleased|\d+\.\d+\.\d+)\]:\s*https:\/\/github\.com\/howiehz\/halo-plugin-extra-api\/(?:compare\/\S+|releases\/tag\/\S+)\s*$/iu;
+  /^\[(?:Unreleased|unreleased|\d+\.\d+\.\d+)\]:\s*https:\/\/github\.com\/howiehz\/halo-plugins\/(?:compare\/\S+|releases\/tag\/\S+)\s*$/iu;
 
 export function extractReleaseVersions(content) {
   const versions = [];
@@ -18,23 +18,23 @@ export function extractReleaseVersions(content) {
   return versions;
 }
 
-export function buildCompareLinks(versions) {
+export function buildCompareLinks(versions, tagPrefix = "halo-plugin-extra-api@") {
   if (versions.length === 0) {
     return [];
   }
 
-  const links = [`[Unreleased]: https://github.com/${REPO_OWNER}/${REPO_NAME}/compare/v${versions[0]}...HEAD`];
+  const links = [`[Unreleased]: https://github.com/${REPO_OWNER}/${REPO_NAME}/compare/${tagPrefix}${versions[0]}...HEAD`];
 
   for (let index = 0; index < versions.length - 1; index += 1) {
     const currentVersion = versions[index];
     const previousVersion = versions[index + 1];
     links.push(
-      `[${currentVersion}]: https://github.com/${REPO_OWNER}/${REPO_NAME}/compare/v${previousVersion}...v${currentVersion}`,
+      `[${currentVersion}]: https://github.com/${REPO_OWNER}/${REPO_NAME}/compare/${tagPrefix}${previousVersion}...${tagPrefix}${currentVersion}`,
     );
   }
 
   const oldestVersion = versions[versions.length - 1];
-  links.push(`[${oldestVersion}]: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/v${oldestVersion}`);
+  links.push(`[${oldestVersion}]: https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/${tagPrefix}${oldestVersion}`);
   return links;
 }
 
@@ -70,7 +70,8 @@ export function stripTrailingCompareLinks(content) {
     .trimEnd();
 }
 
-export function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE) {
+export function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE, options = {}) {
+  const tagPrefix = options.tagPrefix ?? "halo-plugin-extra-api@";
   const content = fs.readFileSync(filePath, "utf8");
   const baseContent = stripTrailingCompareLinks(content);
   const versions = extractReleaseVersions(baseContent);
@@ -79,7 +80,7 @@ export function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE) {
     throw new Error(`No release headings found in ${filePath}`);
   }
 
-  const compareLinks = buildCompareLinks(versions);
+  const compareLinks = buildCompareLinks(versions, tagPrefix);
   const updatedContent = `${baseContent}\n\n${compareLinks.join("\n")}\n`;
   fs.writeFileSync(filePath, updatedContent);
 }
@@ -87,5 +88,6 @@ export function syncChangelogCompareLinks(filePath = DEFAULT_CHANGELOG_FILE) {
 const currentFilePath = fileURLToPath(import.meta.url);
 if (process.argv[1] && path.resolve(process.argv[1]) === currentFilePath) {
   const targetFile = process.argv[2];
-  syncChangelogCompareLinks(targetFile || DEFAULT_CHANGELOG_FILE);
+  const tagPrefix = process.argv[3] || "halo-plugin-extra-api@";
+  syncChangelogCompareLinks(targetFile || DEFAULT_CHANGELOG_FILE, { tagPrefix });
 }

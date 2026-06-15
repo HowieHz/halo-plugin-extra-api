@@ -3,8 +3,17 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'extra-api'
+rootProject.name = 'halo-plugins'
+include 'extra-api'
+include 'nodejs-runtime-api'
+include 'nodejs-runtime'
+include 'minify-html'
 include 'ui'
 include 'shiki'
 
-project(':shiki').projectDir = new File(settingsDir, 'js-modules/shiki')
+project(':extra-api').projectDir = new File(settingsDir, 'packages/halo-plugin-extra-api')
+project(':nodejs-runtime-api').projectDir = new File(settingsDir, 'packages/nodejs-runtime-api')
+project(':nodejs-runtime').projectDir = new File(settingsDir, 'packages/halo-plugin-nodejs-runtime')
+project(':minify-html').projectDir = new File(settingsDir, 'packages/halo-plugin-minify-html')
+project(':ui').projectDir = new File(settingsDir, 'packages/halo-plugin-extra-api/ui')
+project(':shiki').projectDir = new File(settingsDir, 'packages/halo-plugin-extra-api/js-modules/shiki')

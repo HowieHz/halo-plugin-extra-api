@@ -6,6 +6,7 @@ import { assertKnownAssets, sortByDisplayOrder } from "./release-asset-order.js"
 
 const {
   ASSETS_DIR,
+  ASSET_NAME_PREFIX,
   GITHUB_RELEASE_TAG,
   GITHUB_REPOSITORY,
   GITHUB_TOKEN,
@@ -41,10 +42,11 @@ function extractYamlScalar(content, key) {
 function listAssets() {
   const assets = fs
     .readdirSync(ASSETS_DIR)
-    .filter((fileName) => fs.statSync(path.join(ASSETS_DIR, fileName)).isFile());
+    .filter((fileName) => fs.statSync(path.join(ASSETS_DIR, fileName)).isFile())
+    .filter((fileName) => !ASSET_NAME_PREFIX || fileName.startsWith(ASSET_NAME_PREFIX));
 
   if (assets.length === 0) {
-    throw new Error(`Assets directory is empty: ${ASSETS_DIR}`);
+    throw new Error(`No matching assets found in ${ASSETS_DIR}`);
   }
 
   assertKnownAssets(assets);

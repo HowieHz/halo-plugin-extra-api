@@ -1,0 +1,8 @@
+packages:
+  - docs
+
+engineStrict: true
+allowBuilds:
+  esbuild: true
+shellEmulator: true
+dedupePeers: true

@@ -40,27 +40,87 @@ jobs:
         shell: bash
         run: |
           RELEASE_VERSION=$(sed -n 's/^version=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
-          PREVIOUS_TAG=$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          NODEJS_RUNTIME_VERSION=$(sed -n 's/^nodejsRuntimeVersion=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
+          MINIFY_HTML_VERSION=$(sed -n 's/^minifyHtmlVersion=\(.*\)$/\1/p' gradle.properties | tail -n 1 | tr -d '[:space:]')
+          BASE_GRADLE_PROPERTIES=$(git show "${{ github.event.pull_request.base.sha }}:gradle.properties")
+          BASE_RELEASE_VERSION=$(printf '%s\n' "$BASE_GRADLE_PROPERTIES" | sed -n 's/^version=\(.*\)$/\1/p' | tail -n 1 | tr -d '[:space:]')
+          BASE_NODEJS_RUNTIME_VERSION=$(printf '%s\n' "$BASE_GRADLE_PROPERTIES" | sed -n 's/^nodejsRuntimeVersion=\(.*\)$/\1/p' | tail -n 1 | tr -d '[:space:]')
+          BASE_MINIFY_HTML_VERSION=$(printf '%s\n' "$BASE_GRADLE_PROPERTIES" | sed -n 's/^minifyHtmlVersion=\(.*\)$/\1/p' | tail -n 1 | tr -d '[:space:]')
+          if [ -z "$BASE_NODEJS_RUNTIME_VERSION" ]; then
+            BASE_NODEJS_RUNTIME_VERSION="0.0.0"
+          fi
+          if [ -z "$BASE_MINIFY_HTML_VERSION" ]; then
+            BASE_MINIFY_HTML_VERSION="0.0.0"
+          fi
+
+          PREVIOUS_EXTRA_API_VERSION=$(git tag --list 'halo-plugin-extra-api@*' | sed -n 's/^halo-plugin-extra-api@//p' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          if [ -z "$PREVIOUS_EXTRA_API_VERSION" ]; then
+            PREVIOUS_EXTRA_API_VERSION=$(git tag --list 'v*' | sed -n 's/^v//p' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          fi
+
+          PREPARED_PACKAGES=()
+          if [ "$RELEASE_VERSION" != "$BASE_RELEASE_VERSION" ]; then
+            PREPARED_PACKAGES+=("halo-plugin-extra-api@$RELEASE_VERSION")
+          fi
+          if [ "$NODEJS_RUNTIME_VERSION" != "$BASE_NODEJS_RUNTIME_VERSION" ]; then
+            PREPARED_PACKAGES+=("halo-plugin-nodejs-runtime@$NODEJS_RUNTIME_VERSION")
+            PREPARED_PACKAGES+=("nodejs-runtime-api@$NODEJS_RUNTIME_VERSION")
+          fi
+          if [ "$MINIFY_HTML_VERSION" != "$BASE_MINIFY_HTML_VERSION" ]; then
+            PREPARED_PACKAGES+=("halo-plugin-minify-html@$MINIFY_HTML_VERSION")
+          fi
+
           echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+          echo "nodejs_runtime_version=$NODEJS_RUNTIME_VERSION" >> "$GITHUB_OUTPUT"
+          echo "minify_html_version=$MINIFY_HTML_VERSION" >> "$GITHUB_OUTPUT"
+          echo "previous_extra_api_version=$PREVIOUS_EXTRA_API_VERSION" >> "$GITHUB_OUTPUT"
+          {
+            echo 'prepared_packages<<EOF'
+            printf '%s\n' "${PREPARED_PACKAGES[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Write summary and comment on PR
         if: contains(github.event.pull_request.labels.*.name, 'release')
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # https://github.com/actions/github-script/tree/v9.0.0
         env:
-          PREVIOUS_TAG: ${{ steps.summary.outputs.previous_tag }}
+          MINIFY_HTML_VERSION: ${{ steps.summary.outputs.minify_html_version }}
+          NODEJS_RUNTIME_VERSION: ${{ steps.summary.outputs.nodejs_runtime_version }}
+          PREPARED_PACKAGES: ${{ steps.summary.outputs.prepared_packages }}
+          PREVIOUS_EXTRA_API_VERSION: ${{ steps.summary.outputs.previous_extra_api_version }}
           RELEASE_VERSION: ${{ steps.summary.outputs.release_version }}
         with:
           script: |
             const fs = require('node:fs');
 
-            const previousTag = process.env.PREVIOUS_TAG || 'none';
+            const previousExtraApiVersion = process.env.PREVIOUS_EXTRA_API_VERSION || 'none';
             const releaseVersion = process.env.RELEASE_VERSION || 'unknown';
+            const nodejsRuntimeVersion = process.env.NODEJS_RUNTIME_VERSION || 'unknown';
+            const minifyHtmlVersion = process.env.MINIFY_HTML_VERSION || 'unknown';
+            const preparedPackages = (process.env.PREPARED_PACKAGES || '')
+              .split(/\r?\n/)
+              .map((item) => item.trim())
+              .filter(Boolean);
+            const preparedPackageLines = preparedPackages.length > 0
+              ? preparedPackages.map((item) => `- \`${item}\``)
+              : ['- None detected'];
             const summary = [
               '## Release PR',
               '',
-              `- Previous stable release: ${previousTag}`,
-              `- Requested release version (from gradle.properties): ${releaseVersion}`,
+              `- Previous Extra API release: ${previousExtraApiVersion}`,
+              `- Requested Extra API version (from gradle.properties version): ${releaseVersion}`,
+              `- Node.js Runtime version (from gradle.properties nodejsRuntimeVersion): ${nodejsRuntimeVersion}`,
+              `- Minify HTML version (from gradle.properties minifyHtmlVersion): ${minifyHtmlVersion}`,
+              '',
+              '### Prepared Packages',
+              '',
+              ...preparedPackageLines,
+              '',
+              '### Changelogs',
+              '',
+              '- `packages/halo-plugin-extra-api/CHANGELOG.md`',
+              '- `packages/halo-plugin-nodejs-runtime/CHANGELOG.md`',
+              '- `packages/halo-plugin-minify-html/CHANGELOG.md`',
             ].join('\n');
 
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
@@ -71,8 +131,20 @@ jobs:
               marker,
               '## Check Release Guard',
               '',
-              `- Previous stable release: ${previousTag}`,
-              `- Requested release version (from gradle.properties): ${releaseVersion}`,
+              `- Previous Extra API release: ${previousExtraApiVersion}`,
+              `- Requested Extra API version (from gradle.properties version): ${releaseVersion}`,
+              `- Node.js Runtime version (from gradle.properties nodejsRuntimeVersion): ${nodejsRuntimeVersion}`,
+              `- Minify HTML version (from gradle.properties minifyHtmlVersion): ${minifyHtmlVersion}`,
+              '',
+              '### Prepared Packages',
+              '',
+              ...preparedPackageLines,
+              '',
+              '### Changelogs',
+              '',
+              '- `packages/halo-plugin-extra-api/CHANGELOG.md`',
+              '- `packages/halo-plugin-nodejs-runtime/CHANGELOG.md`',
+              '- `packages/halo-plugin-minify-html/CHANGELOG.md`',
               '',
               `Generated by [workflow run](${runUrl}).`,
             ].join('\n');

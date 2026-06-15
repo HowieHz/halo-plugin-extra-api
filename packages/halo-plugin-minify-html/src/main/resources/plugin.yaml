@@ -1,0 +1,21 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: Plugin
+metadata:
+  name: minify-html
+spec:
+  enabled: true
+  requires: ">=2.25.0"
+  author:
+    name: HowieHz
+    website: https://github.com/HowieHz
+  logo: logo.png
+  settingName: plugin-minify-html-settings
+  configMapName: plugin-minify-html-configMap
+  homepage: https://howiehz.top/halo-plugins/reference/minify-html
+  repo: https://github.com/HowieHz/halo-plugins
+  issues: https://github.com/HowieHz/halo-plugins/issues
+  displayName: "HTML 页面压缩"
+  description: "基于 minify-html 对 Halo 前台 HTML 响应执行服务端压缩"
+  license:
+    - name: "AGPL-3.0"
+      url: "https://github.com/HowieHz/halo-plugins/blob/main/LICENSE"
