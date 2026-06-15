@@ -26,6 +26,8 @@ class HtmlMinifyWebFilterTest {
         "/logout/**",
         "/themes/**",
         "/plugins/**",
+        "/assets/**",
+        "/ui-assets/**",
         "/actuator/**",
         "/api/**",
         "/apis/**",
@@ -133,6 +135,54 @@ class HtmlMinifyWebFilterTest {
     void shouldSkipExcludedApiPaths() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
             MockServerHttpRequest.get("/api/content/posts")
+                .accept(MediaType.TEXT_HTML)
+                .build()
+        );
+
+        filter.filter(exchange, decoratedExchange -> {
+            var response = decoratedExchange.getResponse();
+            response.setStatusCode(HttpStatus.OK);
+            response.getHeaders().setContentType(UTF_8_HTML);
+            var body = response.bufferFactory()
+                .wrap("<html><body><div>  Hello  </div></body></html>"
+                    .getBytes(StandardCharsets.UTF_8));
+            return response.writeWith(Mono.just(body));
+        }).block();
+
+        String result = exchange.getResponse().getBodyAsString().block();
+
+        assertEquals("<html><body><div>  Hello  </div></body></html>", result);
+        assertEquals(0, service.minifyCount.get());
+    }
+
+    @Test
+    void shouldSkipExcludedAssetsPaths() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/assets/main.js")
+                .accept(MediaType.TEXT_HTML)
+                .build()
+        );
+
+        filter.filter(exchange, decoratedExchange -> {
+            var response = decoratedExchange.getResponse();
+            response.setStatusCode(HttpStatus.OK);
+            response.getHeaders().setContentType(UTF_8_HTML);
+            var body = response.bufferFactory()
+                .wrap("<html><body><div>  Hello  </div></body></html>"
+                    .getBytes(StandardCharsets.UTF_8));
+            return response.writeWith(Mono.just(body));
+        }).block();
+
+        String result = exchange.getResponse().getBodyAsString().block();
+
+        assertEquals("<html><body><div>  Hello  </div></body></html>", result);
+        assertEquals(0, service.minifyCount.get());
+    }
+
+    @Test
+    void shouldSkipExcludedUiAssetsPaths() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+            MockServerHttpRequest.get("/ui-assets/main.js")
                 .accept(MediaType.TEXT_HTML)
                 .build()
         );
