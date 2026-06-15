@@ -585,6 +585,8 @@ spec:
             - /logout/**
             - /themes/**
             - /plugins/**
+            - /assets/**
+            - /ui-assets/**
             - /actuator/**
             - /api/**
             - /apis/**
@@ -604,7 +606,11 @@ spec:
               value: /themes/**
             - label: 插件资源（/plugins/**）
               value: /plugins/**
-            - label: 监控（/actuator/**）
+            - label: 静态资源（/assets/**）
+              value: /assets/**
+            - label: UI 静态资源（/ui-assets/**）
+              value: /ui-assets/**
+            - label: 监控/运维（/actuator/**）
               value: /actuator/**
             - label: Halo 核心 API（/api/**）
               value: /api/**

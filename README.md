@@ -714,7 +714,7 @@ extraApiJsRenderFinder.highlightCodeInHtml(htmlContent)
 - 自动压缩：启用之后会在服务端对前台 HTML 页面响应做整体压缩。
 - 排除路径规则：
     - 支持 Ant 风格路径匹配，支持 `*` 和 `**`
-    - 默认包含：`/console/**`、`/uc/**`、`/login/**`、`/signup/**`、`/logout/**`、`/themes/**`、`/plugins/**`、`/actuator/**`、`/api/**`、`/apis/**`、`/upload/**`
+    - 默认包含：`/console/**`、`/uc/**`、`/login/**`、`/signup/**`、`/logout/**`、`/themes/**`、`/plugins/**`、`/assets/**`、`/ui-assets/**`、`/actuator/**`、`/api/**`、`/apis/**`、`/upload/**`
 - 常规安全压缩选项：
     - 压缩内联 CSS
     - 压缩内联 JavaScript
