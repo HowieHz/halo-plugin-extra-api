@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       '@halo-dev/api-client':
-        specifier: ^2.25.1
-        version: 2.25.1(axios@1.18.0)
+        specifier: ^2.25.2
+        version: 2.25.2(axios@1.18.0)
       '@halo-dev/components':
-        specifier: ^2.25.1
-        version: 2.25.1(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))
+        specifier: ^2.25.2
+        version: 2.25.2(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))
       '@halo-dev/ui-shared':
-        specifier: ^2.25.1
-        version: 2.25.1(@tiptap/pm@3.26.1)(axios@1.18.0)(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))
+        specifier: ^2.25.2
+        version: 2.25.2(@tiptap/pm@3.26.1)(axios@1.18.0)(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))
       axios:
         specifier: ^1.18.0
         version: 1.18.0
@@ -399,18 +399,13 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@halo-dev/api-client@2.25.1':
-    resolution: {integrity: sha512-FFhjrRnQFy7/KVbduWCFnhCoit2ydlpEMqZFSSTzOucXxPl/WEoGdUm700GKkxATtGODOutvVfNnCu8lHPvLrw==}
-    peerDependencies:
-      axios: ^1.16.0
-
   '@halo-dev/api-client@2.25.2':
     resolution: {integrity: sha512-9FkxGu1N4Ct5TuSXyR8ktY6HzpDbgpFqqC67OqpSCGsX45/8iOm4+oXBqbHAhCWrRbMh1zHPxIE4zadWh7H1Qw==}
     peerDependencies:
       axios: ^1.16.0
 
-  '@halo-dev/components@2.25.1':
-    resolution: {integrity: sha512-B5ONH2p/ASKYT38IngK8XoRuc7KhAkSN8yPW4TraAe9NBviVx9pWq75xfLSC9E6cL2haR7NzlA0Uqpm/rHW5Bw==}
+  '@halo-dev/components@2.25.2':
+    resolution: {integrity: sha512-54DqfDQE+6yaqObUKNvIiVvxaa33WorNe/RH/Zke4I2+0GGG1NKt8sfp4asQlnMjSTXs95yCLgT1Hju3QRiaTg==}
     peerDependencies:
       vue: ^3.5.x
       vue-router: ^5.0.x
@@ -424,8 +419,8 @@ packages:
       '@vitejs/plugin-vue': ^5.0.0 || ^6.0.0
       vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
-  '@halo-dev/ui-shared@2.25.1':
-    resolution: {integrity: sha512-rqJWAQaG8PQHtuRwAjF7V32wLi3gjPt4DxOa8Ysv/qK8eE1lexVrrzbOZr/CXs8dUABow5w9zFylEeM1pEDcwg==}
+  '@halo-dev/ui-shared@2.25.2':
+    resolution: {integrity: sha512-5VlIzlhrENXkc3s6FujTjN3jDIXCISLm4YtXc5/WBecSQaKlavE5N06ixDccuTVMs3sztRST6TdgvNRcMLEN6g==}
     peerDependencies:
       vue: ^3.5.x
       vue-router: ^5.0.x
@@ -1603,8 +1598,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  electron-to-chromium@1.5.374:
-    resolution: {integrity: sha512-HCF5i7izveksHSGqa7mhDh6tr3Uz9Dar2RAjwuh69bw3QGPVObjQIgLwQWeO/Rxp9/r0KdboKy9RbpQDl97fjg==}
+  electron-to-chromium@1.5.375:
+    resolution: {integrity: sha512-ZWP5eB4BVPW/ZYo9252hQZHZ5XavtsTgpbhcmMmRwymavC5AsLWQWBPaKMeNd2LW0KGby5HPXvj7+sr4ta5j/Q==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -3162,17 +3157,12 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@halo-dev/api-client@2.25.1(axios@1.18.0)':
-    dependencies:
-      axios: 1.18.0
-      qs: 6.15.2
-
   '@halo-dev/api-client@2.25.2(axios@1.18.0)':
     dependencies:
       axios: 1.18.0
       qs: 6.15.2
 
-  '@halo-dev/components@2.25.1(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))':
+  '@halo-dev/components@2.25.2(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))':
     dependencies:
       floating-vue: 5.2.2(vue@3.5.38(typescript@6.0.3))
       vue: 3.5.38(typescript@6.0.3)
@@ -3192,9 +3182,9 @@ snapshots:
     transitivePeerDependencies:
       - axios
 
-  '@halo-dev/ui-shared@2.25.1(@tiptap/pm@3.26.1)(axios@1.18.0)(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))':
+  '@halo-dev/ui-shared@2.25.2(@tiptap/pm@3.26.1)(axios@1.18.0)(vue-router@4.5.1(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))':
     dependencies:
-      '@halo-dev/api-client': 2.25.1(axios@1.18.0)
+      '@halo-dev/api-client': 2.25.2(axios@1.18.0)
       '@tiptap/core': 3.26.1(@tiptap/pm@3.26.1)
       mitt: 3.0.1
       vue: 3.5.38(typescript@6.0.3)
@@ -4139,7 +4129,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.10.37
       caniuse-lite: 1.0.30001799
-      electron-to-chromium: 1.5.374
+      electron-to-chromium: 1.5.375
       node-releases: 2.0.47
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
@@ -4251,7 +4241,7 @@ snapshots:
       minimatch: 9.0.9
       semver: 7.8.4
 
-  electron-to-chromium@1.5.374: {}
+  electron-to-chromium@1.5.375: {}
 
   emoji-regex@8.0.0: {}
 
