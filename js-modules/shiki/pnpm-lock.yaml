@@ -13,8 +13,8 @@ importers:
         version: 4.0.2
     devDependencies:
       js-yaml:
-        specifier: ^4.2.0
-        version: 4.2.0
+        specifier: ^5.0.0
+        version: 5.0.0
       oxfmt:
         specifier: ^0.55.0
         version: 0.55.0
@@ -358,8 +358,8 @@ packages:
   html-void-elements@3.0.0:
     resolution: {integrity: sha512-bEqo66MRXsUGxWHV5IP0PUiAWwoEjba4VCzg0LjFJBpchPaTfyfCKTG6bc5F8ucKec3q5y6qOdGyYTSBEvhCrg==}
 
-  js-yaml@4.2.0:
-    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
+  js-yaml@5.0.0:
+    resolution: {integrity: sha512-GSvaPUbk1U+FMZ7rJzF+F8e5YVtu7KnD40et/5rBXXRBv2jCO9L3qCewvIDDdudC0QycTFlf6EAA+h3kxBsuUw==}
     hasBin: true
 
   lightningcss-android-arm64@1.32.0:
@@ -838,7 +838,7 @@ snapshots:
 
   html-void-elements@3.0.0: {}
 
-  js-yaml@4.2.0:
+  js-yaml@5.0.0:
     dependencies:
       argparse: 2.0.1
 
