@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "@halo-dev/ui-plugin-bundler-kit": "^2.25.2",
-        "@iconify/json": "^2.2.487",
+        "@iconify/json": "^2.2.488",
         "@rsbuild/core": "^2.0.15",
         "@rsbuild/plugin-sass": "^1.5.3",
         "@tsconfig/node24": "^24.0.4",
