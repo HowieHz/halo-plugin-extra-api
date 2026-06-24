@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
-import yaml from "js-yaml";
+import { parse, stringify } from "yaml";
 import { bundledThemesInfo } from "shiki/bundle/full";
 
 /* thanks to https://github.com/halo-sigs/plugin-shiki/blob/main/scripts/generate-themes-for-settings-file.mjs */
@@ -13,7 +13,7 @@ const settingsFilePath = new URL(
 
 try {
   const settingsFileContent = readFileSync(settingsFilePath, "utf8");
-  const settings = yaml.load(settingsFileContent);
+  const settings = parse(settingsFileContent);
 
   if (!settings?.spec?.forms) {
     console.warn("No forms found in settings.yaml");
@@ -38,14 +38,10 @@ try {
     });
   });
 
-  const updatedYaml = yaml.dump(settings, {
+  const updatedYaml = stringify(settings, {
     indent: 2,
-    lineWidth: -1,
-    noRefs: true,
-    quotingType: '"',
-    forceQuotes: false,
-    flowLevel: -1,
-    sortKeys: false,
+    lineWidth: 0,
+    aliasDuplicateObjects: false,
   });
 
   writeFileSync(settingsFilePath, updatedYaml, "utf8");
