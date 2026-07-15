@@ -71,7 +71,7 @@ jobs:
           echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # https://github.com/actions/setup-node/tree/v6
         with:
           node-version: 24
 
@@ -204,7 +204,7 @@ jobs:
 
       - name: Set up Node.js
         if: matrix.needs_node_toolchain
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # https://github.com/actions/setup-node/tree/v6
         with:
           node-version: 24
           cache: pnpm
@@ -298,7 +298,7 @@ jobs:
           merge-multiple: true
 
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # https://github.com/actions/setup-node/tree/v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # https://github.com/actions/setup-node/tree/v6
         with:
           node-version: 24
 
