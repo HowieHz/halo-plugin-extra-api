@@ -28,7 +28,7 @@
     },
     "devDependencies": {
         "@halo-dev/ui-plugin-bundler-kit": "^2.25.2",
-        "@iconify/json": "^2.2.500",
+        "@iconify/json": "^2.2.501",
         "@rsbuild/core": "^2.1.6",
         "@rsbuild/plugin-sass": "^2.0.1",
         "@rsbuild/plugin-vue": "^2.0.1",
