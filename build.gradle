@@ -109,7 +109,7 @@ platforms.each { variant, platformList ->
 
 dependencies {
     // Halo 平台依赖
-    implementation platform('run.halo.tools.platform:plugin:2.25.0') // BOM 确保版本一致性
+    implementation platform('run.halo.tools.platform:plugin:2.26.0') // BOM 确保版本一致性
     compileOnly 'run.halo.app:api' // compileOnly：运行时由 Halo 提供，避免冲突
     
     // JavaScript 引擎 - 为什么选择 Javet：支持 Node.js 模块，性能好，维护活跃
@@ -147,6 +147,12 @@ tasks.register('processShikiResources', Copy) {
     from project(':shiki').layout.buildDirectory.dir('dist')
     into layout.buildDirectory.dir('resources/main/js') // 插件 JS 资源目录
     include 'shiki.umd.cjs' // 只包含 UMD 格式，兼容性好
+    shouldRunAfter tasks.named('processResources')
+}
+
+tasks.register('processUiResources', Copy) {
+    from project(':ui').layout.buildDirectory.dir('dist')
+    into layout.buildDirectory.dir('resources/main/console')
     shouldRunAfter tasks.named('processResources')
 }
 
@@ -214,8 +220,12 @@ afterEvaluate {
     tasks.named('processShikiResources') {
         dependsOn project(':shiki').tasks.named('assemble')
     }
+    tasks.named('processUiResources') {
+        dependsOn project(':ui').tasks.named('assemble')
+    }
     tasks.named('classes') {
         dependsOn tasks.named('processShikiResources')
+        dependsOn tasks.named('processUiResources')
     }
     
     // 导入自定义组件索引任务类 - 为什么用自定义：支持多 JAR 任务，官方不支持
@@ -290,7 +300,7 @@ afterEvaluate {
         }
         
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn 'compileJava', 'processResources', jarLiteIndexTask, generateCoreExtensionDefinitionsTask
+        dependsOn 'compileJava', 'processResources', 'processUiResources', jarLiteIndexTask, generateCoreExtensionDefinitionsTask
         
         // 包含对应的组件索引文件 - Halo 需要此文件来注册插件组件
         into('META-INF') {
@@ -387,5 +397,5 @@ tasks.register('buildLite') {
 }
 
 halo {
-    version = '2.25' // 目标 Halo 版本
+    version = '2.26' // 目标 Halo 版本
 }

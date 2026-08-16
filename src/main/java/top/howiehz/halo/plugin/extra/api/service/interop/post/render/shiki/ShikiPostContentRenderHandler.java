@@ -3,7 +3,6 @@ package top.howiehz.halo.plugin.extra.api.service.interop.post.render.shiki;
 import com.google.common.base.Throwables;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import run.halo.app.theme.ReactivePostContentHandler;
@@ -33,7 +32,7 @@ public class ShikiPostContentRenderHandler implements ReactivePostContentHandler
      * @return Mono emitting the processed content context / 发出处理后的内容上下文的 Mono
      */
     @Override
-    public Mono<PostContentContext> handle(@NotNull PostContentContext contentContext) {
+    public Mono<PostContentContext> handle(PostContentContext contentContext) {
         return shikiConfigSupplier.get().map(shikiConfig -> {
             if (!shikiConfig.isEnabledShikiRender()) {
                 return contentContext;
