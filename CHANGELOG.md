@@ -202,8 +202,7 @@
 
 - 新增文章字数计算 API
 
-[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.9...HEAD
-[3.1.9]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.8...v3.1.9
+[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.8...HEAD
 [3.1.8]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.5...v3.1.6
