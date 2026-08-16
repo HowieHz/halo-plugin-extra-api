@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "build": "run-p build:type-check \"build:build-only {@}\" --",
-        "build:build-only": "rsbuild build",
+        "build:build-only": "vite build",
         "build:type-check": "vue-tsc --build",
         "dev": "pnpm run \"/^watch:.*/\"",
         "fmt": "pnpm run \"/^fmt:.*/\"",
@@ -14,25 +14,23 @@
         "prepare": "cd .. && husky ui/.husky",
         "test": "pnpm run \"/^test:.*/\"",
         "test:unit": "vitest --passWithNoTests",
-        "watch:rsbuild": "rsbuild build --watch --env-mode=development"
+        "watch:vite": "vite build --watch --mode development"
     },
     "dependencies": {
-        "@halo-dev/api-client": "^2.25.2",
-        "@halo-dev/components": "^2.25.2",
-        "@halo-dev/ui-shared": "^2.25.2",
+        "@halo-dev/api-client": "^2.26.0",
+        "@halo-dev/components": "^2.26.0",
+        "@halo-dev/ui-shared": "^2.26.0",
         "axios": "^1.19.0",
         "canvas-confetti": "^1.9.4",
         "husky": "^9.1.7",
-        "vue": "^3.5.40",
-        "vue-router": "^5.2.0"
+        "vue": "^3.5.41",
+        "vue-router": "~5.1.0"
     },
     "devDependencies": {
-        "@halo-dev/ui-plugin-bundler-kit": "^2.25.2",
-        "@iconify/json": "^2.2.514",
-        "@rsbuild/core": "^2.1.11",
-        "@rsbuild/plugin-sass": "^2.0.1",
-        "@rsbuild/plugin-vue": "^2.0.1",
-        "@tsconfig/node24": "^24.0.4",
+        "@halo-dev/ui-plugin-bundler-kit": "^2.26.0",
+        "@iconify-json/ri": "^1.2.10",
+        "@vitejs/plugin-vue": "^6.0.8",
+        "@tsconfig/node24": "^24.0.5",
         "@types/canvas-confetti": "^1.9.0",
         "@types/jsdom": "^30.0.0",
         "@types/node": "^26.2.0",
@@ -50,14 +48,15 @@
         "oxfmt": "^0.63.0",
         "oxlint": "^1.78.0",
         "sass": "^1.102.0",
-        "typescript": "~7.0.2",
+        "typescript": "~6.0.3",
         "unplugin-icons": "^23.0.1",
+        "vite": "^8.2.1",
         "vitest": "^4.1.10",
-        "vue-tsc": "^3.3.9"
+        "vue-tsc": "^3.3.10"
     },
     "engines": {
         "node": ">=24",
-        "pnpm": "^11.21.0"
+        "pnpm": "^11.22.0"
     },
-    "packageManager": "pnpm@11.21.0"
+    "packageManager": "pnpm@11.22.0"
 }
