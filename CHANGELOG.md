@@ -24,13 +24,6 @@
 
 ## [Unreleased]
 
-### 🐛 错误修复
-
-- 修复 UI 构建迁移误将未使用的管理端 UI 资源接入插件 JAR，避免轻量版发布不必要依赖 Node/pnpm。
-- 修复发布工作流中的 pnpm 版本不一致问题。
-
-## [3.1.9] - 2026-08-17
-
 ### 💥 破坏性变更
 
 - Halo CMS 最低版本要求更改为 2.26.0
@@ -209,8 +202,7 @@
 
 - 新增文章字数计算 API
 
-[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.9...HEAD
-[3.1.9]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.8...v3.1.9
+[Unreleased]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.8...HEAD
 [3.1.8]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/HowieHz/halo-plugin-extra-api/compare/v3.1.5...v3.1.6
