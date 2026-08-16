@@ -150,12 +150,6 @@ tasks.register('processShikiResources', Copy) {
     shouldRunAfter tasks.named('processResources')
 }
 
-tasks.register('processUiResources', Copy) {
-    from project(':ui').layout.buildDirectory.dir('dist')
-    into layout.buildDirectory.dir('resources/main/console')
-    shouldRunAfter tasks.named('processResources')
-}
-
 // plugin.yaml 版本同步逻辑 - 使用官方风格的 YAML 处理
 // 为什么需要：确保 plugin.yaml 中的版本与构建版本一致，避免部署时版本不匹配
 // 为什么用 YamlPluginVersionSupport：比正则表达式更安全，保持 YAML 格式和注释
@@ -220,12 +214,8 @@ afterEvaluate {
     tasks.named('processShikiResources') {
         dependsOn project(':shiki').tasks.named('assemble')
     }
-    tasks.named('processUiResources') {
-        dependsOn project(':ui').tasks.named('assemble')
-    }
     tasks.named('classes') {
         dependsOn tasks.named('processShikiResources')
-        dependsOn tasks.named('processUiResources')
     }
     
     // 导入自定义组件索引任务类 - 为什么用自定义：支持多 JAR 任务，官方不支持
@@ -300,7 +290,7 @@ afterEvaluate {
         }
         
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        dependsOn 'compileJava', 'processResources', 'processUiResources', jarLiteIndexTask, generateCoreExtensionDefinitionsTask
+        dependsOn 'compileJava', 'processResources', jarLiteIndexTask, generateCoreExtensionDefinitionsTask
         
         // 包含对应的组件索引文件 - Halo 需要此文件来注册插件组件
         into('META-INF') {
