@@ -39,7 +39,7 @@
         "@vue/eslint-config-typescript": "^14.9.0",
         "@vue/test-utils": "^2.4.11",
         "@vue/tsconfig": "^0.9.1",
-        "eslint": "^10.8.1",
+        "eslint": "^10.9.0",
         "eslint-plugin-oxlint": "^1.79.0",
         "eslint-plugin-vue": "~10.10.0",
         "husky": "^8.0.3",
@@ -47,12 +47,12 @@
         "npm-run-all2": "^9.0.3",
         "oxfmt": "^0.64.0",
         "oxlint": "^1.79.0",
-        "sass": "^1.102.0",
+        "sass": "^1.103.1",
         "typescript": "~6.0.3",
         "unplugin-icons": "^23.0.1",
-        "vite": "^8.2.1",
+        "vite": "^8.2.2",
         "vitest": "^4.1.11",
-        "vue-tsc": "^3.3.10"
+        "vue-tsc": "^3.3.11"
     },
     "engines": {
         "node": ">=24",
