@@ -55,8 +55,8 @@
         "vue-tsc": "^3.3.13"
     },
     "engines": {
-        "node": ">=24",
-        "pnpm": "^12.15.0"
+        "node": ">=26",
+        "pnpm": "^12.16.1"
     },
-    "packageManager": "pnpm@12.15.0"
+    "packageManager": "pnpm@12.16.1"
 }
